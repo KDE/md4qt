@@ -35,9 +35,13 @@ Files: tests/manual/*
 Copyright: none
 License: MIT
 
-Files: .gitignore .gitlab-ci.yml conanfile.txt
+Files: .gitignore .kde-ci.yml conanfile.txt
 Copyright: 2022-2024 Igor Mironchik <igor.mironchik@gmail.com>
 License: MIT
+
+Files: .kde-ci.yml
+Copyright: None
+License: CC0-1.0
 
 Files: tests/utils/entity/entities.json
 Copyright: WHATWG (Apple, Google, Mozilla, Microsoft)
