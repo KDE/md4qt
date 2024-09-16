@@ -85,7 +85,7 @@ if( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
 		DESTINATION lib/cmake/md4qt )
 
 	if( BUILD_MD2HTML_APP )
-		include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/args-parser
+		include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
 			${CMAKE_CURRENT_SOURCE_DIR} )
 
 		add_definitions( -DARGS_QSTRING_BUILD )
