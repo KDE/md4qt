@@ -4,9 +4,8 @@
     SPDX-License-Identifier: MIT
 */
 
-#include "1.h"
+#pragma once
 
-void A::parse()
-{
-    MD::Parser<TRAIT> parser;
-}
+struct B {
+    void parse();
+};

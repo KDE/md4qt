@@ -14,9 +14,24 @@ option( BUILD_MD4QT_QT_TESTS "Build tests with Qt support? Default ON." ON )
 option( BUILD_MD4QT_STL_TESTS "Build tests with STL support? Default OFF." OFF )
 option( BUILD_MD2HTML_APP "Build md2html utility? Default OFF." OFF )
 
+set(QT_MIN_VERSION "6.0")
+set(KF_MIN_VERSION "6.0")
+
+find_package(ECM ${KF_MIN_VERSION} REQUIRED NO_MODULE)
+
+list( APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH} )
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR} )
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 list( APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR} )
+
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMSetupVersion)
+include(ECMGenerateHeaders)
+include(KDEClangFormat)
+include(KDEGitCommitHooks)
+include(ECMAddTests)
 
 if( NOT CMAKE_BUILD_TYPE )
 	set( CMAKE_BUILD_TYPE "Release"
@@ -85,10 +100,7 @@ if( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
 		DESTINATION lib/cmake/md4qt )
 
 	if( BUILD_MD2HTML_APP )
-		include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
-			${CMAKE_CURRENT_SOURCE_DIR} )
-
-		add_definitions( -DARGS_QSTRING_BUILD )
+		include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
 		find_package( Qt6Core REQUIRED )
 
@@ -96,6 +108,16 @@ if( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
 
 		target_link_libraries( md2html Qt6::Core )
 	endif()
+
+	file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES md4qt/*.h
+		tests/auto/*.cpp
+		tests/auto/*.h
+		tests/utils/*.cpp
+		tests/utils/*.h
+		md4qt/*.h
+		md2html/*.cpp)
+	kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
+	kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
 
 else()
 

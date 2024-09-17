@@ -56,8 +56,8 @@ if( BUILD_MD4QT_QT_TESTS )
 		if( "${PCH_TARGET}" STREQUAL "" )
 			set( PCH_TARGET "test.md_parser.qt.${NUMSTRING}" )
 			target_precompile_headers( ${PCH_TARGET} PRIVATE
-				<md4qt/parser.hpp>
-				<md4qt/traits.hpp>
+				<md4qt/parser.h>
+				<md4qt/traits.h>
 				<fstream>
 				<cstring>
 				<QDir>
@@ -102,8 +102,8 @@ if( BUILD_MD4QT_STL_TESTS )
 		if( "${PCH_TARGET}" STREQUAL "" )
 			set( PCH_TARGET "test.md_parser.icu.${NUMSTRING}" )
 			target_precompile_headers( ${PCH_TARGET} PRIVATE
-				<md4qt/parser.hpp>
-				<md4qt/traits.hpp>
+				<md4qt/parser.h>
+				<md4qt/traits.h>
 				<fstream>
 				<cstring>
 				<filesystem> )

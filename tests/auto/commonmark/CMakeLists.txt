@@ -48,9 +48,9 @@ if( BUILD_MD4QT_QT_TESTS )
 
 		if( "${PCH_TARGET}" STREQUAL "" )
 			set( PCH_TARGET "test.md_parser.commonmark.qt.${NUMSTRING}" )
-			target_precompile_headers( ${PCH_TARGET} PRIVATE "load.hpp"
-				<md4qt/parser.hpp>
-				<md4qt/traits.hpp> )
+			target_precompile_headers( ${PCH_TARGET} PRIVATE "load.h"
+				<md4qt/parser.h>
+				<md4qt/traits.h> )
 		else()
 			target_precompile_headers( test.md_parser.commonmark.qt.${NUMSTRING}
 				REUSE_FROM ${PCH_TARGET} )
@@ -89,9 +89,9 @@ if( BUILD_MD4QT_STL_TESTS )
 
 		if( "${PCH_TARGET}" STREQUAL "" )
 			set( PCH_TARGET "test.md_parser.commonmark.icu.${NUMSTRING}" )
-			target_precompile_headers( ${PCH_TARGET} PRIVATE "load.hpp"
-				<md4qt/parser.hpp>
-				<md4qt/traits.hpp> )
+			target_precompile_headers( ${PCH_TARGET} PRIVATE "load.h"
+				<md4qt/parser.h>
+				<md4qt/traits.h> )
 		else()
 			target_precompile_headers( test.md_parser.commonmark.icu.${NUMSTRING}
 				REUSE_FROM ${PCH_TARGET} )

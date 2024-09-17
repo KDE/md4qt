@@ -3,6 +3,8 @@
 
 project( tests )
 
+kde_enable_exceptions()
+
 add_subdirectory( test_funcs )
 add_subdirectory( test_parser )
 add_subdirectory( commonmark )
