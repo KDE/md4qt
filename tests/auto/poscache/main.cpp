@@ -10,6 +10,7 @@
 // md4qt include.
 #include <md4qt/parser.h>
 #include <md4qt/poscache.h>
+#include <md4qt/utils.h>
 
 MD::PosCache<TRAIT> g_cache;
 
@@ -648,6 +649,8 @@ TEST_CASE("user_defined")
 
         std::shared_ptr<Item<TRAIT>> clone(MD::Document<TRAIT> *doc = nullptr) const override
         {
+            MD_UNUSED(doc)
+
             return std::make_shared<MyItem>();
         }
     };

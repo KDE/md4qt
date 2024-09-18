@@ -565,7 +565,7 @@ void makeText(MD::TextParsingOpts<TRAIT> &po,
     p->appendItem(t);
 }
 
-void makeCode(MD::TextParsingOpts<TRAIT> &po, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line)
+void makeCode(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line)
 {
     auto c = std::make_shared<MD::Code<TRAIT>>(TRAIT::latin1ToString("code"), false, true);
     c->setStartColumn(0);
@@ -576,7 +576,7 @@ void makeCode(MD::TextParsingOpts<TRAIT> &po, std::shared_ptr<MD::Paragraph<TRAI
     p->appendItem(c);
 }
 
-void makeHtml(MD::TextParsingOpts<TRAIT> &po, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line, bool isFree)
+void makeHtml(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line, bool isFree)
 {
     auto h = std::make_shared<MD::RawHtml<TRAIT>>();
     h->setStartColumn(0);

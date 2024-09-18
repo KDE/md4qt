@@ -5,7 +5,7 @@ cmake_minimum_required( VERSION 3.19 )
 
 project( md4qt )
 
-set( MD4QT_VERSION "3.0.0" )
+set( MD4QT_VERSION "3.0.1" )
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 
@@ -27,11 +27,6 @@ list( APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR} )
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
-include(ECMSetupVersion)
-include(ECMGenerateHeaders)
-include(KDEClangFormat)
-include(KDEGitCommitHooks)
-include(ECMAddTests)
 
 if( NOT CMAKE_BUILD_TYPE )
 	set( CMAKE_BUILD_TYPE "Release"
@@ -108,16 +103,6 @@ if( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
 
 		target_link_libraries( md2html Qt6::Core )
 	endif()
-
-	file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES md4qt/*.h
-		tests/auto/*.cpp
-		tests/auto/*.h
-		tests/utils/*.cpp
-		tests/utils/*.h
-		md4qt/*.h
-		md2html/*.cpp)
-	kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
-	kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
 
 else()
 

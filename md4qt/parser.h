@@ -55,7 +55,7 @@ inline bool indentInList(const std::vector<long long int> *indents, long long in
                 != indents->cend());
     else
         return false;
-};
+}
 
 // Skip spaces in line from pos \p i.
 template<class Trait>
@@ -67,7 +67,7 @@ inline long long int skipSpaces(long long int i, const typename Trait::String &l
         ++i;
 
     return i;
-}; // skipSpaces
+} // skipSpaces
 
 // Returns last non-space character position.
 template<class Trait>
@@ -79,7 +79,7 @@ inline long long int lastNonSpacePos(const typename Trait::String &line)
         --i;
 
     return i;
-}; // lastNonSpacePos
+} // lastNonSpacePos
 
 //! \return Starting sequence of the same characters.
 template<class Trait>
@@ -164,19 +164,6 @@ struct RawHtmlBlock {
     int htmlBlockType = -1;
     bool continueHtml = false;
     bool onLine = false;
-
-    RawHtmlBlock<Trait> &operator=(const RawHtmlBlock<Trait> &other)
-    {
-        if (this != &other) {
-            html = other.html;
-            parent = other.parent;
-            htmlBlockType = other.htmlBlockType;
-            continueHtml = other.continueHtml;
-            onLine = other.onLine;
-        }
-
-        return *this;
-    }
 
     std::shared_ptr<Block<Trait>> findParent(long long int indent) const
     {
@@ -8233,6 +8220,15 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     std::vector<std::pair<RawHtmlBlock<Trait>, long long int>> htmlToAdd;
     long long int line = -1;
 
+    auto parseStream = [&] (StringListStream<Trait> &stream)
+    {
+        const auto tmpHtml = html;
+        html = parse(stream, item, doc, linksToParse, workingPath, fileName, collectRefLinks, false, true);
+        html.topParent = tmpHtml.topParent;
+        html.blocks = tmpHtml.blocks;
+        html.toAdjustLastPos = tmpHtml.toAdjustLastPos;
+    };
+
     for (auto last = fr.data.end(); it != last; ++it, ++pos) {
         if (!fensedCode) {
             fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' ')))
@@ -8262,7 +8258,7 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
             if (ok) {
                 StringListStream<Trait> stream(data);
 
-                html = parse(stream, item, doc, linksToParse, workingPath, fileName, collectRefLinks, false, true);
+                parseStream(stream);
 
                 data.clear();
 
@@ -8283,7 +8279,6 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                     }
 
                     htmlToAdd.push_back({html, html.parent->items().size()});
-                    htmlToAdd.back().first.blocks = html.blocks;
                     updateLastPosInList<Trait>(html);
                     resetHtmlTag<Trait>(html);
                 }
@@ -8360,7 +8355,7 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     if (!data.empty()) {
         StringListStream<Trait> stream(data);
 
-        html = parse(stream, item, doc, linksToParse, workingPath, fileName, collectRefLinks, false, true);
+        parseStream(stream);
 
         if (html.html) {
             html.parent = html.findParent(html.html->startColumn());

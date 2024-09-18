@@ -11,10 +11,11 @@
 // md4qt include.
 #include <md4qt/algo.h>
 #include <md4qt/parser.h>
+#include <md4qt/utils.h>
 
 int g_count = 0;
 
-void onItem(MD::Item<TRAIT> *i)
+void onItem(MD::Item<TRAIT> *)
 {
     ++g_count;
 }
@@ -439,6 +440,8 @@ TEST_CASE("user_defined")
 
         std::shared_ptr<Item<TRAIT>> clone(MD::Document<TRAIT> *doc = nullptr) const override
         {
+            MD_UNUSED(doc)
+
             return std::make_shared<MyItem>();
         }
     };
