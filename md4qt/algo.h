@@ -32,10 +32,12 @@ template<class Trait>
 class AlgoVisitor : public Visitor<Trait>
 {
 public:
-    AlgoVisitor(unsigned int mnl, const typename Trait::template Vector<ItemType> &t, ItemFunctor<Trait> f)
-        : maxNestingLevel(mnl)
-        , types(t)
-        , func(f)
+    AlgoVisitor(unsigned int mnl,
+                const typename Trait::template Vector<ItemType> &t,
+                ItemFunctor<Trait> f)
+        : m_maxNestingLevel(mnl)
+        , m_types(t)
+        , m_func(f)
     {
     }
 
@@ -55,104 +57,119 @@ protected:
 
     void onUserDefined(Item<Trait> *i) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(i->type()))
-            func(i);
+        if (inc.allowed(i->type())) {
+            m_func(i);
+        }
     }
 
     void onText(Text<Trait> *t) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Text))
-            func(t);
+        if (inc.allowed(ItemType::Text)) {
+            m_func(t);
+        }
     }
 
     void onMath(Math<Trait> *m) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Math))
-            func(m);
+        if (inc.allowed(ItemType::Math)) {
+            m_func(m);
+        }
     }
 
     void onLineBreak(LineBreak<Trait> *l) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::LineBreak))
-            func(l);
+        if (inc.allowed(ItemType::LineBreak)) {
+            m_func(l);
+        }
     }
 
     void onParagraph(Paragraph<Trait> *p, bool) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Paragraph))
-            func(p);
+        if (inc.allowed(ItemType::Paragraph)) {
+            m_func(p);
+        }
 
-        if (inc.nextAllowed())
+        if (inc.nextAllowed()) {
             Visitor<Trait>::onParagraph(p, true);
+        }
     }
 
     void onHeading(Heading<Trait> *h) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Heading))
-            func(h);
+        if (inc.allowed(ItemType::Heading)) {
+            m_func(h);
+        }
 
-        if (h->text() && !h->text()->isEmpty() && inc.nextAllowed())
+        if (h->text() && !h->text()->isEmpty() && inc.nextAllowed()) {
             onParagraph(h->text().get(), true);
+        }
     }
 
     void onCode(Code<Trait> *c) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Code))
-            func(c);
+        if (inc.allowed(ItemType::Code)) {
+            m_func(c);
+        }
     }
 
     void onInlineCode(Code<Trait> *c) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Code))
-            func(c);
+        if (inc.allowed(ItemType::Code)) {
+            m_func(c);
+        }
     }
 
     void onBlockquote(Blockquote<Trait> *b) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Blockquote))
-            func(b);
+        if (inc.allowed(ItemType::Blockquote)) {
+            m_func(b);
+        }
 
-        if (inc.nextAllowed())
+        if (inc.nextAllowed()) {
             Visitor<Trait>::onBlockquote(b);
+        }
     }
 
     void onList(List<Trait> *l) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::List))
-            func(l);
+        if (inc.allowed(ItemType::List)) {
+            m_func(l);
+        }
 
         for (auto it = l->items().cbegin(), last = l->items().cend(); it != last; ++it) {
-            if ((*it)->type() == ItemType::ListItem && inc.nextAllowed())
+            if ((*it)->type() == ItemType::ListItem && inc.nextAllowed()) {
                 onListItem(static_cast<ListItem<Trait> *>(it->get()), true);
+            }
         }
     }
 
     void onTable(Table<Trait> *t) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Table))
-            func(t);
+        if (inc.allowed(ItemType::Table)) {
+            m_func(t);
+        }
 
         if (!t->isEmpty() && inc.nextAllowed()) {
             int columns = 0;
@@ -171,8 +188,9 @@ protected:
 
                     ++i;
 
-                    if (i == columns)
+                    if (i == columns) {
                         break;
+                    }
                 }
             }
         }
@@ -180,68 +198,77 @@ protected:
 
     void onAnchor(Anchor<Trait> *a) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Anchor))
-            func(a);
+        if (inc.allowed(ItemType::Anchor)) {
+            m_func(a);
+        }
     }
 
     void onRawHtml(RawHtml<Trait> *h) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::RawHtml))
-            func(h);
+        if (inc.allowed(ItemType::RawHtml)) {
+            m_func(h);
+        }
     }
 
     void onHorizontalLine(HorizontalLine<Trait> *l) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::HorizontalLine))
-            func(l);
+        if (inc.allowed(ItemType::HorizontalLine)) {
+            m_func(l);
+        }
     }
 
     void onLink(Link<Trait> *l) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Link))
-            func(l);
+        if (inc.allowed(ItemType::Link)) {
+            m_func(l);
+        }
 
         if (inc.nextAllowed()) {
-            if (!l->img()->isEmpty())
+            if (!l->img()->isEmpty()) {
                 onImage(l->img().get());
-            else if (l->p() && !l->p()->isEmpty())
+            } else if (l->p() && !l->p()->isEmpty()) {
                 onParagraph(l->p().get(), false);
+            }
         }
     }
 
     void onImage(Image<Trait> *i) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Image))
-            func(i);
+        if (inc.allowed(ItemType::Image)) {
+            m_func(i);
+        }
     }
 
     void onFootnoteRef(FootnoteRef<Trait> *ref) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::FootnoteRef))
-            func(ref);
+        if (inc.allowed(ItemType::FootnoteRef)) {
+            m_func(ref);
+        }
     }
 
     void onListItem(ListItem<Trait> *i, bool) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::ListItem))
-            func(i);
+        if (inc.allowed(ItemType::ListItem)) {
+            m_func(i);
+        }
 
-        if (inc.nextAllowed())
+        if (inc.nextAllowed()) {
             Visitor<Trait>::onListItem(i, true);
+        }
     }
 
     void onTableCell(TableCell<Trait> *c) override
@@ -251,54 +278,60 @@ protected:
 
     void onFootnote(Footnote<Trait> *f) override
     {
-        IncrementNestingLevel inc(currentNestingLevel, maxNestingLevel, types);
+        IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
-        if (inc.allowed(ItemType::Footnote))
-            func(f);
+        if (inc.allowed(ItemType::Footnote)) {
+            m_func(f);
+        }
 
-        if (inc.nextAllowed())
+        if (inc.nextAllowed()) {
             Visitor<Trait>::onFootnote(f);
+        }
     }
 
     virtual void onFootnotes(std::shared_ptr<Document<Trait>> doc)
     {
-        for (const auto &f : doc->footnotesMap())
+        for (const auto &f : doc->footnotesMap()) {
             this->onFootnote(f.second.get());
+        }
     }
 
 protected:
-    unsigned int currentNestingLevel = 0;
-    unsigned int maxNestingLevel = 0;
-    const typename Trait::template Vector<ItemType> &types;
-    ItemFunctor<Trait> func = {};
+    unsigned int m_currentNestingLevel = 0;
+    unsigned int m_maxNestingLevel = 0;
+    const typename Trait::template Vector<ItemType> &m_types;
+    ItemFunctor<Trait> m_func = {};
 
     struct IncrementNestingLevel {
-        IncrementNestingLevel(unsigned int &l, unsigned int m, const typename Trait::template Vector<ItemType> &t)
-            : level(l)
-            , maxNestingLevel(m)
-            , types(t)
+        IncrementNestingLevel(unsigned int &l,
+                              unsigned int m,
+                              const typename Trait::template Vector<ItemType> &t)
+            : m_level(l)
+            , m_maxNestingLevel(m)
+            , m_types(t)
         {
-            ++level;
+            ++m_level;
         }
 
         ~IncrementNestingLevel()
         {
-            --level;
+            --m_level;
         }
 
         bool allowed(ItemType t) const
         {
-            return ((maxNestingLevel == 0 || level <= maxNestingLevel) && std::find(types.cbegin(), types.cend(), t) != types.cend());
+            return ((m_maxNestingLevel == 0 || m_level <= m_maxNestingLevel) &&
+                    std::find(m_types.cbegin(), m_types.cend(), t) != m_types.cend());
         }
 
         bool nextAllowed() const
         {
-            return (maxNestingLevel == 0 || level + 1 <= maxNestingLevel);
+            return (m_maxNestingLevel == 0 || m_level + 1 <= m_maxNestingLevel);
         }
 
-        unsigned int &level;
-        unsigned int maxNestingLevel;
-        const typename Trait::template Vector<ItemType> &types;
+        unsigned int &m_level;
+        unsigned int m_maxNestingLevel;
+        const typename Trait::template Vector<ItemType> &m_types;
     }; // struct IncrementNestingLevel
 }; // class HtmlVisitor
 
