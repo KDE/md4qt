@@ -600,7 +600,7 @@ public:
 
     void removeItemAt(long long int idx)
     {
-        if (idx >= 0 && idx < m_items.size())
+        if (idx >= 0 && idx < static_cast<long long int>(m_items.size()))
             m_items.erase(m_items.cbegin() + idx);
     }
 

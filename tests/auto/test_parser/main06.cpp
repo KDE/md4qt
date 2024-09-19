@@ -1747,7 +1747,7 @@ TEST_CASE("181")
     REQUIRE(pp->endColumn() == 424);
     REQUIRE(pp->endLine() == 0);
     REQUIRE(pp->items().size() == 5);
-    for (int i = 0; i < pp->items().size(); ++i)
+    for (int i = 0; i < static_cast<long long int>(pp->items().size()); ++i)
         REQUIRE(pp->items().at(i)->type() == MD::ItemType::RawHtml);
 }
 

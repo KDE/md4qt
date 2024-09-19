@@ -995,7 +995,7 @@ void checkTest525(std::shared_ptr<MD::Document<Trait>> doc);
 #ifdef MD4QT_ICU_STL_SUPPORT
 
 template<>
-void checkTest525<MD::UnicodeStringTrait>(std::shared_ptr<MD::Document<MD::UnicodeStringTrait>> doc)
+void checkTest525<MD::UnicodeStringTrait>(std::shared_ptr<MD::Document<MD::UnicodeStringTrait>>)
 {
     MESSAGE("This test is not strict to CommonMark 0.30 as uriparse library wrong with this URL.");
     MESSAGE("Skip for now.");

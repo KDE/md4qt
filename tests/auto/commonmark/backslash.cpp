@@ -66,7 +66,7 @@ TEST_CASE("014")
                                                 TRAIT::latin1ToString("[foo]: /url \"not a reference\""),
                                                 TRAIT::latin1ToString("&ouml; not a character entity")};
 
-    for (long long int i = 0; i < p->items().size(); ++i) {
+    for (long long int i = 0; i < static_cast<long long int>(p->items().size()); ++i) {
         REQUIRE(p->items().at(i)->type() == MD::ItemType::Text);
         auto t1 = static_cast<MD::Text<TRAIT> *>(p->items().at(i).get());
         REQUIRE(t1->opts() == MD::TextWithoutFormat);

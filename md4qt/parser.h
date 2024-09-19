@@ -863,7 +863,7 @@ inline typename Trait::String virginSubstr(const MdBlock<Trait> &fr, const WithP
     long long int startLine = virginPos.startLine() < fr.data.at(0).second.lineNumber ? (virginPos.endLine() < fr.data.at(0).second.lineNumber ? -1 : 0)
                                                                                       : virginPos.startLine() - fr.data.at(0).second.lineNumber;
 
-    if (startLine >= fr.data.size() || startLine < 0)
+    if (startLine >= static_cast<long long int>(fr.data.size()) || startLine < 0)
         return {};
 
     auto spos = virginPos.startColumn() - fr.data.at(startLine).first.virginPos(0);
@@ -875,7 +875,7 @@ inline typename Trait::String virginSubstr(const MdBlock<Trait> &fr, const WithP
     long long int linesCount = virginPos.endLine() - virginPos.startLine()
         - (virginPos.startLine() < fr.data.at(0).second.lineNumber ? fr.data.at(0).second.lineNumber - virginPos.startLine() : 0);
 
-    if (startLine + linesCount > fr.data.size()) {
+    if (startLine + linesCount > static_cast<long long int>(fr.data.size())) {
         linesCount = fr.data.size() - startLine - 1;
         epos = fr.data.back().first.length();
     } else
@@ -1092,7 +1092,7 @@ inline long long int processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Tr
                     if (isGitHubAutolink<Trait>(tmp) || email) {
                         auto ti = textAtIdx(p, idx);
 
-                        if (ti >= 0 && ti < p->items().size()) {
+                        if (ti >= 0 && ti < static_cast<long long int>(p->items().size())) {
                             typename ItemWithOpts<Trait>::Styles openStyles, closeStyles;
                             const auto opts = std::static_pointer_cast<Text<Trait>>(p->items().at(ti))->opts();
 
@@ -3485,7 +3485,7 @@ inline std::pair<long long int, long long int> prevPosition(const MdBlock<Trait>
     if (pos > 0)
         return {pos - 1, line};
 
-    for (long long int i = 0; i < fr.data.size(); ++i) {
+    for (long long int i = 0; i < static_cast<long long int>(fr.data.size()); ++i) {
         if (fr.data.at(i).second.lineNumber == line) {
             if (i > 0)
                 return {fr.data.at(i - 1).first.virginPos(fr.data.at(i - 1).first.length() - 1), line - 1};
@@ -3498,11 +3498,11 @@ inline std::pair<long long int, long long int> prevPosition(const MdBlock<Trait>
 template<class Trait>
 inline std::pair<long long int, long long int> nextPosition(const MdBlock<Trait> &fr, long long int pos, long long int line)
 {
-    for (long long int i = 0; i < fr.data.size(); ++i) {
+    for (long long int i = 0; i < static_cast<long long int>(fr.data.size()); ++i) {
         if (fr.data.at(i).second.lineNumber == line) {
             if (fr.data.at(i).first.virginPos(fr.data.at(i).first.length() - 1) >= pos + 1)
                 return {pos + 1, line};
-            else if (i + 1 < fr.data.size())
+            else if (i + 1 < static_cast<long long int>(fr.data.size()))
                 return {fr.data.at(i + 1).first.virginPos(0), fr.data.at(i + 1).second.lineNumber};
             else
                 return {pos, line};
@@ -3909,7 +3909,8 @@ inline void checkForTableInParagraph(TextParsingOpts<Trait> &po, long long int l
 
         for (; i <= lastLine; ++i) {
             const auto h = isTableHeader<Trait>(po.fr.data[i].first.asString());
-            const auto c = i + 1 < po.fr.data.size() ? isTableAlignment<Trait>(po.fr.data[i + 1].first.asString()) : 0;
+            const auto c = i + 1 < static_cast<long long int>(po.fr.data.size()) ?
+                                    isTableAlignment<Trait>(po.fr.data[i + 1].first.asString()) : 0;
 
             if (h && c && c == h) {
                 po.detected = TextParsingOpts<Trait>::Detected::Table;
@@ -7080,10 +7081,11 @@ inline bool Parser<Trait>::isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po)
         long long int line = po.line;
         long long int pos = po.pos;
 
-        normalizePos(pos, line, line < po.fr.data.size() ? po.fr.data[line].first.length() : 0, po.fr.data.size());
+        normalizePos(pos, line, line < static_cast<long long int>(po.fr.data.size()) ?
+                                    po.fr.data[line].first.length() : 0, po.fr.data.size());
 
         if (pos == 0) {
-            if (line < po.fr.data.size()) {
+            if (line < static_cast<long long int>(po.fr.data.size())) {
                 const auto type = whatIsTheLine(po.fr.data[line].first);
 
                 switch (type) {
@@ -7516,7 +7518,7 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                     p.reset(new Paragraph<Trait>);
                     po.rawTextData.clear();
 
-                    if (it->m_line + 1 < fr.data.size()) {
+                    if (it->m_line + 1 < static_cast<long long int>(fr.data.size())) {
                         p->setStartColumn(fr.data.at(it->m_line + 1).first.virginPos(0));
                         p->setStartLine(fr.data.at(it->m_line + 1).second.lineNumber);
                     }
@@ -7566,7 +7568,7 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                         p.reset(new Paragraph<Trait>);
                         po.rawTextData.clear();
 
-                        if (it->m_line + 1 < fr.data.size()) {
+                        if (it->m_line + 1 < static_cast<long long int>(fr.data.size())) {
                             p->setStartColumn(fr.data.at(it->m_line + 1).first.virginPos(0));
                             p->setStartLine(fr.data.at(it->m_line + 1).second.lineNumber);
                         }
@@ -7600,7 +7602,7 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                     break;
 
                 if (po.checkLineOnNewType) {
-                    if (po.line + 1 < po.fr.data.size()) {
+                    if (po.line + 1 < static_cast<long long int>(po.fr.data.size())) {
                         const auto type = Parser<Trait>::whatIsTheLine(po.fr.data[po.line + 1].first);
 
                         if (type == Parser<Trait>::BlockType::CodeIndentedBySpaces) {
@@ -7629,7 +7631,8 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
         parseTableInParagraph(po, pt, doc, linksToParse, workingPath, fileName, collectRefLinks);
     }
 
-    while (po.detected == TextParsingOpts<Trait>::Detected::HTML && po.line < po.fr.data.size()) {
+    while (po.detected == TextParsingOpts<Trait>::Detected::HTML &&
+           po.line < static_cast<long long int>(po.fr.data.size())) {
         if (!isListOrQuoteAfterHtml(po)) {
             if (!collectRefLinks)
                 makeText(po.line, po.fr.data[po.line].first.length(), po);
@@ -7640,7 +7643,8 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
             break;
     }
 
-    if (po.detected == TextParsingOpts<Trait>::Detected::Nothing && po.line <= po.fr.data.size() - 1) {
+    if (po.detected == TextParsingOpts<Trait>::Detected::Nothing &&
+        po.line <= static_cast<long long int>(po.fr.data.size() - 1)) {
         if (!collectRefLinks)
             makeText(po.fr.data.size() - 1, po.fr.data.back().first.length(), po);
     }
@@ -7664,9 +7668,11 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
     if (!pt->isEmpty() && !collectRefLinks)
         parent->appendItem(pt->items().front());
 
-    normalizePos(po.pos, po.line, po.line < po.fr.data.size() ? po.fr.data[po.line].first.length() : 0, po.fr.data.size());
+    normalizePos(po.pos, po.line, po.line < static_cast<long long int>(po.fr.data.size()) ?
+                                    po.fr.data[po.line].first.length() : 0, po.fr.data.size());
 
-    if (po.detected != TextParsingOpts<Trait>::Detected::Nothing && po.line < po.fr.data.size()) {
+    if (po.detected != TextParsingOpts<Trait>::Detected::Nothing &&
+        po.line < static_cast<long long int>(po.fr.data.size())) {
         typename MdBlock<Trait>::Data tmp;
         std::copy(fr.data.cbegin() + po.line, fr.data.cend(), std::back_inserter(tmp));
 
