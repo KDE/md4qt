@@ -475,17 +475,17 @@ protected:
     {
         typename Trait::String url = l->url();
 
-        const auto lit = this->doc->labeledLinks().find(url);
+        const auto lit = this->m_doc->labeledLinks().find(url);
 
-        if (lit != this->doc->labeledLinks().cend()) {
+        if (lit != this->m_doc->labeledLinks().cend()) {
             url = lit->second->url();
         }
 
-        if (std::find(this->anchors.cbegin(), this->anchors.cend(), url) != this->anchors.cend()) {
+        if (std::find(this->m_anchors.cbegin(), this->m_anchors.cend(), url) != this->m_anchors.cend()) {
             url = Trait::latin1ToString("#") + url;
         } else if (url.startsWith(Trait::latin1ToString("#")) &&
-                   this->doc->labeledHeadings().find(url) == this->doc->labeledHeadings().cend()) {
-            auto path = static_cast<Anchor<Trait> *>(this->doc->items().at(0).get())->label();
+                   this->m_doc->labeledHeadings().find(url) == this->m_doc->labeledHeadings().cend()) {
+            auto path = static_cast<Anchor<Trait> *>(this->m_doc->items().at(0).get())->label();
             const auto sp = path.lastIndexOf(Trait::latin1ToString("/"));
             path.remove(sp, path.length() - sp);
             const auto p = url.indexOf(path) - 1;
@@ -544,9 +544,9 @@ protected:
         //! Footnote reference.
         FootnoteRef<Trait> *ref) override
     {
-        const auto fit = this->doc->footnotesMap().find(ref->id());
+        const auto fit = this->m_doc->footnotesMap().find(ref->id());
 
-        if (fit != this->doc->footnotesMap().cend()) {
+        if (fit != this->m_doc->footnotesMap().cend()) {
             const auto r = std::find_if(m_fns.begin(), m_fns.end(), [&ref](const auto &stuff) {
                 return ref->id() == stuff.m_id;
             });
@@ -669,9 +669,9 @@ protected:
         m_justCollectFootnoteRefs = true;
 
         for (const auto &id : tmpm_fns) {
-            const auto fit = this->doc->footnotesMap().find(id.m_id);
+            const auto fit = this->m_doc->footnotesMap().find(id.m_id);
 
-            if (fit != this->doc->footnotesMap().cend()) {
+            if (fit != this->m_doc->footnotesMap().cend()) {
                 this->onFootnote(fit->second.get());
             }
         }
@@ -685,9 +685,9 @@ protected:
             m_html.push_back(Trait::latin1ToString("\">"));
             ++i;
 
-            const auto fit = this->doc->footnotesMap().find(id.m_id);
+            const auto fit = this->m_doc->footnotesMap().find(id.m_id);
 
-            if (fit != this->doc->footnotesMap().cend()) {
+            if (fit != this->m_doc->footnotesMap().cend()) {
                 this->onFootnote(fit->second.get());
 
                 if (!hrefForRefBackImage.isEmpty()) {
