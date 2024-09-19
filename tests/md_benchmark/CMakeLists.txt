@@ -18,8 +18,7 @@ set( CMARK_TESTS OFF CACHE INTERNAL "" FORCE )
 set( CMARK_SHARED OFF CACHE INTERNAL "" FORCE )
 add_subdirectory( 3rdparty/cmark-gfm )
 
-include_directories( 3rdparty/md4c/src
-	3rdparty/cmark-gfm/src
+include_directories( 3rdparty/cmark-gfm/src
 	3rdparty/cmark-gfm/extensions
 	${CMAKE_CURRENT_BINARY_DIR}/3rdparty/cmark-gfm/src
 	${CMAKE_CURRENT_BINARY_DIR}/3rdparty/cmark-gfm/extensions
@@ -37,5 +36,5 @@ file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/../manual/complex.md
 	DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../../bin/tests/manual )
 
 target_link_libraries( md_benchmark libcmark-gfm-extensions_static
-	libcmark-gfm_static md4c Qt::Core ICU::data ICU::dt ICU::uc ICU::i18n ICU::io ICU::in ICU::tu
+	libcmark-gfm_static Qt::Core ICU::data ICU::dt ICU::uc ICU::i18n ICU::io ICU::in ICU::tu
 	uriparser::uriparser )
