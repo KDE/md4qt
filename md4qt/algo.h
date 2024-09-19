@@ -3,8 +3,8 @@
     SPDX-License-Identifier: MIT
 */
 
-#ifndef MD4QT_MD_ALGO_HPP_INCLUDED
-#define MD4QT_MD_ALGO_HPP_INCLUDED
+#ifndef MD4QT_MD_ALGO_H_INCLUDED
+#define MD4QT_MD_ALGO_H_INCLUDED
 
 // md4qt include.
 #include "traits.h"
@@ -357,4 +357,4 @@ inline void forEach(
 
 } /* namespace MD */
 
-#endif // MD4QT_MD_ALGO_HPP_INCLUDED
+#endif // MD4QT_MD_ALGO_H_INCLUDED

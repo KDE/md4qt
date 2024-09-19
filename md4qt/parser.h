@@ -682,9 +682,9 @@ inline typename Trait::String replaceEntity(const typename Trait::String &s)
                     }
                 }
             } else {
-                const auto it = c_entityMap<Trait>.find(en);
+                const auto it = s_entityMap<Trait>.find(en);
 
-                if (it != c_entityMap<Trait>.cend()) {
+                if (it != s_entityMap<Trait>.cend()) {
                     res.push_back(s.sliced(i, p1 - i));
                     i = p2 + 1;
                     res.push_back(Trait::utf16ToString(it->second));
