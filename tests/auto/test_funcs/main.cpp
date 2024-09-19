@@ -560,7 +560,7 @@ void makeText(MD::TextParsingOpts<TRAIT> &po,
     if (endStyle)
         t->closeStyles().push_back({opts, 0, 0, 0, 0});
 
-    po.rawTextData.push_back({TRAIT::latin1ToString("Text"), 0, line, false, false});
+    po.m_rawTextData.push_back({TRAIT::latin1ToString("Text"), 0, line, false, false});
 
     p->appendItem(t);
 }
@@ -620,12 +620,12 @@ void checkP(const std::string &d, std::shared_ptr<MD::Paragraph<TRAIT>> p)
 
 void checkT(const std::vector<int> &d, const MD::TextParsingOpts<TRAIT> &po)
 {
-    REQUIRE(d.size() == po.rawTextData.size());
+    REQUIRE(d.size() == po.m_rawTextData.size());
 
     long long int i = 0;
 
     for (const auto &l : d) {
-        REQUIRE(po.rawTextData.at(i).str.length() == 4 * l);
+        REQUIRE(po.m_rawTextData.at(i).m_str.length() == 4 * l);
 
         ++i;
     }
@@ -863,11 +863,11 @@ TEST_CASE("semi_optimization")
 TEST_CASE("virgin_substr")
 {
     MD::MdBlock<TRAIT> data;
-    data.data.push_back({TRAIT::latin1ToString("**text**"), {1}});
-    data.data.push_back({TRAIT::latin1ToString("__text__"), {2}});
-    data.data.push_back({TRAIT::latin1ToString("text"), {3}});
-    data.data.push_back({TRAIT::latin1ToString("~~text~~"), {4}});
-    data.data.push_back({TRAIT::latin1ToString("~text*"), {5}});
+    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {1}});
+    data.m_data.push_back({TRAIT::latin1ToString("__text__"), {2}});
+    data.m_data.push_back({TRAIT::latin1ToString("text"), {3}});
+    data.m_data.push_back({TRAIT::latin1ToString("~~text~~"), {4}});
+    data.m_data.push_back({TRAIT::latin1ToString("~text*"), {5}});
 
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 0, 1, 0}).isEmpty());
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 1, 1, 1}) == TRAIT::latin1ToString("**"));
@@ -877,7 +877,7 @@ TEST_CASE("virgin_substr")
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 3, 0, 10}) == TRAIT::latin1ToString("text\n~~text~~\n~text*"));
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 0, 100, 100}) == TRAIT::latin1ToString("**text**\n__text__\ntext\n~~text~~\n~text*"));
 
-    data.data[1].first.remove(0, 2);
+    data.m_data[1].first.remove(0, 2);
 
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 1, 1, 1}) == TRAIT::latin1ToString("**"));
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 1, 10, 1}) == TRAIT::latin1ToString("**text**"));
@@ -900,9 +900,9 @@ TEST_CASE("virgin_substr")
 TEST_CASE("local_pos_from_virgin")
 {
     MD::MdBlock<TRAIT> data;
-    data.data.push_back({TRAIT::latin1ToString("**text**"), {1}});
-    data.data.push_back({TRAIT::latin1ToString("**text**"), {2}});
-    data.data.push_back({TRAIT::latin1ToString("**text**"), {3}});
+    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {1}});
+    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {2}});
+    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {3}});
 
     using pair = std::pair<long long int, long long int>;
 
@@ -912,7 +912,7 @@ TEST_CASE("local_pos_from_virgin")
     REQUIRE(MD::localPosFromVirgin<TRAIT>(data, 1, 1) == pair{1, 0});
     REQUIRE(MD::localPosFromVirgin<TRAIT>(data, 0, 4) == pair{-1, -1});
 
-    data.data[0].first.remove(0, 2);
+    data.m_data[0].first.remove(0, 2);
 
     REQUIRE(MD::localPosFromVirgin<TRAIT>(data, 0, 1) == pair{-1, -1});
     REQUIRE(MD::localPosFromVirgin<TRAIT>(data, 2, 1) == pair{0, 0});
@@ -927,7 +927,7 @@ TEST_CASE("local_pos_from_virgin")
 
         REQUIRE(MD::localPosFromVirgin<TRAIT>(dd, 0, 0) == pair{-1, -1});
 
-        dd.data.push_back({TRAIT::latin1ToString(""), {1}});
+        dd.m_data.push_back({TRAIT::latin1ToString(""), {1}});
 
         REQUIRE(MD::localPosFromVirgin<TRAIT>(dd, 0, 1) == pair{-1, -1});
     }

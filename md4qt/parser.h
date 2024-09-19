@@ -42,61 +42,73 @@
 namespace MD
 {
 
-static const char *c_startComment = "<!--";
+static const char *s_startComment = "<!--";
 
-inline bool indentInList(const std::vector<long long int> *indents, long long int indent, bool codeIndentedBySpaces)
+inline bool
+indentInList(const std::vector<long long int> *indents,
+             long long int indent,
+             bool codeIndentedBySpaces)
 {
-    if (indents && !indents->empty())
+    if (indents && !indents->empty()) {
         return (std::find_if(indents->cbegin(),
                              indents->cend(),
                              [indent, codeIndentedBySpaces](const auto &v) {
-                                 return (indent >= v && (codeIndentedBySpaces ? true : indent <= v + 3));
+                                 return (indent >= v && (codeIndentedBySpaces ?
+                                         true : indent <= v + 3));
                              })
                 != indents->cend());
-    else
+    } else {
         return false;
+    }
 }
 
 // Skip spaces in line from pos \p i.
 template<class Trait>
-inline long long int skipSpaces(long long int i, const typename Trait::String &line)
+inline long long int
+skipSpaces(long long int i, const typename Trait::String &line)
 {
     const auto length = line.length();
 
-    while (i < length && line[i].isSpace())
+    while (i < length && line[i].isSpace()) {
         ++i;
+    }
 
     return i;
 } // skipSpaces
 
 // Returns last non-space character position.
 template<class Trait>
-inline long long int lastNonSpacePos(const typename Trait::String &line)
+inline long long int
+lastNonSpacePos(const typename Trait::String &line)
 {
     long long int i = line.length() - 1;
 
-    while (i > 0 && line[i].isSpace())
+    while (i > 0 && line[i].isSpace()) {
         --i;
+    }
 
     return i;
 } // lastNonSpacePos
 
 //! \return Starting sequence of the same characters.
 template<class Trait>
-inline typename Trait::String startSequence(const typename Trait::String &line)
+inline typename Trait::String
+startSequence(const typename Trait::String &line)
 {
     auto pos = skipSpaces<Trait>(0, line);
 
-    if (pos >= line.length())
+    if (pos >= line.length()) {
         return {};
+    }
 
     const auto sch = (pos < line.length() ? line[pos] : typename Trait::Char());
     const auto start = pos;
 
     ++pos;
 
-    while (pos < line.length() && line[pos] == sch)
+    while (pos < line.length() && line[pos] == sch) {
         ++pos;
+    }
 
     return line.sliced(start, pos - start);
 }
@@ -104,44 +116,55 @@ inline typename Trait::String startSequence(const typename Trait::String &line)
 //! \return Is string an ordered list.
 template<class Trait>
 inline bool
-isOrderedList(const typename Trait::String &s, int *num = nullptr, int *len = nullptr, typename Trait::Char *delim = nullptr, bool *isFirstLineEmpty = nullptr)
+isOrderedList(const typename Trait::String &s,
+              int *num = nullptr,
+              int *len = nullptr,
+              typename Trait::Char *delim = nullptr,
+              bool *isFirstLineEmpty = nullptr)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
     long long int dp = p;
 
     for (; p < s.size(); ++p) {
-        if (!s[p].isDigit())
+        if (!s[p].isDigit()) {
             break;
+        }
     }
 
     if (dp != p && p < s.size()) {
         const auto digits = s.sliced(dp, p - dp);
 
-        if (digits.size() > 9)
+        if (digits.size() > 9) {
             return false;
+        }
 
         const auto i = digits.toInt();
 
-        if (num)
+        if (num) {
             *num = i;
+        }
 
-        if (len)
+        if (len) {
             *len = p - dp;
+        }
 
         if (s[p] == Trait::latin1ToChar('.') || s[p] == Trait::latin1ToChar(')')) {
-            if (delim)
+            if (delim) {
                 *delim = s[p];
+            }
 
             ++p;
 
             long long int tmp = skipSpaces<Trait>(p, s);
 
-            if (isFirstLineEmpty)
+            if (isFirstLineEmpty) {
                 *isFirstLineEmpty = (tmp == s.size());
+            }
 
-            if ((p < s.size() && s[p] == Trait::latin1ToChar(' ')) || p == s.size())
+            if ((p < s.size() && s[p] == Trait::latin1ToChar(' ')) || p == s.size()) {
                 return true;
+            }
         }
     }
 
@@ -155,21 +178,23 @@ isOrderedList(const typename Trait::String &s, int *num = nullptr, int *len = nu
 //! Internal structure.
 template<class Trait>
 struct RawHtmlBlock {
-    std::shared_ptr<RawHtml<Trait>> html = {};
-    std::shared_ptr<Block<Trait>> parent = {};
-    std::shared_ptr<Block<Trait>> topParent = {};
+    std::shared_ptr<RawHtml<Trait>> m_html = {};
+    std::shared_ptr<Block<Trait>> m_parent = {};
+    std::shared_ptr<Block<Trait>> m_topParent = {};
     using SequenceOfBlock = std::vector<std::pair<std::shared_ptr<Block<Trait>>, long long int>>;
-    SequenceOfBlock blocks = {};
-    std::map<std::shared_ptr<Block<Trait>>, SequenceOfBlock> toAdjustLastPos = {};
-    int htmlBlockType = -1;
-    bool continueHtml = false;
-    bool onLine = false;
+    SequenceOfBlock m_blocks = {};
+    std::map<std::shared_ptr<Block<Trait>>, SequenceOfBlock> m_toAdjustLastPos = {};
+    int m_htmlBlockType = -1;
+    bool m_continueHtml = false;
+    bool m_onLine = false;
 
-    std::shared_ptr<Block<Trait>> findParent(long long int indent) const
+    std::shared_ptr<Block<Trait>>
+    findParent(long long int indent) const
     {
-        for (auto it = blocks.crbegin(), last = blocks.crend(); it != last; ++it) {
-            if (indent >= it->second)
+        for (auto it = m_blocks.crbegin(), last = m_blocks.crend(); it != last; ++it) {
+            if (indent >= it->second) {
                 return it->first;
+            }
         }
 
         return nullptr;
@@ -179,11 +204,11 @@ struct RawHtmlBlock {
 template<class Trait>
 inline void resetHtmlTag(RawHtmlBlock<Trait> &html)
 {
-    html.html.reset();
-    html.parent.reset();
-    html.htmlBlockType = -1;
-    html.continueHtml = false;
-    html.onLine = false;
+    html.m_html.reset();
+    html.m_parent.reset();
+    html.m_htmlBlockType = -1;
+    html.m_continueHtml = false;
+    html.m_onLine = false;
 }
 
 //
@@ -192,11 +217,11 @@ inline void resetHtmlTag(RawHtmlBlock<Trait> &html)
 
 //! Internal structure.
 struct MdLineData {
-    long long int lineNumber = -1;
+    long long int m_lineNumber = -1;
     using CommentData = std::pair<char, bool>;
     using CommentDataMap = std::map<long long int, CommentData>;
     // std::pair< closed, valid >
-    CommentDataMap htmlCommentData = {};
+    CommentDataMap m_htmlCommentData = {};
 }; // struct MdLineData
 
 //
@@ -209,9 +234,9 @@ struct MdBlock {
     using Line = std::pair<typename Trait::InternalString, MdLineData>;
     using Data = typename Trait::template Vector<Line>;
 
-    Data data;
-    long long int emptyLinesBefore = 0;
-    bool emptyLineAfter = true;
+    Data m_data;
+    long long int m_emptyLinesBefore = 0;
+    bool m_emptyLineAfter = true;
 }; // struct MdBlock
 
 //
@@ -239,7 +264,7 @@ public:
     }
     long long int currentLineNumber() const
     {
-        return (m_pos < size() ? m_stream.at(m_pos).second.lineNumber : size());
+        return (m_pos < size() ? m_stream.at(m_pos).second.m_lineNumber : size());
     }
     typename Trait::InternalString lineAt(long long int pos)
     {
@@ -255,24 +280,31 @@ private:
     long long int m_pos;
 }; // class StringListStream
 
-inline bool checkStack(std::vector<std::pair<std::pair<long long int, bool>, int>> &s, const std::pair<std::pair<long long int, bool>, int> &v, size_t idx)
+inline bool
+checkStack(std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+           const std::pair<std::pair<long long int, bool>, int> &v,
+           size_t idx)
 {
     int value = -v.first.first;
 
     for (long long int i = s.size() - 1; i >= 0; --i) {
         if (s[i].second == v.second && s[i].first.first > 0) {
             // Check for rule of multiplies of 3. Look at CommonMark 0.30 example 411.
-            if (!((s[i].first.second || v.first.second) && (s[i].first.first + value) % 3 == 0 && !(s[i].first.first % 3 == 0 && value % 3 == 0))) {
+            if (!((s[i].first.second || v.first.second) &&
+                (s[i].first.first + value) % 3 == 0 &&
+                !(s[i].first.first % 3 == 0 && value % 3 == 0))) {
                 if (s[i].first.first - value <= 0) {
-                    if (i == (long long int)idx)
+                    if (i == (long long int)idx) {
                         return true;
+                    }
 
                     value -= s[i].first.first;
 
                     s.erase(s.cbegin() + i, s.cend());
 
-                    if (value == 0)
+                    if (value == 0) {
                         break;
+                    }
                 } else {
                     s[i].first.first -= value;
 
@@ -283,8 +315,9 @@ inline bool checkStack(std::vector<std::pair<std::pair<long long int, bool>, int
             }
         }
 
-        if (i == 0)
+        if (i == 0) {
             break;
+        }
     }
 
     return false;
@@ -292,50 +325,60 @@ inline bool checkStack(std::vector<std::pair<std::pair<long long int, bool>, int
 
 //! \return Is string a footnote?
 template<class Trait>
-inline bool isFootnote(const typename Trait::String &s)
+inline bool
+isFootnote(const typename Trait::String &s)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
-    if (s.size() - p < 5)
+    if (s.size() - p < 5) {
         return false;
+    }
 
-    if (s[p++] != Trait::latin1ToChar('['))
+    if (s[p++] != Trait::latin1ToChar('[')) {
         return false;
+    }
 
-    if (s[p++] != Trait::latin1ToChar('^'))
+    if (s[p++] != Trait::latin1ToChar('^')) {
         return false;
+    }
 
-    if (s[p] == Trait::latin1ToChar(']') || s[p].isSpace())
+    if (s[p] == Trait::latin1ToChar(']') || s[p].isSpace()) {
         return false;
+    }
 
     for (; p < s.size(); ++p) {
-        if (s[p] == Trait::latin1ToChar(']'))
+        if (s[p] == Trait::latin1ToChar(']')) {
             break;
-        else if (s[p].isSpace())
+        } else if (s[p].isSpace()) {
             return false;
+        }
     }
 
     ++p;
 
-    if (p < s.size() && s[p] == Trait::latin1ToChar(':'))
+    if (p < s.size() && s[p] == Trait::latin1ToChar(':')) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 //! \return Is string a code fences?
 template<class Trait>
-inline bool isCodeFences(const typename Trait::String &s, bool closing = false)
+inline bool
+isCodeFences(const typename Trait::String &s, bool closing = false)
 {
     auto p = skipSpaces<Trait>(0, s);
 
-    if (p > 3 || p == s.length())
+    if (p > 3 || p == s.length()) {
         return false;
+    }
 
     const auto ch = s[p];
 
-    if (ch != Trait::latin1ToChar('~') && ch != Trait::latin1ToChar('`'))
+    if (ch != Trait::latin1ToChar('~') && ch != Trait::latin1ToChar('`')) {
         return false;
+    }
 
     bool space = false;
 
@@ -343,27 +386,32 @@ inline bool isCodeFences(const typename Trait::String &s, bool closing = false)
     ++p;
 
     for (; p < s.length(); ++p) {
-        if (s[p].isSpace())
+        if (s[p].isSpace()) {
             space = true;
-        else if (s[p] == ch) {
-            if (space && (closing ? true : ch == Trait::latin1ToChar('`')))
+        } else if (s[p] == ch) {
+            if (space && (closing ? true : ch == Trait::latin1ToChar('`'))) {
                 return false;
+            }
 
-            if (!space)
+            if (!space) {
                 ++c;
-        } else if (closing)
+            }
+        } else if (closing) {
             return false;
-        else
+        } else {
             break;
+        }
     }
 
-    if (c < 3)
+    if (c < 3) {
         return false;
+    }
 
     if (ch == Trait::latin1ToChar('`')) {
         for (; p < s.length(); ++p) {
-            if (s[p] == Trait::latin1ToChar('`'))
+            if (s[p] == Trait::latin1ToChar('`')) {
                 return false;
+            }
         }
     }
 
@@ -371,13 +419,17 @@ inline bool isCodeFences(const typename Trait::String &s, bool closing = false)
 }
 
 template<class Trait>
-inline typename Trait::String readEscapedSequence(long long int i, const typename Trait::String &str, long long int *endPos = nullptr)
+inline typename Trait::String
+readEscapedSequence(long long int i,
+                    const typename Trait::String &str,
+                    long long int *endPos = nullptr)
 {
     bool backslash = false;
     const auto start = i;
 
-    if (start >= str.length())
+    if (start >= str.length()) {
         return {};
+    }
 
     while (i < str.length()) {
         bool now = false;
@@ -385,26 +437,31 @@ inline typename Trait::String readEscapedSequence(long long int i, const typenam
         if (str[i] == Trait::latin1ToChar('\\') && !backslash) {
             backslash = true;
             now = true;
-        } else if (str[i].isSpace() && !backslash)
+        } else if (str[i].isSpace() && !backslash) {
             break;
+        }
 
-        if (!now)
+        if (!now) {
             backslash = false;
+        }
 
         ++i;
     }
 
-    if (endPos)
+    if (endPos) {
         *endPos = i - 1;
+    }
 
     return str.sliced(start, i - start);
 }
 
 template<class Trait>
-static const typename Trait::String c_canBeEscaped = Trait::latin1ToString("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
+static const typename Trait::String s_canBeEscaped =
+    Trait::latin1ToString("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
 
 template<class Trait>
-inline typename Trait::InternalString removeBackslashes(const typename Trait::InternalString &s)
+inline typename Trait::InternalString
+removeBackslashes(const typename Trait::InternalString &s)
 {
     typename Trait::InternalString r = s;
     bool backslash = false;
@@ -416,13 +473,14 @@ inline typename Trait::InternalString removeBackslashes(const typename Trait::In
         if (s[i] == Trait::latin1ToChar('\\') && !backslash && i != s.length() - 1) {
             backslash = true;
             now = true;
-        } else if (c_canBeEscaped<Trait>.contains(s[i]) && backslash) {
+        } else if (s_canBeEscaped<Trait>.contains(s[i]) && backslash) {
             r.remove(i - extra - 1, 1);
             ++extra;
         }
 
-        if (!now)
+        if (!now) {
             backslash = false;
+        }
     }
 
     return r;
@@ -431,18 +489,24 @@ inline typename Trait::InternalString removeBackslashes(const typename Trait::In
 //! \return Is string a start of code?
 template<class Trait>
 inline bool
-isStartOfCode(const typename Trait::String &str, typename Trait::String *syntax = nullptr, WithPosition *delim = nullptr, WithPosition *syntaxPos = nullptr)
+isStartOfCode(const typename Trait::String &str,
+              typename Trait::String *syntax = nullptr,
+              WithPosition *delim = nullptr,
+              WithPosition *syntaxPos = nullptr)
 {
     long long int p = skipSpaces<Trait>(0, str);
 
-    if (delim)
+    if (delim) {
         delim->setStartColumn(p);
+    }
 
-    if (p > 3)
+    if (p > 3) {
         return false;
+    }
 
-    if (str.size() - p < 3)
+    if (str.size() - p < 3) {
         return false;
+    }
 
     const bool c96 = str[p] == Trait::latin1ToChar('`');
     const bool c126 = str[p] == Trait::latin1ToChar('~');
@@ -452,18 +516,21 @@ isStartOfCode(const typename Trait::String &str, typename Trait::String *syntax 
         long long int c = 1;
 
         while (p < str.length()) {
-            if (str[p] != (c96 ? Trait::latin1ToChar('`') : Trait::latin1ToChar('~')))
+            if (str[p] != (c96 ? Trait::latin1ToChar('`') : Trait::latin1ToChar('~'))) {
                 break;
+            }
 
             ++c;
             ++p;
         }
 
-        if (delim)
+        if (delim) {
             delim->setEndColumn(p - 1);
+        }
 
-        if (c < 3)
+        if (c < 3) {
             return false;
+        }
 
         if (syntax) {
             p = skipSpaces<Trait>(p, str);
@@ -487,83 +554,98 @@ isStartOfCode(const typename Trait::String &str, typename Trait::String *syntax 
 
 //! \return Is string a horizontal line?
 template<class Trait>
-inline bool isHorizontalLine(const typename Trait::String &s)
+inline bool
+isHorizontalLine(const typename Trait::String &s)
 {
-    if (s.size() < 3)
+    if (s.size() < 3) {
         return false;
+    }
 
     typename Trait::Char c;
 
-    if (s[0] == Trait::latin1ToChar('*'))
+    if (s[0] == Trait::latin1ToChar('*')) {
         c = Trait::latin1ToChar('*');
-    else if (s[0] == Trait::latin1ToChar('-'))
+    } else if (s[0] == Trait::latin1ToChar('-')) {
         c = Trait::latin1ToChar('-');
-    else if (s[0] == Trait::latin1ToChar('_'))
+    } else if (s[0] == Trait::latin1ToChar('_')) {
         c = Trait::latin1ToChar('_');
-    else
+    } else {
         return false;
+    }
 
     long long int p = 1;
     long long int count = 1;
 
     for (; p < s.size(); ++p) {
-        if (s[p] != c && !s[p].isSpace())
+        if (s[p] != c && !s[p].isSpace()) {
             break;
-        else if (s[p] == c)
+        } else if (s[p] == c) {
             ++count;
+        }
     }
 
-    if (count < 3)
+    if (count < 3) {
         return false;
+    }
 
-    if (p == s.size())
+    if (p == s.size()) {
         return true;
+    }
 
     return false;
 }
 
 //! \return Is string a column alignment?
 template<class Trait>
-inline bool isColumnAlignment(const typename Trait::String &s)
+inline bool
+isColumnAlignment(const typename Trait::String &s)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
-    static const typename Trait::String c_legitime = Trait::latin1ToString(":-");
+    static const typename Trait::String s_legitime = Trait::latin1ToString(":-");
 
-    if (!c_legitime.contains(s[p]))
+    if (!s_legitime.contains(s[p])) {
         return false;
-
-    if (s[p] == Trait::latin1ToChar(':'))
-        ++p;
-
-    for (; p < s.size(); ++p) {
-        if (s[p] != Trait::latin1ToChar('-'))
-            break;
     }
 
-    if (p == s.size())
-        return true;
+    if (s[p] == Trait::latin1ToChar(':')) {
+        ++p;
+    }
 
-    if (s[p] != Trait::latin1ToChar(':') && !s[p].isSpace())
+    for (; p < s.size(); ++p) {
+        if (s[p] != Trait::latin1ToChar('-')) {
+            break;
+        }
+    }
+
+    if (p == s.size()) {
+        return true;
+    }
+
+    if (s[p] != Trait::latin1ToChar(':') && !s[p].isSpace()) {
         return false;
+    }
 
     ++p;
 
     for (; p < s.size(); ++p) {
-        if (!s[p].isSpace())
+        if (!s[p].isSpace()) {
             return false;
+        }
     }
 
     return true;
 }
 
 template<class Trait>
-typename Trait::StringList splitString(const typename Trait::String &str, const typename Trait::Char &ch);
+typename Trait::StringList
+splitString(const typename Trait::String &str, const typename Trait::Char &ch);
 
 #ifdef MD4QT_ICU_STL_SUPPORT
 
 template<>
-inline typename UnicodeStringTrait::StringList splitString<UnicodeStringTrait>(const UnicodeString &str, const UnicodeChar &ch)
+inline typename UnicodeStringTrait::StringList
+splitString<UnicodeStringTrait>(const UnicodeString &str, const UnicodeChar &ch)
 {
     return str.split(ch);
 }
@@ -573,7 +655,8 @@ inline typename UnicodeStringTrait::StringList splitString<UnicodeStringTrait>(c
 #ifdef MD4QT_QT_SUPPORT
 
 template<>
-inline typename QStringTrait::StringList splitString<QStringTrait>(const QString &str, const QChar &ch)
+inline typename QStringTrait::StringList
+splitString<QStringTrait>(const QString &str, const QChar &ch)
 {
     return str.split(ch, Qt::SkipEmptyParts);
 }
@@ -582,13 +665,15 @@ inline typename QStringTrait::StringList splitString<QStringTrait>(const QString
 
 //! \return Number of columns?
 template<class Trait>
-inline int isTableAlignment(const typename Trait::String &s)
+inline int
+isTableAlignment(const typename Trait::String &s)
 {
     const auto columns = splitString<Trait>(s.simplified(), Trait::latin1ToChar('|'));
 
     for (const auto &c : columns) {
-        if (!isColumnAlignment<Trait>(c))
+        if (!isColumnAlignment<Trait>(c)) {
             return 0;
+        }
     }
 
     return columns.size();
@@ -596,35 +681,40 @@ inline int isTableAlignment(const typename Trait::String &s)
 
 //! \return Is given string a HTML comment.
 template<class Trait>
-inline bool isHtmlComment(const typename Trait::String &s)
+inline bool
+isHtmlComment(const typename Trait::String &s)
 {
     auto c = s;
 
-    if (s.startsWith(Trait::latin1ToString(c_startComment)))
+    if (s.startsWith(Trait::latin1ToString(s_startComment))) {
         c.remove(0, 4);
-    else
+    } else {
         return false;
+    }
 
     long long int p = -1;
     bool endFound = false;
 
     while ((p = c.indexOf(Trait::latin1ToString("--"), p + 1)) > -1) {
         if (c.size() > p + 2 && c[p + 2] == Trait::latin1ToChar('>')) {
-            if (!endFound)
+            if (!endFound) {
                 endFound = true;
-            else
+            } else {
                 return false;
-        } else if (p - 2 >= 0 && c.sliced(p - 2, 4) == Trait::latin1ToString("<!--"))
+            }
+        } else if (p - 2 >= 0 && c.sliced(p - 2, 4) == Trait::latin1ToString("<!--")) {
             return false;
-        else if (c.size() > p + 3 && c.sliced(p, 4) == Trait::latin1ToString("--!>"))
+        } else if (c.size() > p + 3 && c.sliced(p, 4) == Trait::latin1ToString("--!>")) {
             return false;
+        }
     }
 
     return endFound;
 }
 
 template<class Trait>
-inline typename Trait::String replaceEntity(const typename Trait::String &s)
+inline typename Trait::String
+replaceEntity(const typename Trait::String &s)
 {
     long long int p1 = 0;
 
@@ -656,10 +746,11 @@ inline typename Trait::String replaceEntity(const typename Trait::String &s)
                             res.push_back(s.sliced(i, p1 - i));
                             i = p2 + 1;
 
-                            if (c)
+                            if (c) {
                                 Trait::appendUcs4(res, c);
-                            else
+                            } else {
                                 res.push_back(typename Trait::Char(0xFFFD));
+                            }
                         }
                     }
                 } else {
@@ -674,10 +765,11 @@ inline typename Trait::String replaceEntity(const typename Trait::String &s)
                             res.push_back(s.sliced(i, p1 - i));
                             i = p2 + 1;
 
-                            if (c)
+                            if (c) {
                                 Trait::appendUcs4(res, c);
-                            else
+                            } else {
                                 res.push_back(typename Trait::Char(0xFFFD));
+                            }
                         }
                     }
                 }
@@ -690,8 +782,9 @@ inline typename Trait::String replaceEntity(const typename Trait::String &s)
                     res.push_back(Trait::utf16ToString(it->second));
                 }
             }
-        } else
+        } else {
             break;
+        }
 
         p1 = p2 + 1;
     }
@@ -702,12 +795,14 @@ inline typename Trait::String replaceEntity(const typename Trait::String &s)
 }
 
 template<class Trait>
-inline typename MdBlock<Trait>::Data removeBackslashes(const typename MdBlock<Trait>::Data &d)
+inline typename MdBlock<Trait>::Data
+removeBackslashes(const typename MdBlock<Trait>::Data &d)
 {
     auto tmp = d;
 
-    for (auto &line : tmp)
+    for (auto &line : tmp) {
         line.first = removeBackslashes<Trait>(line.first);
+    }
 
     return tmp;
 }
@@ -729,7 +824,11 @@ enum class OptimizeParagraphType {
 // TextPlugin
 //
 
-enum TextPlugin : int { UnknownPluginID = 0, GitHubAutoLinkPluginID = 1, UserDefinedPluginID = 255 }; // enum TextPlugin
+enum TextPlugin : int {
+    UnknownPluginID = 0,
+    GitHubAutoLinkPluginID = 1,
+    UserDefinedPluginID = 255
+}; // enum TextPlugin
 
 //
 // Style
@@ -737,7 +836,8 @@ enum TextPlugin : int { UnknownPluginID = 0, GitHubAutoLinkPluginID = 1, UserDef
 
 enum class Style { Italic1, Italic2, Bold1, Bold2, Strikethrough, Unknown };
 
-inline TextOption styleToTextOption(Style s)
+inline TextOption
+styleToTextOption(Style s)
 {
     switch (s) {
     case Style::Italic1:
@@ -765,14 +865,18 @@ struct TextParsingOpts;
 
 //! Functor type for text plugin.
 template<class Trait>
-using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>, TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
+using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
+                                          TextParsingOpts<Trait> &,
+                                          const typename Trait::StringList &)>;
 
 //
 // TextPluginsMap
 //
 
 template<class Trait>
-using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>, bool, typename Trait::StringList>>;
+using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
+                                                bool,
+                                                typename Trait::StringList>>;
 
 //
 // TextParsingOpts
@@ -780,53 +884,56 @@ using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>, bool, typ
 
 template<class Trait>
 struct TextParsingOpts {
-    MdBlock<Trait> &fr;
-    std::shared_ptr<Block<Trait>> parent;
-    std::shared_ptr<RawHtml<Trait>> tmpHtml;
-    std::shared_ptr<Document<Trait>> doc;
-    typename Trait::StringList &linksToParse;
-    typename Trait::String workingPath;
-    typename Trait::String fileName;
-    bool collectRefLinks;
-    bool ignoreLineBreak;
-    RawHtmlBlock<Trait> &html;
-    const TextPluginsMap<Trait> &textPlugins;
-    std::shared_ptr<Text<Trait>> lastText = {};
-    bool isSpaceBefore = false;
-    bool wasRefLink = false;
-    bool checkLineOnNewType = false;
-    bool firstInParagraph = true;
+    MdBlock<Trait> &m_fr;
+    std::shared_ptr<Block<Trait>> m_parent;
+    std::shared_ptr<RawHtml<Trait>> m_tmpHtml;
+    std::shared_ptr<Document<Trait>> m_doc;
+    typename Trait::StringList &m_linksToParse;
+    typename Trait::String m_workingPath;
+    typename Trait::String m_fileName;
+    bool m_collectRefLinks;
+    bool m_ignoreLineBreak;
+    RawHtmlBlock<Trait> &m_html;
+    const TextPluginsMap<Trait> &m_textPlugins;
+    std::shared_ptr<Text<Trait>> m_lastText = {};
+    bool m_isSpaceBefore = false;
+    bool m_wasRefLink = false;
+    bool m_checkLineOnNewType = false;
+    bool m_firstInParagraph = true;
 
     struct TextData {
-        typename Trait::String str;
-        long long int pos = -1;
-        long long int line = -1;
-        bool spaceBefore = false;
-        bool spaceAfter = false;
+        typename Trait::String m_str;
+        long long int m_pos = -1;
+        long long int m_line = -1;
+        bool m_spaceBefore = false;
+        bool m_spaceAfter = false;
     };
 
-    std::vector<TextData> rawTextData = {};
+    std::vector<TextData> m_rawTextData = {};
 
-    inline void concatenateAuxText(long long int start, long long int end)
+    inline void
+    concatenateAuxText(long long int start, long long int end)
     {
         if (start < end && (end - start > 1)) {
-            TextData d = rawTextData[start];
+            TextData d = m_rawTextData[start];
 
-            for (auto i = start + 1; i < end; ++i)
-                d.str += rawTextData[i].str;
+            for (auto i = start + 1; i < end; ++i) {
+                d.m_str += m_rawTextData[i].m_str;
+            }
 
-            rawTextData.erase(rawTextData.cbegin() + start, rawTextData.cbegin() + end);
-            rawTextData.insert(rawTextData.cbegin() + start, d);
+            m_rawTextData.erase(m_rawTextData.cbegin() + start, m_rawTextData.cbegin() + end);
+            m_rawTextData.insert(m_rawTextData.cbegin() + start, d);
         }
     }
 
     enum class Detected { Nothing = 0, Table = 1, HTML = 2, List = 3, Code = 4 }; // enum class Detected
 
-    Detected detected = Detected::Nothing;
+    Detected m_detected = Detected::Nothing;
 
-    inline bool shouldStopParsing() const
+    inline bool
+    shouldStopParsing() const
     {
-        switch (detected) {
+        switch (m_detected) {
         case Detected::Table:
         case Detected::List:
         case Detected::Code:
@@ -837,16 +944,16 @@ struct TextParsingOpts {
         }
     }
 
-    long long int line = 0;
-    long long int pos = 0;
-    long long int startTableLine = -1;
-    long long int lastTextLine = -1;
-    long long int lastTextPos = -1;
-    int columnsCount = -1;
-    int opts = TextWithoutFormat;
-    std::vector<std::pair<Style, long long int>> styles = {};
-    typename ItemWithOpts<Trait>::Styles openStyles = {};
-    std::shared_ptr<ItemWithOpts<Trait>> lastItemWithStyle = nullptr;
+    long long int m_line = 0;
+    long long int m_pos = 0;
+    long long int m_startTableLine = -1;
+    long long int m_lastTextLine = -1;
+    long long int m_lastTextPos = -1;
+    int m_columnsCount = -1;
+    int m_opts = TextWithoutFormat;
+    std::vector<std::pair<Style, long long int>> m_styles = {};
+    typename ItemWithOpts<Trait>::Styles m_openStyles = {};
+    std::shared_ptr<ItemWithOpts<Trait>> m_lastItemWithStyle = nullptr;
 }; // struct TextParsingOpts
 
 //
@@ -855,51 +962,61 @@ struct TextParsingOpts {
 
 //! \return Substring from fragment with given virgin positions.
 template<class Trait>
-inline typename Trait::String virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
+inline typename Trait::String
+virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
 {
-    if (fr.data.empty())
+    if (fr.m_data.empty()) {
         return {};
+    }
 
-    long long int startLine = virginPos.startLine() < fr.data.at(0).second.lineNumber ? (virginPos.endLine() < fr.data.at(0).second.lineNumber ? -1 : 0)
-                                                                                      : virginPos.startLine() - fr.data.at(0).second.lineNumber;
+    long long int startLine = virginPos.startLine() < fr.m_data.at(0).second.m_lineNumber ?
+        (virginPos.endLine() < fr.m_data.at(0).second.m_lineNumber ? -1 : 0) :
+        virginPos.startLine() - fr.m_data.at(0).second.m_lineNumber;
 
-    if (startLine >= static_cast<long long int>(fr.data.size()) || startLine < 0)
+    if (startLine >= static_cast<long long int>(fr.m_data.size()) || startLine < 0) {
         return {};
+    }
 
-    auto spos = virginPos.startColumn() - fr.data.at(startLine).first.virginPos(0);
+    auto spos = virginPos.startColumn() - fr.m_data.at(startLine).first.virginPos(0);
 
-    if (spos < 0)
+    if (spos < 0) {
         spos = 0;
+    }
 
     long long int epos = 0;
-    long long int linesCount = virginPos.endLine() - virginPos.startLine()
-        - (virginPos.startLine() < fr.data.at(0).second.lineNumber ? fr.data.at(0).second.lineNumber - virginPos.startLine() : 0);
+    long long int linesCount = virginPos.endLine() - virginPos.startLine() -
+        (virginPos.startLine() < fr.m_data.at(0).second.m_lineNumber ?
+            fr.m_data.at(0).second.m_lineNumber - virginPos.startLine() : 0);
 
-    if (startLine + linesCount > static_cast<long long int>(fr.data.size())) {
-        linesCount = fr.data.size() - startLine - 1;
-        epos = fr.data.back().first.length();
-    } else
-        epos = virginPos.endColumn() - fr.data.at(linesCount + startLine).first.virginPos(0) + 1;
+    if (startLine + linesCount > static_cast<long long int>(fr.m_data.size())) {
+        linesCount = fr.m_data.size() - startLine - 1;
+        epos = fr.m_data.back().first.length();
+    } else {
+        epos = virginPos.endColumn() - fr.m_data.at(linesCount + startLine).first.virginPos(0) + 1;
+    }
 
-    if (epos < 0)
+    if (epos < 0) {
         epos = 0;
+    }
 
-    if (epos > fr.data.at(linesCount + startLine).first.length())
-        epos = fr.data.at(linesCount + startLine).first.length();
+    if (epos > fr.m_data.at(linesCount + startLine).first.length()) {
+        epos = fr.m_data.at(linesCount + startLine).first.length();
+    }
 
     typename Trait::String str =
-        (linesCount ? fr.data.at(startLine).first.sliced(spos).asString() : fr.data.at(startLine).first.sliced(spos, epos - spos).asString());
+        (linesCount ? fr.m_data.at(startLine).first.sliced(spos).asString() :
+            fr.m_data.at(startLine).first.sliced(spos, epos - spos).asString());
 
     long long int i = startLine + 1;
 
     for (; i < startLine + linesCount; ++i) {
         str.push_back(Trait::latin1ToString("\n"));
-        str.push_back(fr.data.at(i).first.asString());
+        str.push_back(fr.m_data.at(i).first.asString());
     }
 
     if (linesCount) {
         str.push_back(Trait::latin1ToString("\n"));
-        str.push_back(fr.data.at(i).first.sliced(0, epos).asString());
+        str.push_back(fr.m_data.at(i).first.sliced(0, epos).asString());
     }
 
     return str;
@@ -912,23 +1029,29 @@ inline typename Trait::String virginSubstr(const MdBlock<Trait> &fr, const WithP
 //! \return Local position ( { column, line } ) in fragment for given virgin position if exists.
 //! \return { -1, -1 } if there is no given position.
 template<class Trait>
-inline std::pair<long long int, long long int> localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine)
+inline std::pair<long long int, long long int>
+localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine)
 {
-    if (fr.data.empty())
+    if (fr.m_data.empty()) {
         return {-1, -1};
+    }
 
-    if (fr.data.front().second.lineNumber > virginLine || fr.data.back().second.lineNumber < virginLine)
+    if (fr.m_data.front().second.m_lineNumber > virginLine ||
+        fr.m_data.back().second.m_lineNumber < virginLine) {
         return {-1, -1};
+    }
 
-    auto line = virginLine - fr.data.front().second.lineNumber;
+    auto line = virginLine - fr.m_data.front().second.m_lineNumber;
 
-    if (fr.data.at(line).first.isEmpty())
+    if (fr.m_data.at(line).first.isEmpty()) {
         return {-1, -1};
+    }
 
-    const auto vzpos = fr.data.at(line).first.virginPos(0);
+    const auto vzpos = fr.m_data.at(line).first.virginPos(0);
 
-    if (vzpos > virginColumn || virginColumn > vzpos + fr.data.at(line).first.length() - 1)
+    if (vzpos > virginColumn || virginColumn > vzpos + fr.m_data.at(line).first.length() - 1) {
         return {-1, -1};
+    }
 
     return {virginColumn - vzpos, line};
 }
@@ -942,61 +1065,75 @@ inline std::pair<long long int, long long int> localPosFromVirgin(const MdBlock<
     "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 */
 template<class Trait>
-inline bool isEmail(const typename Trait::String &url)
+inline bool
+isEmail(const typename Trait::String &url)
 {
-    static const auto allowed = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789");
-    static const auto additional = Trait::latin1ToString(".!#$%&'*+/=?^_`{|}~-");
-    static const auto delim = Trait::latin1ToChar('-');
-    static const auto dog = Trait::latin1ToChar('@');
-    static const auto dot = Trait::latin1ToChar('.');
+    static const auto s_allowed = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789");
+    static const auto s_additional = Trait::latin1ToString(".!#$%&'*+/=?^_`{|}~-");
+    static const auto s_delim = Trait::latin1ToChar('-');
+    static const auto s_dog = Trait::latin1ToChar('@');
+    static const auto s_dot = Trait::latin1ToChar('.');
 
     const auto u = url.toLower();
 
     long long int i = (u.startsWith(Trait::latin1ToString("mailto:")) ? 7 : 0);
-    const auto dogPos = u.indexOf(dog, i);
+    const auto dogPos = u.indexOf(s_dog, i);
 
     if (dogPos != -1) {
-        if (i == dogPos)
+        if (i == dogPos) {
             return false;
+        }
 
-        for (; i < dogPos; ++i)
-            if (allowed.indexOf(u[i]) == -1 && additional.indexOf(u[i]) == -1)
+        for (; i < dogPos; ++i) {
+            if (s_allowed.indexOf(u[i]) == -1 && s_additional.indexOf(u[i]) == -1) {
                 return false;
+            }
+        }
 
         auto checkToDot = [&](long long int start, long long int dotPos) -> bool {
             static const long long int maxlen = 63;
 
-            if (dotPos - start > maxlen || start + 1 > dotPos || start >= u.length() || dotPos > u.length())
+            if (dotPos - start > maxlen ||
+                start + 1 > dotPos ||
+                start >= u.length() ||
+                dotPos > u.length()) {
                 return false;
+            }
 
-            if (u[start] == delim)
+            if (u[start] == s_delim) {
                 return false;
+            }
 
-            if (u[dotPos - 1] == delim)
+            if (u[dotPos - 1] == s_delim) {
                 return false;
+            }
 
-            for (; start < dotPos; ++start)
-                if (allowed.indexOf(u[start]) == -1 && u[start] != delim)
+            for (; start < dotPos; ++start) {
+                if (s_allowed.indexOf(u[start]) == -1 && u[start] != s_delim) {
                     return false;
+                }
+            }
 
             return true;
         };
 
-        long long int dotPos = u.indexOf(dot, dogPos + 1);
+        long long int dotPos = u.indexOf(s_dot, dogPos + 1);
 
         if (dotPos != -1) {
             i = dogPos + 1;
 
             while (dotPos != -1) {
-                if (!checkToDot(i, dotPos))
+                if (!checkToDot(i, dotPos)) {
                     return false;
+                }
 
                 i = dotPos + 1;
-                dotPos = u.indexOf(dot, i);
+                dotPos = u.indexOf(s_dot, i);
             }
 
-            if (!checkToDot(i, u.length()))
+            if (!checkToDot(i, u.length())) {
                 return false;
+            }
 
             return true;
         }
@@ -1006,15 +1143,18 @@ inline bool isEmail(const typename Trait::String &url)
 }
 
 template<class Trait>
-inline bool isValidUrl(const typename Trait::String &url);
+inline bool
+isValidUrl(const typename Trait::String &url);
 
 template<class Trait>
-inline bool isGitHubAutolink(const typename Trait::String &url);
+inline bool
+isGitHubAutolink(const typename Trait::String &url);
 
 #ifdef MD4QT_QT_SUPPORT
 
 template<>
-inline bool isValidUrl<QStringTrait>(const QString &url)
+inline bool
+isValidUrl<QStringTrait>(const QString &url)
 {
     const QUrl u(url, QUrl::StrictMode);
 
@@ -1022,13 +1162,15 @@ inline bool isValidUrl<QStringTrait>(const QString &url)
 }
 
 template<>
-inline bool isGitHubAutolink<QStringTrait>(const QString &url)
+inline bool
+isGitHubAutolink<QStringTrait>(const QString &url)
 {
     const QUrl u(url, QUrl::StrictMode);
 
     return (u.isValid()
             && ((!u.scheme().isEmpty() && !u.host().isEmpty())
-                || (url.startsWith(QStringLiteral("www.")) && url.length() >= 7 && url.indexOf(QLatin1Char('.'), 4) != -1)));
+                || (url.startsWith(QStringLiteral("www.")) && url.length() >= 7 &&
+                    url.indexOf(QLatin1Char('.'), 4) != -1)));
 }
 
 #endif
@@ -1036,7 +1178,8 @@ inline bool isGitHubAutolink<QStringTrait>(const QString &url)
 #ifdef MD4QT_ICU_STL_SUPPORT
 
 template<>
-inline bool isValidUrl<UnicodeStringTrait>(const UnicodeString &url)
+inline bool
+isValidUrl<UnicodeStringTrait>(const UnicodeString &url)
 {
     const UrlUri u(url);
 
@@ -1044,48 +1187,57 @@ inline bool isValidUrl<UnicodeStringTrait>(const UnicodeString &url)
 }
 
 template<>
-inline bool isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
+inline bool
+isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
 {
     const UrlUri u(url);
 
     return (u.isValid()
             && ((!u.scheme().isEmpty() && !u.host().isEmpty())
-                || (url.startsWith(UnicodeString("www.")) && url.length() >= 7 && url.indexOf(UnicodeChar('.'), 4) != -1)));
+                || (url.startsWith(UnicodeString("www.")) && url.length() >= 7 &&
+                    url.indexOf(UnicodeChar('.'), 4) != -1)));
 }
 
 #endif
 
 template<class Trait>
-inline long long int processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p, TextParsingOpts<Trait> &po, long long int idx)
+inline long long int
+processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
+                               TextParsingOpts<Trait> &po,
+                               long long int idx)
 {
-    if (idx < 0 || idx >= (long long int)po.rawTextData.size())
+    if (idx < 0 || idx >= (long long int)po.m_rawTextData.size()) {
         return idx;
+    }
 
-    static const auto delims = Trait::latin1ToString("*_~()<>");
-    auto s = po.rawTextData[idx];
+    static const auto s_delims = Trait::latin1ToString("*_~()<>");
+    auto s = po.m_rawTextData[idx];
     bool first = true;
     long long int j = 0;
     auto end = typename Trait::Char(0x00);
     bool skipSpace = true;
     long long int ret = idx;
 
-    while (s.str.length()) {
+    while (s.m_str.length()) {
         long long int i = 0;
         end = typename Trait::Char(0x00);
 
-        for (; i < s.str.length(); ++i) {
+        for (; i < s.m_str.length(); ++i) {
             if (first) {
-                if (s.str[i] == Trait::latin1ToChar('('))
+                if (s.m_str[i] == Trait::latin1ToChar('(')) {
                     end = Trait::latin1ToChar(')');
+                }
 
-                if (delims.indexOf(s.str[i]) == -1 && !s.str[i].isSpace()) {
+                if (s_delims.indexOf(s.m_str[i]) == -1 && !s.m_str[i].isSpace()) {
                     first = false;
                     j = i;
                 }
             } else {
-                if (s.str[i].isSpace() || i == s.str.length() - 1 || s.str[i] == end) {
-                    auto tmp = s.str.sliced(j, i - j + (i == s.str.length() - 1 && s.str[i] != end && !s.str[i].isSpace() ? 1 : 0));
-                    skipSpace = s.str[i].isSpace();
+                if (s.m_str[i].isSpace() || i == s.m_str.length() - 1 || s.m_str[i] == end) {
+                    auto tmp = s.m_str.sliced(j, i - j +
+                        (i == s.m_str.length() - 1 && s.m_str[i] != end && !s.m_str[i].isSpace() ?
+                            1 : 0));
+                    skipSpace = s.m_str[i].isSpace();
 
                     const auto email = isEmail<Trait>(tmp);
 
@@ -1096,76 +1248,82 @@ inline long long int processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Tr
                             typename ItemWithOpts<Trait>::Styles openStyles, closeStyles;
                             const auto opts = std::static_pointer_cast<Text<Trait>>(p->items().at(ti))->opts();
 
-                            if (j == 0 || s.str.sliced(0, j).simplified().isEmpty()) {
+                            if (j == 0 || s.m_str.sliced(0, j).simplified().isEmpty()) {
                                 openStyles = std::static_pointer_cast<ItemWithOpts<Trait>>(p->items().at(ti))->openStyles();
                                 closeStyles = std::static_pointer_cast<ItemWithOpts<Trait>>(p->items().at(ti))->closeStyles();
                                 p->removeItemAt(ti);
-                                po.rawTextData.erase(po.rawTextData.cbegin() + idx);
+                                po.m_rawTextData.erase(po.m_rawTextData.cbegin() + idx);
                                 --ret;
                             } else {
-                                const auto tmp = s.str.sliced(0, j);
+                                const auto tmp = s.m_str.sliced(0, j);
 
                                 auto t = std::static_pointer_cast<Text<Trait>>(p->items().at(ti));
-                                t->setEndColumn(po.fr.data.at(s.line).first.virginPos(s.pos + j - 1));
+                                t->setEndColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + j - 1));
                                 closeStyles = t->closeStyles();
                                 t->closeStyles() = {};
-                                po.rawTextData[idx].str = tmp;
+                                po.m_rawTextData[idx].m_str = tmp;
                                 ++idx;
                                 auto text = replaceEntity<Trait>(tmp.simplified());
                                 text = removeBackslashes<Trait>(text).asString();
                                 t->setText(text);
                                 t->setSpaceAfter(true);
-                                t->setSpaceBefore(s.pos > 0 ? po.fr.data[s.line].first[s.pos - 1].isSpace() : true);
+                                t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
                                 ++ti;
                             }
 
                             std::shared_ptr<Link<Trait>> lnk(new Link<Trait>);
-                            lnk->setStartColumn(po.fr.data.at(s.line).first.virginPos(s.pos + j));
-                            lnk->setStartLine(po.fr.data.at(s.line).second.lineNumber);
+                            lnk->setStartColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + j));
+                            lnk->setStartLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                             lnk->setEndColumn(
-                                po.fr.data.at(s.line).first.virginPos(s.pos + i - (i == s.str.length() - 1 && s.str[i] != end && !s.str[i].isSpace() ? 0 : 1)));
-                            lnk->setEndLine(po.fr.data.at(s.line).second.lineNumber);
+                                po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + i -
+                                    (i == s.m_str.length() - 1 && s.m_str[i] != end && !s.m_str[i].isSpace() ?
+                                        0 : 1)));
+                            lnk->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                             lnk->openStyles() = openStyles;
                             lnk->setTextPos({lnk->startColumn(), lnk->startLine(), lnk->endColumn(), lnk->endLine()});
                             lnk->setUrlPos(lnk->textPos());
 
-                            if (email && !tmp.toLower().startsWith(Trait::latin1ToString("mailto:")))
+                            if (email && !tmp.toLower().startsWith(Trait::latin1ToString("mailto:"))) {
                                 tmp = Trait::latin1ToString("mailto:") + tmp;
+                            }
 
-                            if (!email && tmp.toLower().startsWith(Trait::latin1ToString("www.")))
+                            if (!email && tmp.toLower().startsWith(Trait::latin1ToString("www."))) {
                                 tmp = Trait::latin1ToString("http://") + tmp;
+                            }
 
                             lnk->setUrl(tmp);
                             lnk->setOpts(opts);
                             p->insertItem(ti, lnk);
 
-                            s.pos += i + (s.str[i] == end ? 0 : 1);
-                            s.str.remove(0, i + (s.str[i] == end ? 0 : 1));
-                            s.spaceBefore = true;
+                            s.m_pos += i + (s.m_str[i] == end ? 0 : 1);
+                            s.m_str.remove(0, i + (s.m_str[i] == end ? 0 : 1));
+                            s.m_spaceBefore = true;
                             j = 0;
                             i = 0;
 
-                            if (s.str.simplified().isEmpty())
-                                s.str.clear();
+                            if (s.m_str.simplified().isEmpty()) {
+                                s.m_str.clear();
+                            }
 
-                            if (!s.str.isEmpty()) {
-                                po.rawTextData.insert(po.rawTextData.cbegin() + idx, s);
+                            if (!s.m_str.isEmpty()) {
+                                po.m_rawTextData.insert(po.m_rawTextData.cbegin() + idx, s);
                                 ++ret;
 
                                 auto t = std::make_shared<Text<Trait>>();
-                                t->setStartColumn(po.fr.data[s.line].first.virginPos(s.pos));
-                                t->setStartLine(po.fr.data.at(s.line).second.lineNumber);
-                                t->setEndLine(po.fr.data.at(s.line).second.lineNumber);
-                                t->setEndColumn(po.fr.data.at(s.line).first.virginPos(s.pos + s.str.length() - 1));
-                                auto text = replaceEntity<Trait>(s.str);
+                                t->setStartColumn(po.m_fr.m_data[s.m_line].first.virginPos(s.m_pos));
+                                t->setStartLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
+                                t->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
+                                t->setEndColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + s.m_str.length() - 1));
+                                auto text = replaceEntity<Trait>(s.m_str);
                                 text = removeBackslashes<Trait>(text).asString();
                                 t->setText(text);
-                                t->setSpaceAfter(s.spaceAfter);
-                                t->setSpaceBefore(s.pos > 0 ? po.fr.data[s.line].first[s.pos - 1].isSpace() : true);
+                                t->setSpaceAfter(s.m_spaceAfter);
+                                t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
                                 t->closeStyles() = closeStyles;
                                 p->insertItem(ti + 1, t);
-                            } else
+                            } else {
                                 lnk->closeStyles() = closeStyles;
+                            }
 
                             break;
                         }
@@ -1178,20 +1336,24 @@ inline long long int processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Tr
 
         first = true;
 
-        if (i == s.str.length())
+        if (i == s.m_str.length()) {
             break;
+        }
     }
 
     return ret;
 }
 
 template<class Trait>
-inline void githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p, TextParsingOpts<Trait> &po, const typename Trait::StringList &)
+inline void
+githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
+                     TextParsingOpts<Trait> &po,
+                     const typename Trait::StringList &)
 {
-    if (!po.collectRefLinks) {
+    if (!po.m_collectRefLinks) {
         long long int i = 0;
 
-        while (i >= 0 && i < (long long int)po.rawTextData.size()) {
+        while (i >= 0 && i < (long long int)po.m_rawTextData.size()) {
             i = processGitHubAutolinkExtension(p, po, i);
 
             ++i;
@@ -1216,7 +1378,8 @@ public:
     ~Parser() = default;
 
     //! \return Parsed Markdown document.
-    std::shared_ptr<Document<Trait>> parse(
+    std::shared_ptr<Document<Trait>>
+    parse(
         //! File name of the Markdown document.
         const typename Trait::String &fileName,
         //! Should parsing be recursive? If recursive all links to existing Markdown
@@ -1233,7 +1396,8 @@ public:
         bool fullyOptimizeParagraphs = true);
 
     //! \return Parsed Markdown document.
-    std::shared_ptr<Document<Trait>> parse(
+    std::shared_ptr<Document<Trait>>
+    parse(
         //! Stream to parse.
         typename Trait::TextStream &stream,
         //! Absolute path to the root folder for the document.
@@ -1249,7 +1413,8 @@ public:
         bool fullyOptimizeParagraphs = true);
 
     //! Add text plugin.
-    void addTextPlugin(
+    void
+    addTextPlugin(
         //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
         int id,
         //! Function of a plugin, that will be invoked to processs raw text.
@@ -1263,7 +1428,8 @@ public:
     }
 
     //! Remove text plugin.
-    void removeTextPlugin(
+    void
+    removeTextPlugin(
         //! ID of plugin that should be removed.
         int id)
     {
@@ -1271,19 +1437,24 @@ public:
     }
 
 private:
-    void parseFile(const typename Trait::String &fileName,
-                   bool recursive,
-                   std::shared_ptr<Document<Trait>> doc,
-                   const typename Trait::StringList &ext,
-                   typename Trait::StringList *parentLinks = nullptr);
-    void parseStream(typename Trait::TextStream &stream,
-                     const typename Trait::String &workingPath,
-                     const typename Trait::String &fileName,
-                     bool recursive,
-                     std::shared_ptr<Document<Trait>> doc,
-                     const typename Trait::StringList &ext,
-                     typename Trait::StringList *parentLinks = nullptr);
-    void clearCache();
+    void
+    parseFile(const typename Trait::String &fileName,
+              bool recursive,
+              std::shared_ptr<Document<Trait>> doc,
+              const typename Trait::StringList &ext,
+              typename Trait::StringList *parentLinks = nullptr);
+
+    void
+    parseStream(typename Trait::TextStream &stream,
+                const typename Trait::String &workingPath,
+                const typename Trait::String &fileName,
+                bool recursive,
+                std::shared_ptr<Document<Trait>> doc,
+                const typename Trait::StringList &ext,
+                typename Trait::StringList *parentLinks = nullptr);
+
+    void
+    clearCache();
 
     enum class BlockType {
         Unknown,
@@ -1301,28 +1472,118 @@ private:
     }; // enum BlockType
 
     struct ListIndent {
-        long long int level = -1;
-        long long int indent = -1;
+        long long int m_level = -1;
+        long long int m_indent = -1;
     }; // struct ListIndent
 
-    BlockType whatIsTheLine(typename Trait::InternalString &str,
-                            bool inList = false,
-                            bool inListWithFirstEmptyLine = false,
-                            bool fensedCodeInList = false,
-                            typename Trait::String *startOfCode = nullptr,
-                            ListIndent *indent = nullptr,
-                            bool emptyLinePreceded = false,
-                            bool calcIndent = false,
-                            const std::vector<long long int> *indents = nullptr);
-    long long int parseFragment(MdBlock<Trait> &fr,
-                                std::shared_ptr<Block<Trait>> parent,
-                                std::shared_ptr<Document<Trait>> doc,
-                                typename Trait::StringList &linksToParse,
-                                const typename Trait::String &workingPath,
-                                const typename Trait::String &fileName,
-                                bool collectRefLinks,
-                                RawHtmlBlock<Trait> &html);
-    void parseText(MdBlock<Trait> &fr,
+    BlockType
+    whatIsTheLine(typename Trait::InternalString &str,
+                  bool inList = false,
+                  bool inListWithFirstEmptyLine = false,
+                  bool fensedCodeInList = false,
+                  typename Trait::String *startOfCode = nullptr,
+                  ListIndent *indent = nullptr,
+                  bool emptyLinePreceded = false,
+                  bool calcIndent = false,
+                  const std::vector<long long int> *indents = nullptr);
+
+    long long int
+    parseFragment(MdBlock<Trait> &fr,
+                  std::shared_ptr<Block<Trait>> parent,
+                  std::shared_ptr<Document<Trait>> doc,
+                  typename Trait::StringList &linksToParse,
+                  const typename Trait::String &workingPath,
+                  const typename Trait::String &fileName,
+                  bool collectRefLinks,
+                  RawHtmlBlock<Trait> &html);
+
+    void
+    parseText(MdBlock<Trait> &fr,
+              std::shared_ptr<Block<Trait>> parent,
+              std::shared_ptr<Document<Trait>> doc,
+              typename Trait::StringList &linksToParse,
+              const typename Trait::String &workingPath,
+              const typename Trait::String &fileName,
+              bool collectRefLinks,
+              RawHtmlBlock<Trait> &html);
+
+    void
+    parseBlockquote(MdBlock<Trait> &fr,
+                    std::shared_ptr<Block<Trait>> parent,
+                    std::shared_ptr<Document<Trait>> doc,
+                    typename Trait::StringList &linksToParse,
+                    const typename Trait::String &workingPath,
+                    const typename Trait::String &fileName,
+                    bool collectRefLinks,
+                    RawHtmlBlock<Trait> &html);
+
+    long long int
+    parseList(MdBlock<Trait> &fr,
+              std::shared_ptr<Block<Trait>> parent,
+              std::shared_ptr<Document<Trait>> doc,
+              typename Trait::StringList &linksToParse,
+              const typename Trait::String &workingPath,
+              const typename Trait::String &fileName,
+              bool collectRefLinks,
+              RawHtmlBlock<Trait> &html);
+
+    void
+    parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<Trait>> parent, bool collectRefLinks);
+
+    void
+    parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
+                              std::shared_ptr<Block<Trait>> parent,
+                              bool collectRefLinks,
+                              int indent,
+                              const typename Trait::String &syntax,
+                              long long int emptyColumn,
+                              long long int startLine,
+                              bool fensedCode,
+                              const WithPosition &startDelim = {},
+                              const WithPosition &endDelim = {},
+                              const WithPosition &syntaxPos = {});
+
+    long long int
+    parseListItem(MdBlock<Trait> &fr,
+                  std::shared_ptr<Block<Trait>> parent,
+                  std::shared_ptr<Document<Trait>> doc,
+                  typename Trait::StringList &linksToParse,
+                  const typename Trait::String &workingPath,
+                  const typename Trait::String &fileName,
+                  bool collectRefLinks,
+                  RawHtmlBlock<Trait> &html,
+                  std::shared_ptr<ListItem<Trait>> *resItem = nullptr);
+
+    void
+    parseHeading(MdBlock<Trait> &fr,
+                 std::shared_ptr<Block<Trait>> parent,
+                 std::shared_ptr<Document<Trait>> doc,
+                 typename Trait::StringList &linksToParse,
+                 const typename Trait::String &workingPath,
+                 const typename Trait::String &fileName,
+                 bool collectRefLinks);
+
+    void
+    parseFootnote(MdBlock<Trait> &fr,
+                  std::shared_ptr<Block<Trait>> parent,
+                  std::shared_ptr<Document<Trait>> doc,
+                  typename Trait::StringList &linksToParse,
+                  const typename Trait::String &workingPath,
+                  const typename Trait::String &fileName,
+                  bool collectRefLinks);
+
+    void
+    parseTable(MdBlock<Trait> &fr,
+               std::shared_ptr<Block<Trait>> parent,
+               std::shared_ptr<Document<Trait>> doc,
+               typename Trait::StringList &linksToParse,
+               const typename Trait::String &workingPath,
+               const typename Trait::String &fileName,
+               bool collectRefLinks,
+               int columnsCount);
+
+    void
+    parseParagraph(MdBlock<Trait> &fr,
                    std::shared_ptr<Block<Trait>> parent,
                    std::shared_ptr<Document<Trait>> doc,
                    typename Trait::StringList &linksToParse,
@@ -1330,181 +1591,126 @@ private:
                    const typename Trait::String &fileName,
                    bool collectRefLinks,
                    RawHtmlBlock<Trait> &html);
-    void parseBlockquote(MdBlock<Trait> &fr,
-                         std::shared_ptr<Block<Trait>> parent,
-                         std::shared_ptr<Document<Trait>> doc,
-                         typename Trait::StringList &linksToParse,
-                         const typename Trait::String &workingPath,
-                         const typename Trait::String &fileName,
-                         bool collectRefLinks,
-                         RawHtmlBlock<Trait> &html);
-    long long int parseList(MdBlock<Trait> &fr,
-                            std::shared_ptr<Block<Trait>> parent,
-                            std::shared_ptr<Document<Trait>> doc,
-                            typename Trait::StringList &linksToParse,
-                            const typename Trait::String &workingPath,
-                            const typename Trait::String &fileName,
-                            bool collectRefLinks,
-                            RawHtmlBlock<Trait> &html);
-    void parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<Trait>> parent, bool collectRefLinks);
-    void parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
-                                   std::shared_ptr<Block<Trait>> parent,
-                                   bool collectRefLinks,
-                                   int indent,
-                                   const typename Trait::String &syntax,
-                                   long long int emptyColumn,
-                                   long long int startLine,
-                                   bool fensedCode,
-                                   const WithPosition &startDelim = {},
-                                   const WithPosition &endDelim = {},
-                                   const WithPosition &syntaxPos = {});
-    long long int parseListItem(MdBlock<Trait> &fr,
-                                std::shared_ptr<Block<Trait>> parent,
-                                std::shared_ptr<Document<Trait>> doc,
-                                typename Trait::StringList &linksToParse,
-                                const typename Trait::String &workingPath,
-                                const typename Trait::String &fileName,
-                                bool collectRefLinks,
-                                RawHtmlBlock<Trait> &html,
-                                std::shared_ptr<ListItem<Trait>> *resItem = nullptr);
-    void parseHeading(MdBlock<Trait> &fr,
-                      std::shared_ptr<Block<Trait>> parent,
-                      std::shared_ptr<Document<Trait>> doc,
-                      typename Trait::StringList &linksToParse,
-                      const typename Trait::String &workingPath,
-                      const typename Trait::String &fileName,
-                      bool collectRefLinks);
-    void parseFootnote(MdBlock<Trait> &fr,
-                       std::shared_ptr<Block<Trait>> parent,
-                       std::shared_ptr<Document<Trait>> doc,
-                       typename Trait::StringList &linksToParse,
-                       const typename Trait::String &workingPath,
-                       const typename Trait::String &fileName,
-                       bool collectRefLinks);
-    void parseTable(MdBlock<Trait> &fr,
-                    std::shared_ptr<Block<Trait>> parent,
-                    std::shared_ptr<Document<Trait>> doc,
-                    typename Trait::StringList &linksToParse,
-                    const typename Trait::String &workingPath,
-                    const typename Trait::String &fileName,
-                    bool collectRefLinks,
-                    int columnsCount);
-    void parseParagraph(MdBlock<Trait> &fr,
-                        std::shared_ptr<Block<Trait>> parent,
-                        std::shared_ptr<Document<Trait>> doc,
-                        typename Trait::StringList &linksToParse,
-                        const typename Trait::String &workingPath,
-                        const typename Trait::String &fileName,
-                        bool collectRefLinks,
-                        RawHtmlBlock<Trait> &html);
-    void parseFormattedTextLinksImages(MdBlock<Trait> &fr,
-                                       std::shared_ptr<Block<Trait>> parent,
-                                       std::shared_ptr<Document<Trait>> doc,
-                                       typename Trait::StringList &linksToParse,
-                                       const typename Trait::String &workingPath,
-                                       const typename Trait::String &fileName,
-                                       bool collectRefLinks,
-                                       bool ignoreLineBreak,
-                                       RawHtmlBlock<Trait> &html,
-                                       bool inLink);
 
-    RawHtmlBlock<Trait> parse(StringListStream<Trait> &stream,
-                              std::shared_ptr<Block<Trait>> parent,
-                              std::shared_ptr<Document<Trait>> doc,
-                              typename Trait::StringList &linksToParse,
-                              const typename Trait::String &workingPath,
-                              const typename Trait::String &fileName,
-                              bool collectRefLinks,
-                              bool top = false,
-                              bool dontProcessLastFreeHtml = false);
+    void
+    parseFormattedTextLinksImages(MdBlock<Trait> &fr,
+                                  std::shared_ptr<Block<Trait>> parent,
+                                  std::shared_ptr<Document<Trait>> doc,
+                                  typename Trait::StringList &linksToParse,
+                                  const typename Trait::String &workingPath,
+                                  const typename Trait::String &fileName,
+                                  bool collectRefLinks,
+                                  bool ignoreLineBreak,
+                                  RawHtmlBlock<Trait> &html,
+                                  bool inLink);
+
+    RawHtmlBlock<Trait>
+    parse(StringListStream<Trait> &stream,
+          std::shared_ptr<Block<Trait>> parent,
+          std::shared_ptr<Document<Trait>> doc,
+          typename Trait::StringList &linksToParse,
+          const typename Trait::String &workingPath,
+          const typename Trait::String &fileName,
+          bool collectRefLinks,
+          bool top = false,
+          bool dontProcessLastFreeHtml = false);
 
     struct ParserContext {
-        typename Trait::template Vector<MdBlock<Trait>> splitted;
-        typename MdBlock<Trait>::Data fragment;
-        bool emptyLineInList = false;
-        bool fensedCodeInList = false;
-        long long int emptyLinesCount = 0;
-        long long int lineCounter = 0;
-        std::vector<long long int> indents;
-        ListIndent indent;
-        RawHtmlBlock<Trait> html;
-        long long int emptyLinesBefore = 0;
-        MdLineData::CommentDataMap htmlCommentData;
-        typename Trait::String startOfCode;
-        typename Trait::String startOfCodeInList;
-        BlockType type = BlockType::EmptyLine;
-        BlockType lineType = BlockType::Unknown;
-        BlockType prevLineType = BlockType::Unknown;
+        typename Trait::template Vector<MdBlock<Trait>> m_splitted;
+        typename MdBlock<Trait>::Data m_fragment;
+        bool m_emptyLineInList = false;
+        bool m_fensedCodeInList = false;
+        long long int m_emptyLinesCount = 0;
+        long long int m_lineCounter = 0;
+        std::vector<long long int> m_indents;
+        ListIndent m_indent;
+        RawHtmlBlock<Trait> m_html;
+        long long int m_emptyLinesBefore = 0;
+        MdLineData::CommentDataMap m_htmlCommentData;
+        typename Trait::String m_startOfCode;
+        typename Trait::String m_startOfCodeInList;
+        BlockType m_type = BlockType::EmptyLine;
+        BlockType m_lineType = BlockType::Unknown;
+        BlockType m_prevLineType = BlockType::Unknown;
     }; // struct ParserContext
 
-    void parseFragment(ParserContext &ctx,
-                       std::shared_ptr<Block<Trait>> parent,
-                       std::shared_ptr<Document<Trait>> doc,
-                       typename Trait::StringList &linksToParse,
-                       const typename Trait::String &workingPath,
-                       const typename Trait::String &fileName,
-                       bool collectRefLinks);
+    void
+    parseFragment(ParserContext &ctx,
+                  std::shared_ptr<Block<Trait>> parent,
+                  std::shared_ptr<Document<Trait>> doc,
+                  typename Trait::StringList &linksToParse,
+                  const typename Trait::String &workingPath,
+                  const typename Trait::String &fileName,
+                  bool collectRefLinks);
 
-    void eatFootnote(ParserContext &ctx,
-                     StringListStream<Trait> &stream,
-                     std::shared_ptr<Block<Trait>> parent,
-                     std::shared_ptr<Document<Trait>> doc,
-                     typename Trait::StringList &linksToParse,
-                     const typename Trait::String &workingPath,
-                     const typename Trait::String &fileName,
-                     bool collectRefLinks);
+    void
+    eatFootnote(ParserContext &ctx,
+                StringListStream<Trait> &stream,
+                std::shared_ptr<Block<Trait>> parent,
+                std::shared_ptr<Document<Trait>> doc,
+                typename Trait::StringList &linksToParse,
+                const typename Trait::String &workingPath,
+                const typename Trait::String &fileName,
+                bool collectRefLinks);
 
-    void finishHtml(ParserContext &ctx,
-                    std::shared_ptr<Block<Trait>> parent,
-                    std::shared_ptr<Document<Trait>> doc,
-                    bool collectRefLinks,
-                    bool top,
-                    bool dontProcessLastFreeHtml);
+    void
+    finishHtml(ParserContext &ctx,
+               std::shared_ptr<Block<Trait>> parent,
+               std::shared_ptr<Document<Trait>> doc,
+               bool collectRefLinks,
+               bool top,
+               bool dontProcessLastFreeHtml);
 
-    void makeLineMain(ParserContext &ctx,
-                      const typename Trait::InternalString &line,
-                      long long int emptyLinesCount,
-                      const ListIndent &currentIndent,
-                      long long int ns,
-                      long long int currentLineNumber);
+    void
+    makeLineMain(ParserContext &ctx,
+                 const typename Trait::InternalString &line,
+                 long long int emptyLinesCount,
+                 const ListIndent &currentIndent,
+                 long long int ns,
+                 long long int currentLineNumber);
 
-    void parseFragmentAndMakeNextLineMain(ParserContext &ctx,
-                                          std::shared_ptr<Block<Trait>> parent,
-                                          std::shared_ptr<Document<Trait>> doc,
-                                          typename Trait::StringList &linksToParse,
-                                          const typename Trait::String &workingPath,
-                                          const typename Trait::String &fileName,
-                                          bool collectRefLinks,
-                                          const typename Trait::InternalString &line,
-                                          const ListIndent &currentIndent,
-                                          long long int ns,
-                                          long long int currentLineNumber);
+    void
+    parseFragmentAndMakeNextLineMain(ParserContext &ctx,
+                                     std::shared_ptr<Block<Trait>> parent,
+                                     std::shared_ptr<Document<Trait>> doc,
+                                     typename Trait::StringList &linksToParse,
+                                     const typename Trait::String &workingPath,
+                                     const typename Trait::String &fileName,
+                                     bool collectRefLinks,
+                                     const typename Trait::InternalString &line,
+                                     const ListIndent &currentIndent,
+                                     long long int ns,
+                                     long long int currentLineNumber);
 
-    bool isListType(BlockType t);
+    bool
+    isListType(BlockType t);
 
-    typename Trait::InternalString readLine(ParserContext &ctx, StringListStream<Trait> &stream);
+    typename Trait::InternalString
+    readLine(ParserContext &ctx, StringListStream<Trait> &stream);
 
-    std::shared_ptr<Image<Trait>> makeImage(const typename Trait::String &url,
-                                            const typename MdBlock<Trait>::Data &text,
-                                            TextParsingOpts<Trait> &po,
-                                            bool doNotCreateTextOnFail,
-                                            long long int startLine,
-                                            long long int startPos,
-                                            long long int lastLine,
-                                            long long int lastPos,
-                                            const WithPosition &textPos,
-                                            const WithPosition &urlPos);
+    std::shared_ptr<Image<Trait>>
+    makeImage(const typename Trait::String &url,
+              const typename MdBlock<Trait>::Data &text,
+              TextParsingOpts<Trait> &po,
+              bool doNotCreateTextOnFail,
+              long long int startLine,
+              long long int startPos,
+              long long int lastLine,
+              long long int lastPos,
+              const WithPosition &textPos,
+              const WithPosition &urlPos);
 
-    std::shared_ptr<Link<Trait>> makeLink(const typename Trait::String &url,
-                                          const typename MdBlock<Trait>::Data &text,
-                                          TextParsingOpts<Trait> &po,
-                                          bool doNotCreateTextOnFail,
-                                          long long int startLine,
-                                          long long int startPos,
-                                          long long int lastLine,
-                                          long long int lastPos,
-                                          const WithPosition &textPos,
-                                          const WithPosition &urlPos);
+    std::shared_ptr<Link<Trait>>
+    makeLink(const typename Trait::String &url,
+             const typename MdBlock<Trait>::Data &text,
+             TextParsingOpts<Trait> &po,
+             bool doNotCreateTextOnFail,
+             long long int startLine,
+             long long int startPos,
+             long long int lastLine,
+             long long int lastPos,
+             const WithPosition &textPos,
+             const WithPosition &urlPos);
 
     struct Delimiter {
         enum DelimiterType {
@@ -1552,93 +1758,162 @@ private:
 
     using Delims = typename Trait::template Vector<Delimiter>;
 
-    bool createShortcutImage(const typename MdBlock<Trait>::Data &text,
-                             TextParsingOpts<Trait> &po,
-                             long long int startLine,
-                             long long int startPos,
-                             long long int lastLineForText,
-                             long long int lastPosForText,
-                             typename Delims::const_iterator lastIt,
-                             const typename MdBlock<Trait>::Data &linkText,
-                             bool doNotCreateTextOnFail,
-                             const WithPosition &textPos,
-                             const WithPosition &linkTextPos);
+    bool
+    createShortcutImage(const typename MdBlock<Trait>::Data &text,
+                        TextParsingOpts<Trait> &po,
+                        long long int startLine,
+                        long long int startPos,
+                        long long int lastLineForText,
+                        long long int lastPosForText,
+                        typename Delims::const_iterator lastIt,
+                        const typename MdBlock<Trait>::Data &linkText,
+                        bool doNotCreateTextOnFail,
+                        const WithPosition &textPos,
+                        const WithPosition &linkTextPos);
 
-    typename Delims::const_iterator checkForImage(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    typename Delims::const_iterator
+    checkForImage(typename Delims::const_iterator it,
+                  typename Delims::const_iterator last,
+                  TextParsingOpts<Trait> &po);
 
-    bool createShortcutLink(const typename MdBlock<Trait>::Data &text,
-                            TextParsingOpts<Trait> &po,
-                            long long int startLine,
-                            long long int startPos,
-                            long long int lastLineForText,
-                            long long int lastPosForText,
-                            typename Delims::const_iterator lastIt,
-                            const typename MdBlock<Trait>::Data &linkText,
-                            bool doNotCreateTextOnFail,
-                            const WithPosition &textPos,
-                            const WithPosition &linkTextPos);
+    bool
+    createShortcutLink(const typename MdBlock<Trait>::Data &text,
+                       TextParsingOpts<Trait> &po,
+                       long long int startLine,
+                       long long int startPos,
+                       long long int lastLineForText,
+                       long long int lastPosForText,
+                       typename Delims::const_iterator lastIt,
+                       const typename MdBlock<Trait>::Data &linkText,
+                       bool doNotCreateTextOnFail,
+                       const WithPosition &textPos,
+                       const WithPosition &linkTextPos);
 
-    typename Delims::const_iterator checkForLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    typename Delims::const_iterator
+    checkForLink(typename Delims::const_iterator it,
+                 typename Delims::const_iterator last,
+                 TextParsingOpts<Trait> &po);
 
-    Delims collectDelimiters(const typename MdBlock<Trait>::Data &fr);
+    Delims
+    collectDelimiters(const typename MdBlock<Trait>::Data &fr);
 
-    std::pair<typename Trait::String, bool> readHtmlTag(typename Delims::const_iterator it, TextParsingOpts<Trait> &po);
+    std::pair<typename Trait::String, bool>
+    readHtmlTag(typename Delims::const_iterator it, TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator findIt(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    typename Delims::const_iterator
+    findIt(typename Delims::const_iterator it,
+           typename Delims::const_iterator last,
+           TextParsingOpts<Trait> &po);
 
-    void finishRule1HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool skipFirst);
+    void
+    finishRule1HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po,
+                       bool skipFirst);
 
-    void finishRule2HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    void
+    finishRule2HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
-    void finishRule3HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    void
+    finishRule3HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
-    void finishRule4HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    void
+    finishRule4HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
-    void finishRule5HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    void
+    finishRule5HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
-    void finishRule6HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    void
+    finishRule6HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
     typename Parser<Trait>::Delims::const_iterator
-    finishRule7HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    finishRule7HtmlTag(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
     typename Delims::const_iterator
-    finishRawHtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool skipFirst);
+    finishRawHtmlTag(typename Delims::const_iterator it,
+                     typename Delims::const_iterator last,
+                     TextParsingOpts<Trait> &po,
+                     bool skipFirst);
 
-    int htmlTagRule(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
-
-    typename Delims::const_iterator checkForRawHtml(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
-
-    typename Delims::const_iterator checkForMath(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    int
+    htmlTagRule(typename Delims::const_iterator it,
+                typename Delims::const_iterator last,
+                TextParsingOpts<Trait> &po);
 
     typename Delims::const_iterator
-    checkForAutolinkHtml(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool updatePos);
+    checkForRawHtml(typename Delims::const_iterator it,
+                    typename Delims::const_iterator last,
+                    TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator checkForInlineCode(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    typename Delims::const_iterator
+    checkForMath(typename Delims::const_iterator it,
+                 typename Delims::const_iterator last,
+                 TextParsingOpts<Trait> &po);
 
-    std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator> readTextBetweenSquareBrackets(typename Delims::const_iterator start,
-                                                                                                            typename Delims::const_iterator it,
-                                                                                                            typename Delims::const_iterator last,
-                                                                                                            TextParsingOpts<Trait> &po,
-                                                                                                            bool doNotCreateTextOnFail,
-                                                                                                            WithPosition *pos = nullptr);
+    typename Delims::const_iterator
+    checkForAutolinkHtml(typename Delims::const_iterator it,
+                         typename Delims::const_iterator last,
+                         TextParsingOpts<Trait> &po,
+                         bool updatePos);
+
+    typename Delims::const_iterator
+    checkForInlineCode(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po);
 
     std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
-    checkForLinkText(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *pos = nullptr);
+    readTextBetweenSquareBrackets(typename Delims::const_iterator start,
+                                  typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po,
+                                  bool doNotCreateTextOnFail,
+                                  WithPosition *pos = nullptr);
 
     std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
-    checkForLinkLabel(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *pos = nullptr);
+    checkForLinkText(typename Delims::const_iterator it,
+                     typename Delims::const_iterator last,
+                     TextParsingOpts<Trait> &po,
+                     WithPosition *pos = nullptr);
+
+    std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
+    checkForLinkLabel(typename Delims::const_iterator it,
+                      typename Delims::const_iterator last,
+                      TextParsingOpts<Trait> &po,
+                      WithPosition *pos = nullptr);
 
     std::tuple<typename Trait::String, typename Trait::String, typename Delims::const_iterator, bool>
-    checkForInlineLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *urlPos = nullptr);
+    checkForInlineLink(typename Delims::const_iterator it,
+                       typename Delims::const_iterator last,
+                       TextParsingOpts<Trait> &po,
+                       WithPosition *urlPos = nullptr);
 
     inline std::tuple<typename Trait::String, typename Trait::String, typename Delims::const_iterator, bool>
-    checkForRefLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *urlPos = nullptr);
+    checkForRefLink(typename Delims::const_iterator it,
+                    typename Delims::const_iterator last,
+                    TextParsingOpts<Trait> &po,
+                    WithPosition *urlPos = nullptr);
 
-    typename Trait::String toSingleLine(const typename MdBlock<Trait>::Data &d);
+    typename Trait::String
+    toSingleLine(const typename MdBlock<Trait>::Data &d);
 
     template<class Func>
     typename Delims::const_iterator
-    checkShortcut(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, Func functor)
+    checkShortcut(typename Delims::const_iterator it,
+                  typename Delims::const_iterator last,
+                  TextParsingOpts<Trait> &po,
+                  Func functor)
     {
         const auto start = it;
 
@@ -1648,7 +1923,8 @@ private:
         std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
         if (it != start && !toSingleLine(text).simplified().isEmpty()) {
-            if ((this->*functor)(text, po, start->m_line, start->m_pos, start->m_line, start->m_pos + start->m_len, it, {}, false, labelPos, {})) {
+            if ((this->*functor)(text, po, start->m_line, start->m_pos, start->m_line,
+                start->m_pos + start->m_len, it, {}, false, labelPos, {})) {
                 return it;
             }
         }
@@ -1656,60 +1932,93 @@ private:
         return start;
     }
 
-    void createStyles(std::vector<std::pair<Style, long long int>> &s, long long int l, typename Delimiter::DelimiterType t, long long int &count);
+    void
+    createStyles(std::vector<std::pair<Style, long long int>> &s,
+                 long long int l,
+                 typename Delimiter::DelimiterType t,
+                 long long int &count);
 
-    bool isSequence(typename Delims::const_iterator it, long long int itLine, long long int itPos, typename Delimiter::DelimiterType t);
-
-    typename Delims::const_iterator readSequence(typename Delims::const_iterator it,
-                                                 typename Delims::const_iterator last,
-                                                 long long int &line,
-                                                 long long int &pos,
-                                                 long long int &len,
-                                                 typename Delims::const_iterator &current);
-
-    int emphasisToInt(typename Delimiter::DelimiterType t);
-
-    std::pair<bool, size_t> checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s, size_t idx);
-
-    std::vector<std::pair<std::pair<long long int, bool>, int>> fixSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s);
-
-    std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>>
-    closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars, size_t idx);
-
-    std::vector<std::pair<Style, long long int>>
-    createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s, size_t i, typename Delimiter::DelimiterType t, long long int &count);
-
-    std::tuple<bool, std::vector<std::pair<Style, long long int>>, long long int, long long int>
-    isStyleClosed(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
-
-    typename Delims::const_iterator incrementIterator(typename Delims::const_iterator it, typename Delims::const_iterator last, long long int count);
+    bool
+    isSequence(typename Delims::const_iterator it,
+               long long int itLine,
+               long long int itPos,
+               typename Delimiter::DelimiterType t);
 
     typename Delims::const_iterator
-    checkForStyle(typename Delims::const_iterator first, typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po);
+    readSequence(typename Delims::const_iterator it,
+                 typename Delims::const_iterator last,
+                 long long int &line,
+                 long long int &pos,
+                 long long int &len,
+                 typename Delims::const_iterator &current);
 
-    bool isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po);
+    int
+    emphasisToInt(typename Delimiter::DelimiterType t);
 
-    void parseTableInParagraph(TextParsingOpts<Trait> &po,
-                               std::shared_ptr<Paragraph<Trait>> parent,
-                               std::shared_ptr<Document<Trait>> doc,
-                               typename Trait::StringList &linksToParse,
-                               const typename Trait::String &workingPath,
-                               const typename Trait::String &fileName,
-                               bool collectRefLinks);
+    std::pair<bool, size_t>
+    checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+                          size_t idx);
 
-    bool isNewBlockIn(MdBlock<Trait> &fr, long long int startLine, long long int endLine);
+    std::vector<std::pair<std::pair<long long int, bool>, int>>
+    fixSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s);
 
-    void makeInlineCode(long long int startLine,
-                        long long int startPos,
-                        long long int lastLine,
-                        long long int lastPos,
-                        TextParsingOpts<Trait> &po,
-                        typename Delims::const_iterator startDelimIt,
-                        typename Delims::const_iterator endDelimIt);
+    std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>>
+    closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
+                    size_t idx);
 
-    OptimizeParagraphType defaultParagraphOptimization() const
+    std::vector<std::pair<Style, long long int>>
+    createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+                 size_t i,
+                 typename Delimiter::DelimiterType t,
+                 long long int &count);
+
+    std::tuple<bool, std::vector<std::pair<Style, long long int>>, long long int, long long int>
+    isStyleClosed(typename Delims::const_iterator it,
+                  typename Delims::const_iterator last,
+                  TextParsingOpts<Trait> &po);
+
+    typename Delims::const_iterator
+    incrementIterator(typename Delims::const_iterator it,
+                      typename Delims::const_iterator last,
+                      long long int count);
+
+    typename Delims::const_iterator
+    checkForStyle(typename Delims::const_iterator first,
+                  typename Delims::const_iterator it,
+                  typename Delims::const_iterator last,
+                  TextParsingOpts<Trait> &po);
+
+    bool
+    isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po);
+
+    void
+    parseTableInParagraph(TextParsingOpts<Trait> &po,
+                          std::shared_ptr<Paragraph<Trait>> parent,
+                          std::shared_ptr<Document<Trait>> doc,
+                          typename Trait::StringList &linksToParse,
+                          const typename Trait::String &workingPath,
+                          const typename Trait::String &fileName,
+                          bool collectRefLinks);
+
+    bool
+    isNewBlockIn(MdBlock<Trait> &fr,
+                 long long int startLine,
+                 long long int endLine);
+
+    void
+    makeInlineCode(long long int startLine,
+                   long long int startPos,
+                   long long int lastLine,
+                   long long int lastPos,
+                   TextParsingOpts<Trait> &po,
+                   typename Delims::const_iterator startDelimIt,
+                   typename Delims::const_iterator endDelimIt);
+
+    OptimizeParagraphType
+    defaultParagraphOptimization() const
     {
-        return (m_fullyOptimizeParagraphs ? OptimizeParagraphType::Full : OptimizeParagraphType::Semi);
+        return (m_fullyOptimizeParagraphs ? OptimizeParagraphType::Full :
+            OptimizeParagraphType::Semi);
     }
 
 private:
@@ -1729,7 +2038,10 @@ private:
 
 template<class Trait>
 inline std::shared_ptr<Document<Trait>>
-Parser<Trait>::parse(const typename Trait::String &fileName, bool recursive, const typename Trait::StringList &ext, bool fullyOptimizeParagraphs)
+Parser<Trait>::parse(const typename Trait::String &fileName,
+                     bool recursive,
+                     const typename Trait::StringList &ext,
+                     bool fullyOptimizeParagraphs)
 {
     m_fullyOptimizeParagraphs = fullyOptimizeParagraphs;
 
@@ -1743,10 +2055,11 @@ Parser<Trait>::parse(const typename Trait::String &fileName, bool recursive, con
 }
 
 template<class Trait>
-inline std::shared_ptr<Document<Trait>> Parser<Trait>::parse(typename Trait::TextStream &stream,
-                                                             const typename Trait::String &path,
-                                                             const typename Trait::String &fileName,
-                                                             bool fullyOptimizeParagraphs)
+inline std::shared_ptr<Document<Trait>>
+Parser<Trait>::parse(typename Trait::TextStream &stream,
+                     const typename Trait::String &path,
+                     const typename Trait::String &fileName,
+                     bool fullyOptimizeParagraphs)
 {
     m_fullyOptimizeParagraphs = fullyOptimizeParagraphs;
 
@@ -1776,12 +2089,14 @@ public:
     {
     }
 
-    bool atEnd() const
+    bool
+    atEnd() const
     {
         return (m_lastBuf && m_pos == m_buf.size());
     }
 
-    QString readLine()
+    QString
+    readLine()
     {
         QString line;
         bool rFound = false;
@@ -1799,37 +2114,43 @@ public:
                 rFound = true;
 
                 continue;
-            } else if (c == QLatin1Char('\n'))
+            } else if (c == QLatin1Char('\n')) {
                 return line;
+            }
 
-            if (!c.isNull())
+            if (!c.isNull()) {
                 line.push_back(c);
+            }
         }
 
         return line;
     }
 
 private:
-    void fillBuf()
+    void
+    fillBuf()
     {
         m_buf = m_stream.read(512);
 
-        if (m_stream.atEnd())
+        if (m_stream.atEnd()) {
             m_lastBuf = true;
+        }
 
         m_pos = 0;
     }
 
-    QChar getChar()
+    QChar
+    getChar()
     {
-        if (m_pos < m_buf.size())
+        if (m_pos < m_buf.size()) {
             return m_buf.at(m_pos++);
-        else if (!atEnd()) {
+        } else if (!atEnd()) {
             fillBuf();
 
             return getChar();
-        } else
+        } else {
             return QChar();
+        }
     }
 
 private:
@@ -1872,8 +2193,9 @@ public:
                     tmp[j++] = 0xEF;
                     tmp[j++] = 0xBF;
                     tmp[j] = 0xBD;
-                } else
+                } else {
                     tmp[j] = content[i];
+                }
             }
 
             tmp[tmp.size() - 1] = 0;
@@ -1884,12 +2206,14 @@ public:
         m_str = UnicodeString::fromUTF8((char *)&content[0]);
     }
 
-    bool atEnd() const
+    bool
+    atEnd() const
     {
         return m_pos == m_str.size();
     }
 
-    UnicodeString readLine()
+    UnicodeString
+    readLine()
     {
         UnicodeString line;
 
@@ -1908,23 +2232,27 @@ public:
                 rFound = true;
 
                 continue;
-            } else if (c == UnicodeChar('\n'))
+            } else if (c == UnicodeChar('\n')) {
                 return line;
+            }
 
-            if (!c.isNull())
+            if (!c.isNull()) {
                 line.push_back(c);
+            }
         }
 
         return line;
     }
 
 private:
-    UnicodeChar getChar()
+    UnicodeChar
+    getChar()
     {
-        if (!atEnd())
+        if (!atEnd()) {
             return m_str[m_pos++];
-        else
+        } else {
             return UnicodeChar();
+        }
     }
 
 private:
@@ -1935,24 +2263,30 @@ private:
 #endif
 
 template<class Trait>
-inline bool checkForEndHtmlComments(const typename Trait::String &line, long long int pos)
+inline bool
+checkForEndHtmlComments(const typename Trait::String &line,
+                        long long int pos)
 {
     const long long int e = line.indexOf(Trait::latin1ToString("-->"), pos);
 
-    if (e != -1)
+    if (e != -1) {
         return isHtmlComment<Trait>(line.sliced(0, e + 3));
+    }
 
     return false;
 }
 
 template<class Trait>
-inline void checkForHtmlComments(const typename Trait::InternalString &line, StringListStream<Trait> &stream, MdLineData::CommentDataMap &res)
+inline void
+checkForHtmlComments(const typename Trait::InternalString &line,
+                     StringListStream<Trait> &stream,
+                     MdLineData::CommentDataMap &res)
 {
     long long int p = 0, l = stream.currentLineNumber();
 
     const auto &str = line.asString();
 
-    while ((p = str.indexOf(Trait::latin1ToString(c_startComment), p)) != -1) {
+    while ((p = str.indexOf(Trait::latin1ToString(s_startComment), p)) != -1) {
         bool addNegative = false;
 
         auto c = str.sliced(p);
@@ -1971,9 +2305,9 @@ inline void checkForHtmlComments(const typename Trait::InternalString &line, Str
             continue;
         }
 
-        if (checkForEndHtmlComments<Trait>(c, 4))
+        if (checkForEndHtmlComments<Trait>(c, 4)) {
             res.insert({line.virginPos(p), {2, true}});
-        else {
+        } else {
             addNegative = true;
 
             for (; l < stream.size(); ++l) {
@@ -1990,70 +2324,75 @@ inline void checkForHtmlComments(const typename Trait::InternalString &line, Str
             }
         }
 
-        if (addNegative)
+        if (addNegative) {
             res.insert({line.virginPos(p), {-1, false}});
+        }
 
         ++p;
     }
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
-                                         std::shared_ptr<Block<Trait>> parent,
-                                         std::shared_ptr<Document<Trait>> doc,
-                                         typename Trait::StringList &linksToParse,
-                                         const typename Trait::String &workingPath,
-                                         const typename Trait::String &fileName,
-                                         bool collectRefLinks)
+inline void
+Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
+                             std::shared_ptr<Block<Trait>> parent,
+                             std::shared_ptr<Document<Trait>> doc,
+                             typename Trait::StringList &linksToParse,
+                             const typename Trait::String &workingPath,
+                             const typename Trait::String &fileName,
+                             bool collectRefLinks)
 {
-    if (!ctx.fragment.empty()) {
-        MdBlock<Trait> block = {ctx.fragment, ctx.emptyLinesBefore, ctx.emptyLinesCount > 0};
+    if (!ctx.m_fragment.empty()) {
+        MdBlock<Trait> block = {ctx.m_fragment, ctx.m_emptyLinesBefore, ctx.m_emptyLinesCount > 0};
 
-        ctx.emptyLinesBefore = ctx.emptyLinesCount;
+        ctx.m_emptyLinesBefore = ctx.m_emptyLinesCount;
 
-        ctx.splitted.push_back(block);
+        ctx.m_splitted.push_back(block);
 
         long long int line = 0;
 
         while (line >= 0) {
-            line = parseFragment(block, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, ctx.html);
+            line = parseFragment(block, parent, doc, linksToParse, workingPath,
+                fileName, collectRefLinks, ctx.m_html);
 
             assert(line != 0);
 
             if (line > 0) {
-                if (ctx.html.html) {
-                    if (!collectRefLinks)
-                        ctx.html.parent->appendItem(ctx.html.html);
+                if (ctx.m_html.m_html) {
+                    if (!collectRefLinks) {
+                        ctx.m_html.m_parent->appendItem(ctx.m_html.m_html);
+                    }
 
-                    resetHtmlTag<Trait>(ctx.html);
+                    resetHtmlTag<Trait>(ctx.m_html);
                 }
 
-                const auto it = std::find_if(ctx.fragment.cbegin(), ctx.fragment.cend(), [line](const auto &d) {
-                    return (d.second.lineNumber == line);
+                const auto it = std::find_if(ctx.m_fragment.cbegin(), ctx.m_fragment.cend(), [line](const auto &d) {
+                    return (d.second.m_lineNumber == line);
                 });
 
-                block.data.clear();
-                std::copy(it, ctx.fragment.cend(), std::back_inserter(block.data));
-                block.emptyLinesBefore = 0;
+                block.m_data.clear();
+                std::copy(it, ctx.m_fragment.cend(), std::back_inserter(block.m_data));
+                block.m_emptyLinesBefore = 0;
             }
         }
 
-        ctx.fragment.clear();
+        ctx.m_fragment.clear();
     }
 
-    ctx.type = BlockType::EmptyLine;
-    ctx.emptyLineInList = false;
-    ctx.fensedCodeInList = false;
-    ctx.emptyLinesCount = 0;
-    ctx.lineCounter = 0;
-    ctx.indents.clear();
-    ctx.indent = {-1, -1};
-    ctx.startOfCode.clear();
-    ctx.startOfCodeInList.clear();
+    ctx.m_type = BlockType::EmptyLine;
+    ctx.m_emptyLineInList = false;
+    ctx.m_fensedCodeInList = false;
+    ctx.m_emptyLinesCount = 0;
+    ctx.m_lineCounter = 0;
+    ctx.m_indents.clear();
+    ctx.m_indent = {-1, -1};
+    ctx.m_startOfCode.clear();
+    ctx.m_startOfCodeInList.clear();
 }
 
 template<class Trait>
-inline void replaceTabs(typename Trait::InternalString &s)
+inline void
+replaceTabs(typename Trait::InternalString &s)
 {
     unsigned char size = 4;
     long long int len = s.length();
@@ -2067,20 +2406,22 @@ inline void replaceTabs(typename Trait::InternalString &s)
             size = 5;
         }
 
-        if (size == 1)
+        if (size == 1) {
             size = 5;
+        }
     }
 }
 
 template<class Trait>
-inline void Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
-                                       StringListStream<Trait> &stream,
-                                       std::shared_ptr<Block<Trait>> parent,
-                                       std::shared_ptr<Document<Trait>> doc,
-                                       typename Trait::StringList &linksToParse,
-                                       const typename Trait::String &workingPath,
-                                       const typename Trait::String &fileName,
-                                       bool collectRefLinks)
+inline void
+Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
+                           StringListStream<Trait> &stream,
+                           std::shared_ptr<Block<Trait>> parent,
+                           std::shared_ptr<Document<Trait>> doc,
+                           typename Trait::StringList &linksToParse,
+                           const typename Trait::String &workingPath,
+                           const typename Trait::String &fileName,
+                           bool collectRefLinks)
 {
     long long int emptyLinesCount = 0;
     bool wasEmptyLine = false;
@@ -2098,144 +2439,156 @@ inline void Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ct
             if (ns == line.length()) {
                 ++emptyLinesCount;
                 wasEmptyLine = true;
-            } else
+            } else {
                 emptyLinesCount = 0;
+            }
 
-            ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
         } else if (!wasEmptyLine) {
             if (isFootnote<Trait>(line.sliced(ns).asString())) {
                 parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
-                ctx.lineType = BlockType::Footnote;
+                ctx.m_lineType = BlockType::Footnote;
 
-                makeLineMain(ctx, line, emptyLinesCount, ctx.indent, ns, currentLineNumber);
+                makeLineMain(ctx, line, emptyLinesCount, ctx.m_indent, ns, currentLineNumber);
 
                 continue;
-            } else
-                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+            } else {
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+            }
         } else {
             parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
-            ctx.lineType =
-                whatIsTheLine(line, false, false, false, &ctx.startOfCodeInList, &ctx.indent, ctx.lineType == BlockType::EmptyLine, true, &ctx.indents);
+            ctx.m_lineType =
+                whatIsTheLine(line, false, false, false, &ctx.m_startOfCodeInList, &ctx.m_indent,
+                    ctx.m_lineType == BlockType::EmptyLine, true, &ctx.m_indents);
 
-            makeLineMain(ctx, line, emptyLinesCount, ctx.indent, ns, currentLineNumber);
+            makeLineMain(ctx, line, emptyLinesCount, ctx.m_indent, ns, currentLineNumber);
 
-            if (ctx.type == BlockType::Footnote) {
+            if (ctx.m_type == BlockType::Footnote) {
                 wasEmptyLine = false;
 
                 continue;
-            } else
+            } else {
                 break;
+            }
         }
     }
 
-    if (stream.atEnd() && !ctx.fragment.empty())
+    if (stream.atEnd() && !ctx.m_fragment.empty()) {
         parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishHtml(ParserContext &ctx,
-                                      std::shared_ptr<Block<Trait>> parent,
-                                      std::shared_ptr<Document<Trait>> doc,
-                                      bool collectRefLinks,
-                                      bool top,
-                                      bool dontProcessLastFreeHtml)
+inline void
+Parser<Trait>::finishHtml(ParserContext &ctx,
+                          std::shared_ptr<Block<Trait>> parent,
+                          std::shared_ptr<Document<Trait>> doc,
+                          bool collectRefLinks,
+                          bool top,
+                          bool dontProcessLastFreeHtml)
 {
     if (!collectRefLinks || top) {
-        if (ctx.html.html->isFreeTag()) {
+        if (ctx.m_html.m_html->isFreeTag()) {
             if (!dontProcessLastFreeHtml) {
-                if (ctx.html.parent) {
-                    ctx.html.parent->appendItem(ctx.html.html);
+                if (ctx.m_html.m_parent) {
+                    ctx.m_html.m_parent->appendItem(ctx.m_html.m_html);
 
-                    updateLastPosInList(ctx.html);
-                } else
-                    parent->appendItem(ctx.html.html);
+                    updateLastPosInList(ctx.m_html);
+                } else {
+                    parent->appendItem(ctx.m_html.m_html);
+                }
             }
         } else {
             if (parent->items().back()->type() == ItemType::Paragraph) {
                 auto p = static_cast<Paragraph<Trait> *>(parent->items().back().get());
 
                 if (p->isDirty()) {
-                    p->appendItem(ctx.html.html);
-                    p->setEndColumn(ctx.html.html->endColumn());
-                    p->setEndLine(ctx.html.html->endLine());
+                    p->appendItem(ctx.m_html.m_html);
+                    p->setEndColumn(ctx.m_html.m_html->endColumn());
+                    p->setEndLine(ctx.m_html.m_html->endLine());
                 } else {
                     std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-                    p->appendItem(ctx.html.html);
-                    p->setStartColumn(ctx.html.html->startColumn());
-                    p->setStartLine(ctx.html.html->startLine());
-                    p->setEndColumn(ctx.html.html->endColumn());
-                    p->setEndLine(ctx.html.html->endLine());
+                    p->appendItem(ctx.m_html.m_html);
+                    p->setStartColumn(ctx.m_html.m_html->startColumn());
+                    p->setStartLine(ctx.m_html.m_html->startLine());
+                    p->setEndColumn(ctx.m_html.m_html->endColumn());
+                    p->setEndLine(ctx.m_html.m_html->endLine());
                     doc->appendItem(p);
                 }
             } else {
                 std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-                p->appendItem(ctx.html.html);
-                p->setStartColumn(ctx.html.html->startColumn());
-                p->setStartLine(ctx.html.html->startLine());
-                p->setEndColumn(ctx.html.html->endColumn());
-                p->setEndLine(ctx.html.html->endLine());
+                p->appendItem(ctx.m_html.m_html);
+                p->setStartColumn(ctx.m_html.m_html->startColumn());
+                p->setStartLine(ctx.m_html.m_html->startLine());
+                p->setEndColumn(ctx.m_html.m_html->endColumn());
+                p->setEndLine(ctx.m_html.m_html->endLine());
                 doc->appendItem(p);
             }
         }
     }
 
-    if (!dontProcessLastFreeHtml)
-        resetHtmlTag(ctx.html);
+    if (!dontProcessLastFreeHtml) {
+        resetHtmlTag(ctx.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::makeLineMain(ParserContext &ctx,
-                                        const typename Trait::InternalString &line,
-                                        long long int emptyLinesCount,
-                                        const ListIndent &currentIndent,
-                                        long long int ns,
-                                        long long int currentLineNumber)
+inline void
+Parser<Trait>::makeLineMain(ParserContext &ctx,
+                            const typename Trait::InternalString &line,
+                            long long int emptyLinesCount,
+                            const ListIndent &currentIndent,
+                            long long int ns,
+                            long long int currentLineNumber)
 {
-    if (ctx.html.htmlBlockType >= 6)
-        ctx.html.continueHtml = (emptyLinesCount <= 0);
+    if (ctx.m_html.m_htmlBlockType >= 6) {
+        ctx.m_html.m_continueHtml = (emptyLinesCount <= 0);
+    }
 
-    ctx.type = ctx.lineType;
+    ctx.m_type = ctx.m_lineType;
 
-    switch (ctx.type) {
+    switch (ctx.m_type) {
     case BlockType::List:
     case BlockType::ListWithFirstEmptyLine: {
-        if (ctx.indents.empty())
-            ctx.indents.push_back(currentIndent.indent);
+        if (ctx.m_indents.empty())
+            ctx.m_indents.push_back(currentIndent.m_indent);
 
-        ctx.indent = currentIndent;
+        ctx.m_indent = currentIndent;
     } break;
 
     case BlockType::Code:
-        ctx.startOfCode = startSequence<Trait>(line.asString());
+        ctx.m_startOfCode = startSequence<Trait>(line.asString());
         break;
 
     default:
         break;
     }
 
-    if (!line.isEmpty() && ns < line.length())
-        ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+    if (!line.isEmpty() && ns < line.length()) {
+        ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+    }
 
-    ctx.lineCounter = 1;
-    ctx.emptyLinesCount = 0;
+    ctx.m_lineCounter = 1;
+    ctx.m_emptyLinesCount = 0;
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseFragmentAndMakeNextLineMain(ParserContext &ctx,
-                                                            std::shared_ptr<Block<Trait>> parent,
-                                                            std::shared_ptr<Document<Trait>> doc,
-                                                            typename Trait::StringList &linksToParse,
-                                                            const typename Trait::String &workingPath,
-                                                            const typename Trait::String &fileName,
-                                                            bool collectRefLinks,
-                                                            const typename Trait::InternalString &line,
-                                                            const ListIndent &currentIndent,
-                                                            long long int ns,
-                                                            long long int currentLineNumber)
+inline void
+Parser<Trait>::parseFragmentAndMakeNextLineMain(ParserContext &ctx,
+                                                std::shared_ptr<Block<Trait>> parent,
+                                                std::shared_ptr<Document<Trait>> doc,
+                                                typename Trait::StringList &linksToParse,
+                                                const typename Trait::String &workingPath,
+                                                const typename Trait::String &fileName,
+                                                bool collectRefLinks,
+                                                const typename Trait::InternalString &line,
+                                                const ListIndent &currentIndent,
+                                                long long int ns,
+                                                long long int currentLineNumber)
 {
-    const auto empty = ctx.emptyLinesCount;
+    const auto empty = ctx.m_emptyLinesCount;
 
     parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
@@ -2243,7 +2596,8 @@ inline void Parser<Trait>::parseFragmentAndMakeNextLineMain(ParserContext &ctx,
 }
 
 template<class Trait>
-inline bool Parser<Trait>::isListType(BlockType t)
+inline bool
+Parser<Trait>::isListType(BlockType t)
 {
     switch (t) {
     case BlockType::List:
@@ -2256,9 +2610,11 @@ inline bool Parser<Trait>::isListType(BlockType t)
 }
 
 template<class Trait>
-typename Trait::InternalString Parser<Trait>::readLine(typename Parser<Trait>::ParserContext &ctx, StringListStream<Trait> &stream)
+typename Trait::InternalString
+Parser<Trait>::readLine(typename Parser<Trait>::ParserContext &ctx,
+                        StringListStream<Trait> &stream)
 {
-    ctx.htmlCommentData.clear();
+    ctx.m_htmlCommentData.clear();
 
     auto line = stream.readLine();
 
@@ -2266,21 +2622,22 @@ typename Trait::InternalString Parser<Trait>::readLine(typename Parser<Trait>::P
 
     line.replace(typename Trait::Char(0), Trait::utf16ToString(&c_zeroReplaceWith[0]));
 
-    checkForHtmlComments(line, stream, ctx.htmlCommentData);
+    checkForHtmlComments(line, stream, ctx.m_htmlCommentData);
 
     return line;
 }
 
 template<class Trait>
-inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
-                                                std::shared_ptr<Block<Trait>> parent,
-                                                std::shared_ptr<Document<Trait>> doc,
-                                                typename Trait::StringList &linksToParse,
-                                                const typename Trait::String &workingPath,
-                                                const typename Trait::String &fileName,
-                                                bool collectRefLinks,
-                                                bool top,
-                                                bool dontProcessLastFreeHtml)
+inline RawHtmlBlock<Trait>
+Parser<Trait>::parse(StringListStream<Trait> &stream,
+                     std::shared_ptr<Block<Trait>> parent,
+                     std::shared_ptr<Document<Trait>> doc,
+                     typename Trait::StringList &linksToParse,
+                     const typename Trait::String &workingPath,
+                     const typename Trait::String &fileName,
+                     bool collectRefLinks,
+                     bool top,
+                     bool dontProcessLastFreeHtml)
 {
     ParserContext ctx;
 
@@ -2289,40 +2646,45 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
 
         auto line = readLine(ctx, stream);
 
-        if (ctx.lineType != BlockType::Unknown)
-            ctx.prevLineType = ctx.lineType;
+        if (ctx.m_lineType != BlockType::Unknown) {
+            ctx.m_prevLineType = ctx.m_lineType;
+        }
 
-        ctx.lineType = whatIsTheLine(line,
-                                     (ctx.emptyLineInList || isListType(ctx.type)),
-                                     ctx.prevLineType == BlockType::ListWithFirstEmptyLine,
-                                     ctx.fensedCodeInList,
-                                     &ctx.startOfCodeInList,
-                                     &ctx.indent,
-                                     ctx.lineType == BlockType::EmptyLine,
-                                     true,
-                                     &ctx.indents);
+        ctx.m_lineType = whatIsTheLine(line,
+                                       (ctx.m_emptyLineInList || isListType(ctx.m_type)),
+                                       ctx.m_prevLineType == BlockType::ListWithFirstEmptyLine,
+                                       ctx.m_fensedCodeInList,
+                                       &ctx.m_startOfCodeInList,
+                                       &ctx.m_indent,
+                                       ctx.m_lineType == BlockType::EmptyLine,
+                                       true,
+                                       &ctx.m_indents);
 
-        if (isListType(ctx.type) && ctx.lineType == BlockType::FensedCodeInList)
-            ctx.fensedCodeInList = !ctx.fensedCodeInList;
+        if (isListType(ctx.m_type) && ctx.m_lineType == BlockType::FensedCodeInList) {
+            ctx.m_fensedCodeInList = !ctx.m_fensedCodeInList;
+        }
 
-        const auto currentIndent = ctx.indent;
+        const auto currentIndent = ctx.m_indent;
 
         const auto ns = skipSpaces<Trait>(0, line.asString());
 
-        const auto indentInListValue = indentInList(&ctx.indents, ns, true);
+        const auto indentInListValue = indentInList(&ctx.m_indents, ns, true);
 
-        if (isListType(ctx.lineType) && !ctx.fensedCodeInList && ctx.indent.level > -1) {
-            if (ctx.indent.level < (long long int)ctx.indents.size())
-                ctx.indents.erase(ctx.indents.cbegin() + ctx.indent.level, ctx.indents.cend());
+        if (isListType(ctx.m_lineType) && !ctx.m_fensedCodeInList && ctx.m_indent.m_level > -1) {
+            if (ctx.m_indent.m_level < (long long int)ctx.m_indents.size()) {
+                ctx.m_indents.erase(ctx.m_indents.cbegin() + ctx.m_indent.m_level, ctx.m_indents.cend());
+            }
 
-            ctx.indents.push_back(ctx.indent.indent);
+            ctx.m_indents.push_back(ctx.m_indent.m_indent);
         }
 
-        if (ctx.type == BlockType::CodeIndentedBySpaces && ns > 3)
-            ctx.lineType = BlockType::CodeIndentedBySpaces;
+        if (ctx.m_type == BlockType::CodeIndentedBySpaces && ns > 3) {
+            ctx.m_lineType = BlockType::CodeIndentedBySpaces;
+        }
 
-        if (ctx.type == BlockType::ListWithFirstEmptyLine && ctx.lineCounter == 2 && !isListType(ctx.lineType)) {
-            if (ctx.emptyLinesCount > 0) {
+        if (ctx.m_type == BlockType::ListWithFirstEmptyLine && ctx.m_lineCounter == 2 &&
+            !isListType(ctx.m_lineType)) {
+            if (ctx.m_emptyLinesCount > 0) {
                 parseFragmentAndMakeNextLineMain(ctx,
                                                  parent,
                                                  doc,
@@ -2337,16 +2699,17 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
 
                 continue;
             } else {
-                ctx.emptyLineInList = false;
-                ctx.emptyLinesCount = 0;
+                ctx.m_emptyLineInList = false;
+                ctx.m_emptyLinesCount = 0;
             }
         }
 
-        if (ctx.type == BlockType::ListWithFirstEmptyLine && ctx.lineCounter == 2)
-            ctx.type = BlockType::List;
+        if (ctx.m_type == BlockType::ListWithFirstEmptyLine && ctx.m_lineCounter == 2) {
+            ctx.m_type = BlockType::List;
+        }
 
         // Footnote.
-        if (ctx.lineType == BlockType::Footnote) {
+        if (ctx.m_lineType == BlockType::Footnote) {
             parseFragmentAndMakeNextLineMain(ctx,
                                              parent,
                                              doc,
@@ -2365,20 +2728,21 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
         }
 
         // First line of the fragment.
-        if (ns != line.length() && ctx.type == BlockType::EmptyLine) {
-            makeLineMain(ctx, line, ctx.emptyLinesCount, currentIndent, ns, currentLineNumber);
+        if (ns != line.length() && ctx.m_type == BlockType::EmptyLine) {
+            makeLineMain(ctx, line, ctx.m_emptyLinesCount, currentIndent, ns, currentLineNumber);
 
             continue;
-        } else if (ns == line.length() && ctx.type == BlockType::EmptyLine)
+        } else if (ns == line.length() && ctx.m_type == BlockType::EmptyLine) {
             continue;
+        }
 
-        ++ctx.lineCounter;
+        ++ctx.m_lineCounter;
 
         // Got new empty line.
         if (ns == line.length()) {
-            ++ctx.emptyLinesCount;
+            ++ctx.m_emptyLinesCount;
 
-            switch (ctx.type) {
+            switch (ctx.m_type) {
             case BlockType::Blockquote: {
                 parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
@@ -2391,15 +2755,15 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
                 break;
 
             case BlockType::Code: {
-                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
-                ctx.emptyLinesCount = 0;
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_emptyLinesCount = 0;
 
                 continue;
             }
 
             case BlockType::List:
             case BlockType::ListWithFirstEmptyLine: {
-                ctx.emptyLineInList = true;
+                ctx.m_emptyLineInList = true;
 
                 continue;
             }
@@ -2409,37 +2773,43 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
             }
         }
         //! Empty new line in list.
-        else if (ctx.emptyLineInList) {
-            if (indentInListValue || isListType(ctx.lineType) || ctx.lineType == BlockType::SomethingInList) {
-                for (long long int i = 0; i < ctx.emptyLinesCount; ++i)
-                    ctx.fragment.push_back({typename Trait::String(), {currentLineNumber - ctx.emptyLinesCount + i, {}}});
+        else if (ctx.m_emptyLineInList) {
+            if (indentInListValue || isListType(ctx.m_lineType) || ctx.m_lineType == BlockType::SomethingInList) {
+                for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
+                    ctx.m_fragment.push_back({typename Trait::String(),
+                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}}});
+                }
 
-                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
 
-                ctx.emptyLineInList = false;
-                ctx.emptyLinesCount = 0;
+                ctx.m_emptyLineInList = false;
+                ctx.m_emptyLinesCount = 0;
 
                 continue;
             } else {
-                const auto empty = ctx.emptyLinesCount;
+                const auto empty = ctx.m_emptyLinesCount;
 
                 parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
-                ctx.lineType = whatIsTheLine(line, false, false, false, nullptr, nullptr, true, false, &ctx.indents);
+                ctx.m_lineType = whatIsTheLine(line, false, false, false, nullptr, nullptr,
+                    true, false, &ctx.m_indents);
 
                 makeLineMain(ctx, line, empty, currentIndent, ns, currentLineNumber);
 
                 continue;
             }
-        } else if (ctx.emptyLinesCount > 0) {
-            if (ctx.type == BlockType::CodeIndentedBySpaces && ctx.lineType == BlockType::CodeIndentedBySpaces) {
-                const auto indent = skipSpaces<Trait>(0, ctx.fragment.front().first.asString());
+        } else if (ctx.m_emptyLinesCount > 0) {
+            if (ctx.m_type == BlockType::CodeIndentedBySpaces &&
+                ctx.m_lineType == BlockType::CodeIndentedBySpaces) {
+                const auto indent = skipSpaces<Trait>(0, ctx.m_fragment.front().first.asString());
 
-                for (long long int i = 0; i < ctx.emptyLinesCount; ++i)
-                    ctx.fragment.push_back({typename Trait::String(indent, Trait::latin1ToChar(' ')), {currentLineNumber - ctx.emptyLinesCount + i, {}}});
+                for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
+                    ctx.m_fragment.push_back({typename Trait::String(indent, Trait::latin1ToChar(' ')),
+                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}}});
+                }
 
-                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
-                ctx.emptyLinesCount = 0;
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_emptyLinesCount = 0;
             } else {
                 parseFragmentAndMakeNextLineMain(ctx,
                                                  parent,
@@ -2458,23 +2828,25 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
         }
 
         // Something new and first block is not a code block or a list, blockquote.
-        if (ctx.type != ctx.lineType && ctx.type != BlockType::Code && !isListType(ctx.type) && ctx.type != BlockType::Blockquote) {
-            if (ctx.type == BlockType::Text && ctx.lineType == BlockType::CodeIndentedBySpaces)
-                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+        if (ctx.m_type != ctx.m_lineType && ctx.m_type != BlockType::Code &&
+            !isListType(ctx.m_type) && ctx.m_type != BlockType::Blockquote) {
+            if (ctx.m_type == BlockType::Text && ctx.m_lineType == BlockType::CodeIndentedBySpaces) {
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+            }
             else {
-                if (ctx.type == BlockType::Text && isListType(ctx.lineType)) {
-                    if (ctx.lineType != BlockType::ListWithFirstEmptyLine) {
+                if (ctx.m_type == BlockType::Text && isListType(ctx.m_lineType)) {
+                    if (ctx.m_lineType != BlockType::ListWithFirstEmptyLine) {
                         int num = 0;
 
                         if (isOrderedList<Trait>(line.asString(), &num)) {
                             if (num != 1) {
-                                ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+                                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
 
                                 continue;
                             }
                         }
                     } else {
-                        ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+                        ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
 
                         continue;
                     }
@@ -2494,15 +2866,18 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
             }
         }
         // End of code block.
-        else if (ctx.type == BlockType::Code && ctx.type == ctx.lineType && !ctx.startOfCode.isEmpty()
-                 && startSequence<Trait>(line.asString()).contains(ctx.startOfCode) && isCodeFences<Trait>(line.asString(), true)) {
-            ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+        else if (ctx.m_type == BlockType::Code && ctx.m_type == ctx.m_lineType &&
+                 !ctx.m_startOfCode.isEmpty() &&
+                 startSequence<Trait>(line.asString()).contains(ctx.m_startOfCode) &&
+                 isCodeFences<Trait>(line.asString(), true)) {
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
 
             parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
         }
         // Not a continue of list.
-        else if (ctx.type != ctx.lineType && isListType(ctx.type) && ctx.lineType != BlockType::SomethingInList && ctx.lineType != BlockType::FensedCodeInList
-                 && !isListType(ctx.lineType)) {
+        else if (ctx.m_type != ctx.m_lineType && isListType(ctx.m_type) &&
+                 ctx.m_lineType != BlockType::SomethingInList &&
+                 ctx.m_lineType != BlockType::FensedCodeInList && !isListType(ctx.m_lineType)) {
             parseFragmentAndMakeNextLineMain(ctx,
                                              parent,
                                              doc,
@@ -2514,7 +2889,7 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
                                              currentIndent,
                                              ns,
                                              currentLineNumber);
-        } else if (ctx.type == BlockType::Heading) {
+        } else if (ctx.m_type == BlockType::Heading) {
             parseFragmentAndMakeNextLineMain(ctx,
                                              parent,
                                              doc,
@@ -2526,69 +2901,75 @@ inline RawHtmlBlock<Trait> Parser<Trait>::parse(StringListStream<Trait> &stream,
                                              currentIndent,
                                              ns,
                                              currentLineNumber);
-        } else
-            ctx.fragment.push_back({line, {currentLineNumber, ctx.htmlCommentData}});
+        } else {
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+        }
 
-        ctx.emptyLinesCount = 0;
+        ctx.m_emptyLinesCount = 0;
     }
 
-    if (!ctx.fragment.empty()) {
-        if (ctx.type == BlockType::Code)
-            ctx.fragment.push_back({ctx.startOfCode, {-1, {}}});
+    if (!ctx.m_fragment.empty()) {
+        if (ctx.m_type == BlockType::Code) {
+            ctx.m_fragment.push_back({ctx.m_startOfCode, {-1, {}}});
+        }
 
         parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
     }
 
     if (top) {
-        resetHtmlTag(ctx.html);
+        resetHtmlTag(ctx.m_html);
 
-        for (long long int i = 0; i < (long long int)ctx.splitted.size(); ++i) {
+        for (long long int i = 0; i < (long long int)ctx.m_splitted.size(); ++i) {
             long long int line = 0;
 
-            auto &data = ctx.splitted[i];
+            auto &data = ctx.m_splitted[i];
 
             while (line >= 0) {
-                line = parseFragment(data, parent, doc, linksToParse, workingPath, fileName, false, ctx.html);
+                line = parseFragment(data, parent, doc, linksToParse, workingPath, fileName, false, ctx.m_html);
 
                 assert(line != 0);
 
                 if (line > 0) {
-                    if (ctx.html.html) {
-                        ctx.html.parent->appendItem(ctx.html.html);
+                    if (ctx.m_html.m_html) {
+                        ctx.m_html.m_parent->appendItem(ctx.m_html.m_html);
 
-                        resetHtmlTag<Trait>(ctx.html);
+                        resetHtmlTag<Trait>(ctx.m_html);
                     }
 
-                    const auto it = std::find_if(data.data.cbegin(), data.data.cend(), [line](const auto &d) {
-                        return (d.second.lineNumber == line);
+                    const auto it = std::find_if(data.m_data.cbegin(), data.m_data.cend(), [line](const auto &d) {
+                        return (d.second.m_lineNumber == line);
                     });
 
-                    data.data.erase(data.data.cbegin(), it);
+                    data.m_data.erase(data.m_data.cbegin(), it);
                 }
             }
 
-            if (ctx.html.htmlBlockType >= 6)
-                ctx.html.continueHtml = (!ctx.splitted[i].emptyLineAfter);
+            if (ctx.m_html.m_htmlBlockType >= 6) {
+                ctx.m_html.m_continueHtml = (!ctx.m_splitted[i].m_emptyLineAfter);
+            }
 
-            if (ctx.html.html.get() && !ctx.html.continueHtml)
+            if (ctx.m_html.m_html.get() && !ctx.m_html.m_continueHtml) {
                 finishHtml(ctx, parent, doc, collectRefLinks, top, dontProcessLastFreeHtml);
+            }
         }
     }
 
-    if (ctx.html.html.get())
+    if (ctx.m_html.m_html.get()) {
         finishHtml(ctx, parent, doc, collectRefLinks, top, dontProcessLastFreeHtml);
+    }
 
-    return ctx.html;
+    return ctx.m_html;
 }
 
 #ifdef MD4QT_QT_SUPPORT
 
 template<>
-inline void Parser<QStringTrait>::parseFile(const QString &fileName,
-                                            bool recursive,
-                                            std::shared_ptr<Document<QStringTrait>> doc,
-                                            const QStringList &ext,
-                                            QStringList *parentLinks)
+inline void
+Parser<QStringTrait>::parseFile(const QString &fileName,
+                                bool recursive,
+                                std::shared_ptr<Document<QStringTrait>> doc,
+                                const QStringList &ext,
+                                QStringList *parentLinks)
 {
     QFileInfo fi(fileName);
 
@@ -2609,11 +2990,12 @@ inline void Parser<QStringTrait>::parseFile(const QString &fileName,
 #ifdef MD4QT_ICU_STL_SUPPORT
 
 template<>
-inline void Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
-                                                  bool recursive,
-                                                  std::shared_ptr<Document<UnicodeStringTrait>> doc,
-                                                  const std::vector<UnicodeString> &ext,
-                                                  std::vector<UnicodeString> *parentLinks)
+inline void
+Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
+                                      bool recursive,
+                                      std::shared_ptr<Document<UnicodeStringTrait>> doc,
+                                      const std::vector<UnicodeString> &ext,
+                                      std::vector<UnicodeString> *parentLinks)
 {
     if (UnicodeStringTrait::fileExists(fileName)) {
         std::string fn;
@@ -2622,8 +3004,9 @@ inline void Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
         try {
             auto e = UnicodeString::fromUTF8(std::filesystem::u8path(fn).extension().u8string());
 
-            if (!e.isEmpty())
+            if (!e.isEmpty()) {
                 e.remove(0, 1);
+            }
 
             if (std::find(ext.cbegin(), ext.cend(), e.toLower()) != ext.cend()) {
                 auto path = std::filesystem::canonical(std::filesystem::u8path(fn));
@@ -2633,12 +3016,14 @@ inline void Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
                     const auto fileNameS = path.filename().u8string();
                     auto workingDirectory = path.remove_filename().u8string();
 
-                    if (!workingDirectory.empty())
+                    if (!workingDirectory.empty()) {
                         workingDirectory.erase(workingDirectory.size() - 1, 1);
+                    }
 
                     std::replace(workingDirectory.begin(), workingDirectory.end(), '\\', '/');
 
-                    parseStream(file, UnicodeString::fromUTF8(workingDirectory), UnicodeString::fromUTF8(fileNameS), recursive, doc, ext, parentLinks);
+                    parseStream(file, UnicodeString::fromUTF8(workingDirectory),
+                        UnicodeString::fromUTF8(fileNameS), recursive, doc, ext, parentLinks);
 
                     file.close();
                 }
@@ -2651,7 +3036,9 @@ inline void Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
 #endif
 
 template<class Trait>
-void resolveLinks(typename Trait::StringList &linksToParse, std::shared_ptr<Document<Trait>> doc)
+void
+resolveLinks(typename Trait::StringList &linksToParse,
+             std::shared_ptr<Document<Trait>> doc)
 {
     for (auto it = linksToParse.begin(), last = linksToParse.end(); it != last; ++it) {
         auto nextFileName = *it;
@@ -2659,29 +3046,33 @@ void resolveLinks(typename Trait::StringList &linksToParse, std::shared_ptr<Docu
         if (nextFileName.startsWith(Trait::latin1ToString("#"))) {
             const auto lit = doc->labeledLinks().find(nextFileName);
 
-            if (lit != doc->labeledLinks().cend())
+            if (lit != doc->labeledLinks().cend()) {
                 nextFileName = lit->second->url();
-            else
+            } else {
                 continue;
+            }
         }
 
-        if (Trait::fileExists(nextFileName))
+        if (Trait::fileExists(nextFileName)) {
             *it = Trait::absoluteFilePath(nextFileName);
+        }
     }
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseStream(typename Trait::TextStream &s,
-                                       const typename Trait::String &workingPath,
-                                       const typename Trait::String &fileName,
-                                       bool recursive,
-                                       std::shared_ptr<Document<Trait>> doc,
-                                       const typename Trait::StringList &ext,
-                                       typename Trait::StringList *parentLinks)
+inline void
+Parser<Trait>::parseStream(typename Trait::TextStream &s,
+                           const typename Trait::String &workingPath,
+                           const typename Trait::String &fileName,
+                           bool recursive,
+                           std::shared_ptr<Document<Trait>> doc,
+                           const typename Trait::StringList &ext,
+                           typename Trait::StringList *parentLinks)
 {
     typename Trait::StringList linksToParse;
 
-    const auto path = workingPath.isEmpty() ? typename Trait::String(fileName) : typename Trait::String(workingPath + Trait::latin1ToString("/") + fileName);
+    const auto path = workingPath.isEmpty() ? typename Trait::String(fileName) :
+        typename Trait::String(workingPath + Trait::latin1ToString("/") + fileName);
 
     doc->appendItem(std::shared_ptr<Anchor<Trait>>(new Anchor<Trait>(path)));
 
@@ -2717,42 +3108,50 @@ inline void Parser<Trait>::parseStream(typename Trait::TextStream &s,
             if (parentLinks) {
                 const auto pit = std::find(parentLinks->cbegin(), parentLinks->cend(), nextFileName);
 
-                if (pit != parentLinks->cend())
+                if (pit != parentLinks->cend()) {
                     continue;
+                }
             }
 
-            if (nextFileName.startsWith(Trait::latin1ToString("#")))
+            if (nextFileName.startsWith(Trait::latin1ToString("#"))) {
                 continue;
+            }
 
             const auto pit = std::find(m_parsedFiles.cbegin(), m_parsedFiles.cend(), nextFileName);
 
             if (pit == m_parsedFiles.cend()) {
-                if (!doc->isEmpty() && doc->items().back()->type() != ItemType::PageBreak)
+                if (!doc->isEmpty() && doc->items().back()->type() != ItemType::PageBreak) {
                     doc->appendItem(std::shared_ptr<PageBreak<Trait>>(new PageBreak<Trait>));
+                }
 
                 parseFile(nextFileName, recursive, doc, ext, &linksToParse);
             }
         }
 
-        if (parentLinks)
+        if (parentLinks) {
             std::copy(tmpLinks.cbegin(), tmpLinks.cend(), std::back_inserter(*parentLinks));
+        }
     }
 }
 
 template<class Trait>
-inline long long int posOfListItem(const typename Trait::String &s, bool ordered)
+inline long long int
+posOfListItem(const typename Trait::String &s,
+              bool ordered)
 {
     long long int p = 0;
 
     for (; p < s.size(); ++p) {
-        if (!s[p].isSpace())
+        if (!s[p].isSpace()) {
             break;
+        }
     }
 
     if (ordered) {
         for (; p < s.size(); ++p) {
-            if (!s[p].isDigit())
+            if (!s[p].isDigit()) {
                 break;
+            }
         }
     }
 
@@ -2761,44 +3160,50 @@ inline long long int posOfListItem(const typename Trait::String &s, bool ordered
     long long int sc = 0;
 
     for (; p < s.size(); ++p) {
-        if (!s[p].isSpace())
+        if (!s[p].isSpace()) {
             break;
-        else
+        } else {
             ++sc;
+        }
     }
 
-    if (p == s.length() || sc > 4)
+    if (p == s.length() || sc > 4) {
         p = p - sc + 1;
-    else if (sc == 0)
+    } else if (sc == 0) {
         ++p;
+    }
 
     return p;
 }
 
-inline long long int listLevel(const std::vector<long long int> &indents, long long int pos)
+inline long long int
+listLevel(const std::vector<long long int> &indents,
+          long long int pos)
 {
     long long int level = indents.size();
 
     for (auto it = indents.crbegin(), last = indents.crend(); it != last; ++it) {
-        if (pos >= *it)
+        if (pos >= *it) {
             break;
-        else
+        } else {
             --level;
+        }
     }
 
     return level;
 }
 
 template<class Trait>
-inline typename Parser<Trait>::BlockType Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
-                                                                      bool inList,
-                                                                      bool inListWithFirstEmptyLine,
-                                                                      bool fensedCodeInList,
-                                                                      typename Trait::String *startOfCode,
-                                                                      ListIndent *indent,
-                                                                      bool emptyLinePreceded,
-                                                                      bool calcIndent,
-                                                                      const std::vector<long long int> *indents)
+inline typename Parser<Trait>::BlockType
+Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
+                             bool inList,
+                             bool inListWithFirstEmptyLine,
+                             bool fensedCodeInList,
+                             typename Trait::String *startOfCode,
+                             ListIndent *indent,
+                             bool emptyLinePreceded,
+                             bool calcIndent,
+                             const std::vector<long long int> *indents)
 {
     replaceTabs<Trait>(str);
 
@@ -2811,30 +3216,37 @@ inline typename Parser<Trait>::BlockType Parser<Trait>::whatIsTheLine(typename T
         const bool indentIn = indentInList(indents, first, false);
         bool isHeading = false;
 
-        if (first < 4 && isFootnote<Trait>(s.asString()))
+        if (first < 4 && isFootnote<Trait>(s.asString())) {
             return BlockType::Footnote;
+        }
 
-        if (s.asString().startsWith(Trait::latin1ToString("#")) && (indent ? first - indent->indent < 4 : first < 4)) {
+        if (s.asString().startsWith(Trait::latin1ToString("#")) &&
+            (indent ? first - indent->m_indent < 4 : first < 4)) {
             long long int c = 0;
 
-            while (c < s.length() && s[c] == Trait::latin1ToChar('#'))
+            while (c < s.length() && s[c] == Trait::latin1ToChar('#')) {
                 ++c;
+            }
 
-            if (c <= 6 && ((c < s.length() && s[c].isSpace()) || c == s.length()))
+            if (c <= 6 && ((c < s.length() && s[c].isSpace()) || c == s.length())) {
                 isHeading = true;
+            }
         }
 
         if (inList) {
             bool isFirstLineEmpty = false;
-            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr, &isFirstLineEmpty);
+            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr,
+                &isFirstLineEmpty);
             const bool fensedCode = isCodeFences<Trait>(s.asString());
-            const auto codeIndentedBySpaces = emptyLinePreceded && first >= 4 && !indentInList(indents, first, true);
+            const auto codeIndentedBySpaces = emptyLinePreceded && first >= 4 &&
+                !indentInList(indents, first, true);
 
             if (fensedCodeInList) {
                 if (indentInList(indents, first, true)) {
                     if (fensedCode) {
-                        if (startOfCode && startSequence<Trait>(s.asString()).contains(*startOfCode))
+                        if (startOfCode && startSequence<Trait>(s.asString()).contains(*startOfCode)) {
                             return BlockType::FensedCodeInList;
+                        }
                     }
 
                     return BlockType::SomethingInList;
@@ -2842,92 +3254,103 @@ inline typename Parser<Trait>::BlockType Parser<Trait>::whatIsTheLine(typename T
             }
 
             if (fensedCode && indentIn) {
-                if (startOfCode)
+                if (startOfCode) {
                     *startOfCode = startSequence<Trait>(s.asString());
-
-                return BlockType::FensedCodeInList;
-            } else if ((((s.asString().startsWith(Trait::latin1ToString("-")) || s.asString().startsWith(Trait::latin1ToString("+"))
-                          || s.asString().startsWith(Trait::latin1ToString("*")))
-                         && ((s.length() > 1 && s[1] == Trait::latin1ToChar(' ')) || s.length() == 1))
-                        || orderedList)
-                       && (first < 4 || indentIn)) {
-                if (codeIndentedBySpaces)
-                    return BlockType::CodeIndentedBySpaces;
-
-                if (indent && calcIndent) {
-                    indent->indent = posOfListItem<Trait>(str.asString(), orderedList);
-                    indent->level = (indents ? listLevel(*indents, first) : -1);
                 }
 
-                if (s.simplified().length() == 1 || isFirstLineEmpty)
+                return BlockType::FensedCodeInList;
+            } else if ((((s.asString().startsWith(Trait::latin1ToString("-")) ||
+                          s.asString().startsWith(Trait::latin1ToString("+")) ||
+                          s.asString().startsWith(Trait::latin1ToString("*"))) &&
+                         ((s.length() > 1 && s[1] == Trait::latin1ToChar(' ')) || s.length() == 1)) ||
+                         orderedList) && (first < 4 || indentIn)) {
+                if (codeIndentedBySpaces) {
+                    return BlockType::CodeIndentedBySpaces;
+                }
+
+                if (indent && calcIndent) {
+                    indent->m_indent = posOfListItem<Trait>(str.asString(), orderedList);
+                    indent->m_level = (indents ? listLevel(*indents, first) : -1);
+                }
+
+                if (s.simplified().length() == 1 || isFirstLineEmpty) {
                     return BlockType::ListWithFirstEmptyLine;
-                else
+                } else {
                     return BlockType::List;
-            } else if (indentInList(indents, first, true))
+                }
+            } else if (indentInList(indents, first, true)) {
                 return BlockType::SomethingInList;
+            }
             else {
-                if (!isHeading && !isBlockquote && !(fensedCode && first < 4) && !emptyLinePreceded && !inListWithFirstEmptyLine)
+                if (!isHeading && !isBlockquote &&
+                    !(fensedCode && first < 4) && !emptyLinePreceded && !inListWithFirstEmptyLine) {
                     return BlockType::SomethingInList;
+                }
             }
         } else {
             bool isFirstLineEmpty = false;
 
-            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr, &isFirstLineEmpty);
+            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr,
+                &isFirstLineEmpty);
             const bool isHLine = first < 4 && isHorizontalLine<Trait>(s.asString());
 
-            if (!isHLine
-                && (((s.asString().startsWith(Trait::latin1ToString("-")) || s.asString().startsWith(Trait::latin1ToString("+"))
-                      || s.asString().startsWith(Trait::latin1ToString("*")))
-                     && ((s.length() > 1 && s[1] == Trait::latin1ToChar(' ')) || s.length() == 1))
-                    || orderedList)
-                && first < 4) {
+            if (!isHLine &&
+                (((s.asString().startsWith(Trait::latin1ToString("-")) || s.asString().startsWith(Trait::latin1ToString("+")) ||
+                      s.asString().startsWith(Trait::latin1ToString("*"))) &&
+                     ((s.length() > 1 && s[1] == Trait::latin1ToChar(' ')) || s.length() == 1)) ||
+                    orderedList) && first < 4) {
                 if (indent && calcIndent) {
-                    indent->indent = posOfListItem<Trait>(str.asString(), orderedList);
-                    indent->level = (indents ? listLevel(*indents, first) : -1);
+                    indent->m_indent = posOfListItem<Trait>(str.asString(), orderedList);
+                    indent->m_level = (indents ? listLevel(*indents, first) : -1);
                 }
 
-                if (s.simplified().length() == 1 || isFirstLineEmpty)
+                if (s.simplified().length() == 1 || isFirstLineEmpty) {
                     return BlockType::ListWithFirstEmptyLine;
-                else
+                } else {
                     return BlockType::List;
+                }
             }
         }
 
-        if (str.asString().startsWith(typename Trait::String(4, Trait::latin1ToChar(' '))))
+        if (str.asString().startsWith(typename Trait::String(4, Trait::latin1ToChar(' ')))) {
             return BlockType::CodeIndentedBySpaces;
-        else if (isCodeFences<Trait>(str.asString()))
+        } else if (isCodeFences<Trait>(str.asString())) {
             return BlockType::Code;
-        else if (isBlockquote)
+        } else if (isBlockquote) {
             return BlockType::Blockquote;
-        else if (isHeading)
+        } else if (isHeading) {
             return BlockType::Heading;
-    } else
+        }
+    } else {
         return BlockType::EmptyLine;
+    }
 
     return BlockType::Text;
 }
 
 template<class Trait>
-inline long long int Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
-                                                  std::shared_ptr<Block<Trait>> parent,
-                                                  std::shared_ptr<Document<Trait>> doc,
-                                                  typename Trait::StringList &linksToParse,
-                                                  const typename Trait::String &workingPath,
-                                                  const typename Trait::String &fileName,
-                                                  bool collectRefLinks,
-                                                  RawHtmlBlock<Trait> &html)
+inline long long int
+Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
+                             std::shared_ptr<Block<Trait>> parent,
+                             std::shared_ptr<Document<Trait>> doc,
+                             typename Trait::StringList &linksToParse,
+                             const typename Trait::String &workingPath,
+                             const typename Trait::String &fileName,
+                             bool collectRefLinks,
+                             RawHtmlBlock<Trait> &html)
 {
-    if (html.continueHtml)
+    if (html.m_continueHtml) {
         parseText(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
-    else {
-        if (html.html) {
-            if (!collectRefLinks)
-                parent->appendItem(html.html);
+    } else {
+        if (html.m_html) {
+            if (!collectRefLinks) {
+                parent->appendItem(html.m_html);
+            }
 
             resetHtmlTag(html);
         }
 
-        switch (whatIsTheLine(fr.data.front().first)) {
+        switch (whatIsTheLine(fr.m_data.front().first)) {
         case BlockType::Footnote:
             parseFootnote(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
             break;
@@ -2947,8 +3370,9 @@ inline long long int Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
         case BlockType::CodeIndentedBySpaces: {
             int indent = 1;
 
-            if (fr.data.front().first.asString().startsWith(Trait::latin1ToString("    ")))
+            if (fr.m_data.front().first.asString().startsWith(Trait::latin1ToString("    "))) {
                 indent = 4;
+            }
 
             parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, {}, -1, -1, false);
         } break;
@@ -2970,13 +3394,15 @@ inline long long int Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
 }
 
 template<class Trait>
-inline void Parser<Trait>::clearCache()
+inline void
+Parser<Trait>::clearCache()
 {
     m_parsedFiles.clear();
 }
 
 template<class Trait>
-inline int isTableHeader(const typename Trait::String &s)
+inline int
+isTableHeader(const typename Trait::String &s)
 {
     if (s.contains(Trait::latin1ToChar('|'))) {
         int c = 0;
@@ -2994,47 +3420,53 @@ inline int isTableHeader(const typename Trait::String &s)
             if (v[i] == Trait::latin1ToChar('\\') && !backslash) {
                 backslash = true;
                 now = true;
-            } else if (v[i] == Trait::latin1ToChar('|') && !backslash)
+            } else if (v[i] == Trait::latin1ToChar('|') && !backslash) {
                 ++c;
+            }
 
-            if (!now)
+            if (!now) {
                 backslash = false;
+            }
         }
 
         ++c;
 
         return c;
-    } else
+    } else {
         return 0;
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseText(MdBlock<Trait> &fr,
-                                     std::shared_ptr<Block<Trait>> parent,
-                                     std::shared_ptr<Document<Trait>> doc,
-                                     typename Trait::StringList &linksToParse,
-                                     const typename Trait::String &workingPath,
-                                     const typename Trait::String &fileName,
-                                     bool collectRefLinks,
-                                     RawHtmlBlock<Trait> &html)
+inline void
+Parser<Trait>::parseText(MdBlock<Trait> &fr,
+                         std::shared_ptr<Block<Trait>> parent,
+                         std::shared_ptr<Document<Trait>> doc,
+                         typename Trait::StringList &linksToParse,
+                         const typename Trait::String &workingPath,
+                         const typename Trait::String &fileName,
+                         bool collectRefLinks,
+                         RawHtmlBlock<Trait> &html)
 {
-    const auto h = isTableHeader<Trait>(fr.data.front().first.asString());
-    const auto c = fr.data.size() > 1 ? isTableAlignment<Trait>(fr.data[1].first.asString()) : 0;
+    const auto h = isTableHeader<Trait>(fr.m_data.front().first.asString());
+    const auto c = fr.m_data.size() > 1 ? isTableAlignment<Trait>(fr.m_data[1].first.asString()) : 0;
 
-    if (c && h && c == h && !html.continueHtml) {
+    if (c && h && c == h && !html.m_continueHtml) {
         parseTable(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, c);
 
-        if (!fr.data.empty()) {
-            StringListStream<Trait> stream(fr.data);
+        if (!fr.m_data.empty()) {
+            StringListStream<Trait> stream(fr.m_data);
 
             Parser<Trait>::parse(stream, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
         }
-    } else
+    } else {
         parseParagraph(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
+    }
 }
 
 template<class Trait>
-inline std::pair<typename Trait::String, WithPosition> findAndRemoveHeaderLabel(typename Trait::InternalString &s)
+inline std::pair<typename Trait::String, WithPosition>
+findAndRemoveHeaderLabel(typename Trait::InternalString &s)
 {
     const auto start = s.asString().indexOf(Trait::latin1ToString("{#"));
 
@@ -3042,8 +3474,9 @@ inline std::pair<typename Trait::String, WithPosition> findAndRemoveHeaderLabel(
         long long int p = start + 2;
 
         for (; p < s.length(); ++p) {
-            if (s[p] == Trait::latin1ToChar('}'))
+            if (s[p] == Trait::latin1ToChar('}')) {
                 break;
+            }
         }
 
         if (p < s.length() && s[p] == Trait::latin1ToChar('}')) {
@@ -3061,29 +3494,34 @@ inline std::pair<typename Trait::String, WithPosition> findAndRemoveHeaderLabel(
 }
 
 template<class Trait>
-inline typename Trait::String stringToLabel(const typename Trait::String &s)
+inline typename Trait::String
+stringToLabel(const typename Trait::String &s)
 {
     typename Trait::String res;
 
     for (long long int i = 0; i < s.length(); ++i) {
         const auto c = s[i];
 
-        if (c.isLetter() || c.isDigit() || c == Trait::latin1ToChar('-') || c == Trait::latin1ToChar('_'))
+        if (c.isLetter() || c.isDigit() || c == Trait::latin1ToChar('-') ||
+            c == Trait::latin1ToChar('_')) {
             res.push_back(c.toLower());
-        else if (c.isSpace() && !res.isEmpty())
+        } else if (c.isSpace() && !res.isEmpty()) {
             res.push_back(Trait::latin1ToString("-"));
+        }
     }
 
     return res;
 }
 
 template<class Trait>
-inline typename Trait::String paragraphToLabel(Paragraph<Trait> *p)
+inline typename Trait::String
+paragraphToLabel(Paragraph<Trait> *p)
 {
     typename Trait::String l;
 
-    if (!p)
+    if (!p) {
         return l;
+    }
 
     long long int line = -1;
 
@@ -3102,34 +3540,38 @@ inline typename Trait::String paragraphToLabel(Paragraph<Trait> *p)
         case ItemType::Image: {
             auto i = static_cast<Image<Trait> *>(it->get());
 
-            if (!i->p()->isEmpty())
+            if (!i->p()->isEmpty()) {
                 tmp = paragraphToLabel(i->p().get());
-            else if (!i->text().simplified().isEmpty())
+            } else if (!i->text().simplified().isEmpty()) {
                 tmp = stringToLabel<Trait>(i->text().simplified());
+            }
         } break;
 
         case ItemType::Link: {
             auto link = static_cast<Link<Trait> *>(it->get());
 
-            if (!link->p()->isEmpty())
+            if (!link->p()->isEmpty()) {
                 tmp = paragraphToLabel(link->p().get());
-            else if (!link->text().simplified().isEmpty())
+            } else if (!link->text().simplified().isEmpty()) {
                 tmp = stringToLabel<Trait>(link->text().simplified());
+            }
         } break;
 
         case ItemType::Code: {
             auto c = static_cast<Code<Trait> *>(it->get());
 
-            if (!c->text().simplified().isEmpty())
+            if (!c->text().simplified().isEmpty()) {
                 tmp = stringToLabel<Trait>(c->text().simplified());
+            }
         } break;
 
         default:
             break;
         }
 
-        if (!l.isEmpty() && !tmp.isEmpty() && !newLine)
+        if (!l.isEmpty() && !tmp.isEmpty() && !newLine) {
             l.push_back(Trait::latin1ToString("-"));
+        }
 
         l.push_back(tmp);
     }
@@ -3138,27 +3580,32 @@ inline typename Trait::String paragraphToLabel(Paragraph<Trait> *p)
 }
 
 template<class Trait>
-inline WithPosition findAndRemoveClosingSequence(typename Trait::InternalString &s)
+inline WithPosition
+findAndRemoveClosingSequence(typename Trait::InternalString &s)
 {
     long long int end = -1;
     long long int start = -1;
 
     for (long long int i = s.length() - 1; i >= 0; --i) {
-        if (!s[i].isSpace() && s[i] != Trait::latin1ToChar('#') && end == -1)
+        if (!s[i].isSpace() && s[i] != Trait::latin1ToChar('#') && end == -1) {
             return {};
+        }
 
         if (s[i] == Trait::latin1ToChar('#')) {
-            if (end == -1)
+            if (end == -1) {
                 end = i;
+            }
 
             if (i - 1 >= 0) {
                 if (s[i - 1].isSpace()) {
                     start = i;
                     break;
-                } else if (s[i - 1] != Trait::latin1ToChar('#'))
+                } else if (s[i - 1] != Trait::latin1ToChar('#')) {
                     return {};
-            } else
+                }
+            } else {
                 start = 0;
+            }
         }
     }
 
@@ -3175,28 +3622,30 @@ inline WithPosition findAndRemoveClosingSequence(typename Trait::InternalString 
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
-                                        std::shared_ptr<Block<Trait>> parent,
-                                        std::shared_ptr<Document<Trait>> doc,
-                                        typename Trait::StringList &linksToParse,
-                                        const typename Trait::String &workingPath,
-                                        const typename Trait::String &fileName,
-                                        bool collectRefLinks)
+inline void
+Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
+                            std::shared_ptr<Block<Trait>> parent,
+                            std::shared_ptr<Document<Trait>> doc,
+                            typename Trait::StringList &linksToParse,
+                            const typename Trait::String &workingPath,
+                            const typename Trait::String &fileName,
+                            bool collectRefLinks)
 {
-    if (!fr.data.empty() && !collectRefLinks) {
-        auto line = fr.data.front().first;
+    if (!fr.m_data.empty() && !collectRefLinks) {
+        auto line = fr.m_data.front().first;
 
         std::shared_ptr<Heading<Trait>> h(new Heading<Trait>);
         h->setStartColumn(line.virginPos(skipSpaces<Trait>(0, line.asString())));
-        h->setStartLine(fr.data.front().second.lineNumber);
+        h->setStartLine(fr.m_data.front().second.m_lineNumber);
         h->setEndColumn(line.virginPos(line.length() - 1));
         h->setEndLine(h->startLine());
 
         long long int pos = 0;
         pos = skipSpaces<Trait>(pos, line.asString());
 
-        if (pos > 0)
+        if (pos > 0) {
             line = line.sliced(pos);
+        }
 
         pos = 0;
         int lvl = 0;
@@ -3206,21 +3655,23 @@ inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
             ++pos;
         }
 
-        WithPosition startDelim = {h->startColumn(), h->startLine(), line.virginPos(pos - 1), h->startLine()};
+        WithPosition startDelim = {h->startColumn(), h->startLine(),
+            line.virginPos(pos - 1), h->startLine()};
 
         pos = skipSpaces<Trait>(pos, line.asString());
 
-        if (pos > 0)
-            fr.data.front().first = line.sliced(pos);
+        if (pos > 0) {
+            fr.m_data.front().first = line.sliced(pos);
+        }
 
-        auto label = findAndRemoveHeaderLabel<Trait>(fr.data.front().first);
+        auto label = findAndRemoveHeaderLabel<Trait>(fr.m_data.front().first);
 
         typename Heading<Trait>::Delims delims = {startDelim};
 
-        auto endDelim = findAndRemoveClosingSequence<Trait>(fr.data.front().first);
+        auto endDelim = findAndRemoveClosingSequence<Trait>(fr.m_data.front().first);
 
         if (endDelim.startColumn() != -1) {
-            endDelim.setStartLine(fr.data.front().second.lineNumber);
+            endDelim.setStartLine(fr.m_data.front().second.m_lineNumber);
             endDelim.setEndLine(endDelim.startLine());
 
             delims.push_back(endDelim);
@@ -3231,10 +3682,11 @@ inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         h->setLevel(lvl);
 
         if (!label.first.isEmpty()) {
-            h->setLabel(label.first.sliced(1, label.first.length() - 2) + Trait::latin1ToString("/")
-                        + (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") : Trait::latin1ToString("")) + fileName);
+            h->setLabel(label.first.sliced(1, label.first.length() - 2) + Trait::latin1ToString("/") +
+                        (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") :
+                            Trait::latin1ToString("")) + fileName);
 
-            label.second.setStartLine(fr.data.front().second.lineNumber);
+            label.second.setStartLine(fr.m_data.front().second.m_lineNumber);
             label.second.setEndLine(label.second.startLine());
 
             h->setLabelPos(label.second);
@@ -3243,27 +3695,32 @@ inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
 
         typename MdBlock<Trait>::Data tmp;
-        tmp.push_back(fr.data.front());
+        tmp.push_back(fr.m_data.front());
         tmp.front().first = tmp.front().first.simplified();
         MdBlock<Trait> block = {tmp, 0};
 
         RawHtmlBlock<Trait> html;
 
-        parseFormattedTextLinksImages(block, p, doc, linksToParse, workingPath, fileName, false, false, html, false);
+        parseFormattedTextLinksImages(block, p, doc, linksToParse, workingPath, fileName,
+            false, false, html, false);
 
-        fr.data.erase(fr.data.cbegin());
+        fr.m_data.erase(fr.m_data.cbegin());
 
-        if (p->items().size() && p->items().at(0)->type() == ItemType::Paragraph)
+        if (p->items().size() && p->items().at(0)->type() == ItemType::Paragraph) {
             h->setText(std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0)));
-        else
+        } else {
             h->setText(p);
+        }
 
-        if (h->isLabeled())
+        if (h->isLabeled()) {
             doc->insertLabeledHeading(h->label(), h);
-        else {
-            typename Trait::String label = Trait::latin1ToString("#") + paragraphToLabel(h->text().get());
+        } else {
+            typename Trait::String label = Trait::latin1ToString("#") +
+                paragraphToLabel(h->text().get());
 
-            label += Trait::latin1ToString("/") + (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") : Trait::latin1ToString("")) + fileName;
+            label += Trait::latin1ToString("/") +
+                (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") :
+                    Trait::latin1ToString("")) + fileName;
 
             h->setLabel(label);
 
@@ -3275,7 +3732,8 @@ inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
 }
 
 template<class Trait>
-inline typename Trait::InternalString prepareTableData(typename Trait::InternalString s)
+inline typename Trait::InternalString
+prepareTableData(typename Trait::InternalString s)
 {
     s.replace(Trait::latin1ToString("\\|"), Trait::latin1ToString("|"));
 
@@ -3283,7 +3741,8 @@ inline typename Trait::InternalString prepareTableData(typename Trait::InternalS
 }
 
 template<class Trait>
-inline std::pair<typename Trait::InternalStringList, std::vector<long long int>> splitTableRow(const typename Trait::InternalString &s)
+inline std::pair<typename Trait::InternalStringList, std::vector<long long int>>
+splitTableRow(const typename Trait::InternalString &s)
 {
     typename Trait::InternalStringList res;
     std::vector<long long int> columns;
@@ -3303,8 +3762,9 @@ inline std::pair<typename Trait::InternalStringList, std::vector<long long int>>
             start = i + 1;
         }
 
-        if (!now)
+        if (!now) {
             backslash = false;
+        }
     }
 
     res.push_back(prepareTableData<Trait>(s.sliced(start, s.length() - start).simplified()));
@@ -3313,37 +3773,41 @@ inline std::pair<typename Trait::InternalStringList, std::vector<long long int>>
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
-                                      std::shared_ptr<Block<Trait>> parent,
-                                      std::shared_ptr<Document<Trait>> doc,
-                                      typename Trait::StringList &linksToParse,
-                                      const typename Trait::String &workingPath,
-                                      const typename Trait::String &fileName,
-                                      bool collectRefLinks,
-                                      int columnsCount)
+inline void
+Parser<Trait>::parseTable(MdBlock<Trait> &fr,
+                          std::shared_ptr<Block<Trait>> parent,
+                          std::shared_ptr<Document<Trait>> doc,
+                          typename Trait::StringList &linksToParse,
+                          const typename Trait::String &workingPath,
+                          const typename Trait::String &fileName,
+                          bool collectRefLinks,
+                          int columnsCount)
 {
     static const char sep = '|';
 
-    if (fr.data.size() >= 2) {
+    if (fr.m_data.size() >= 2) {
         std::shared_ptr<Table<Trait>> table(new Table<Trait>);
-        table->setStartColumn(fr.data.front().first.virginPos(0));
-        table->setStartLine(fr.data.front().second.lineNumber);
-        table->setEndColumn(fr.data.back().first.virginPos(fr.data.back().first.length() - 1));
-        table->setEndLine(fr.data.back().second.lineNumber);
+        table->setStartColumn(fr.m_data.front().first.virginPos(0));
+        table->setStartLine(fr.m_data.front().second.m_lineNumber);
+        table->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+        table->setEndLine(fr.m_data.back().second.m_lineNumber);
 
         auto parseTableRow = [&](const typename MdBlock<Trait>::Line &lineData) -> bool {
             const auto &row = lineData.first;
 
-            if (row.asString().startsWith(Trait::latin1ToString("    ")))
+            if (row.asString().startsWith(Trait::latin1ToString("    "))) {
                 return false;
+            }
 
             auto line = row.simplified();
 
-            if (line.asString().startsWith(typename Trait::String(Trait::latin1ToChar(sep))))
+            if (line.asString().startsWith(typename Trait::String(Trait::latin1ToChar(sep)))) {
                 line.remove(0, 1);
+            }
 
-            if (line.asString().endsWith(typename Trait::String(Trait::latin1ToChar(sep))))
+            if (line.asString().endsWith(typename Trait::String(Trait::latin1ToChar(sep)))) {
                 line.remove(line.length() - 1, 1);
+            }
 
             auto columns = splitTableRow<Trait>(line);
             columns.second.insert(columns.second.begin(), row.virginPos(0));
@@ -3351,21 +3815,22 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
 
             std::shared_ptr<TableRow<Trait>> tr(new TableRow<Trait>);
             tr->setStartColumn(row.virginPos(0));
-            tr->setStartLine(lineData.second.lineNumber);
+            tr->setStartLine(lineData.second.m_lineNumber);
             tr->setEndColumn(row.virginPos(row.length() - 1));
-            tr->setEndLine(lineData.second.lineNumber);
+            tr->setEndLine(lineData.second.m_lineNumber);
 
             int col = 0;
 
             for (auto it = columns.first.begin(), last = columns.first.end(); it != last; ++it, ++col) {
-                if (col == columnsCount)
+                if (col == columnsCount) {
                     break;
+                }
 
                 std::shared_ptr<TableCell<Trait>> c(new TableCell<Trait>);
                 c->setStartColumn(columns.second.at(col));
-                c->setStartLine(lineData.second.lineNumber);
+                c->setStartLine(lineData.second.m_lineNumber);
                 c->setEndColumn(columns.second.at(col + 1));
-                c->setEndLine(lineData.second.lineNumber);
+                c->setEndLine(lineData.second.m_lineNumber);
 
                 if (!it->isEmpty()) {
                     it->replace(Trait::latin1ToString("&#124;"), Trait::latin1ToChar(sep));
@@ -3378,7 +3843,8 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
 
                     RawHtmlBlock<Trait> html;
 
-                    parseFormattedTextLinksImages(block, p, doc, linksToParse, workingPath, fileName, collectRefLinks, false, html, false);
+                    parseFormattedTextLinksImages(block, p, doc, linksToParse, workingPath, fileName,
+                        collectRefLinks, false, html, false);
 
                     if (!p->isEmpty()) {
                         if (p->items().at(0)->type() == ItemType::Paragraph) {
@@ -3387,10 +3853,12 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                             for (auto it = pp->items().cbegin(), last = pp->items().cend(); it != last; ++it) {
                                 c->appendItem((*it));
                             }
-                        } else if (p->items().at(0)->type() == ItemType::RawHtml)
+                        } else if (p->items().at(0)->type() == ItemType::RawHtml) {
                             c->appendItem(p->items().at(0));
-                    } else if (html.html.get())
-                        c->appendItem(html.html);
+                        }
+                    } else if (html.m_html.get()) {
+                        c->appendItem(html.m_html);
+                    }
                 }
 
                 tr->appendCell(c);
@@ -3403,7 +3871,7 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
         };
 
         {
-            auto fmt = fr.data.at(1).first;
+            auto fmt = fr.m_data.at(1).first;
 
             auto columns = fmt.split(typename Trait::InternalString(Trait::latin1ToChar(sep)));
 
@@ -3413,82 +3881,100 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                 if (!it->isEmpty()) {
                     typename Table<Trait>::Alignment a = Table<Trait>::AlignLeft;
 
-                    if (it->asString().endsWith(Trait::latin1ToString(":")) && it->asString().startsWith(Trait::latin1ToString(":")))
+                    if (it->asString().endsWith(Trait::latin1ToString(":")) &&
+                        it->asString().startsWith(Trait::latin1ToString(":"))) {
                         a = Table<Trait>::AlignCenter;
-                    else if (it->asString().endsWith(Trait::latin1ToString(":")))
+                    } else if (it->asString().endsWith(Trait::latin1ToString(":"))) {
                         a = Table<Trait>::AlignRight;
+                    }
 
                     table->setColumnAlignment(table->columnsCount(), a);
                 }
             }
         }
 
-        fr.data.erase(fr.data.cbegin() + 1);
+        fr.m_data.erase(fr.m_data.cbegin() + 1);
 
         long long int r = 0;
 
-        for (const auto &line : std::as_const(fr.data)) {
-            if (!parseTableRow(line))
+        for (const auto &line : std::as_const(fr.m_data)) {
+            if (!parseTableRow(line)) {
                 break;
+            }
 
             ++r;
         }
 
-        fr.data.erase(fr.data.cbegin(), fr.data.cbegin() + r);
+        fr.m_data.erase(fr.m_data.cbegin(), fr.m_data.cbegin() + r);
 
-        if (!table->isEmpty() && !collectRefLinks)
+        if (!table->isEmpty() && !collectRefLinks) {
             parent->appendItem(table);
+        }
     }
 }
 
 template<class Trait>
-inline bool isH(const typename Trait::String &s, const typename Trait::Char &c)
+inline bool
+isH(const typename Trait::String &s,
+    const typename Trait::Char &c)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
-    if (p > 3)
+    if (p > 3) {
         return false;
+    }
 
     const auto start = p;
 
     for (; p < s.size(); ++p) {
-        if (s[p] != c)
+        if (s[p] != c) {
             break;
+        }
     }
 
-    if (p - start < 1)
+    if (p - start < 1) {
         return false;
+    }
 
     for (; p < s.size(); ++p) {
-        if (!s[p].isSpace())
+        if (!s[p].isSpace()) {
             return false;
+        }
     }
 
     return true;
 }
 
 template<class Trait>
-inline bool isH1(const typename Trait::String &s)
+inline bool
+isH1(const typename Trait::String &s)
 {
     return isH<Trait>(s, Trait::latin1ToChar('='));
 }
 
 template<class Trait>
-inline bool isH2(const typename Trait::String &s)
+inline bool
+isH2(const typename Trait::String &s)
 {
     return isH<Trait>(s, Trait::latin1ToChar('-'));
 }
 
 template<class Trait>
-inline std::pair<long long int, long long int> prevPosition(const MdBlock<Trait> &fr, long long int pos, long long int line)
+inline std::pair<long long int, long long int>
+prevPosition(const MdBlock<Trait> &fr,
+             long long int pos,
+             long long int line)
 {
-    if (pos > 0)
+    if (pos > 0) {
         return {pos - 1, line};
+    }
 
-    for (long long int i = 0; i < static_cast<long long int>(fr.data.size()); ++i) {
-        if (fr.data.at(i).second.lineNumber == line) {
-            if (i > 0)
-                return {fr.data.at(i - 1).first.virginPos(fr.data.at(i - 1).first.length() - 1), line - 1};
+    for (long long int i = 0; i < static_cast<long long int>(fr.m_data.size()); ++i) {
+        if (fr.m_data.at(i).second.m_lineNumber == line) {
+            if (i > 0) {
+                return {fr.m_data.at(i - 1).first.virginPos(fr.m_data.at(i - 1).first.length() - 1),
+                    line - 1};
+            }
         }
     }
 
@@ -3496,16 +3982,20 @@ inline std::pair<long long int, long long int> prevPosition(const MdBlock<Trait>
 }
 
 template<class Trait>
-inline std::pair<long long int, long long int> nextPosition(const MdBlock<Trait> &fr, long long int pos, long long int line)
+inline std::pair<long long int, long long int>
+nextPosition(const MdBlock<Trait> &fr,
+             long long int pos,
+             long long int line)
 {
-    for (long long int i = 0; i < static_cast<long long int>(fr.data.size()); ++i) {
-        if (fr.data.at(i).second.lineNumber == line) {
-            if (fr.data.at(i).first.virginPos(fr.data.at(i).first.length() - 1) >= pos + 1)
+    for (long long int i = 0; i < static_cast<long long int>(fr.m_data.size()); ++i) {
+        if (fr.m_data.at(i).second.m_lineNumber == line) {
+            if (fr.m_data.at(i).first.virginPos(fr.m_data.at(i).first.length() - 1) >= pos + 1) {
                 return {pos + 1, line};
-            else if (i + 1 < static_cast<long long int>(fr.data.size()))
-                return {fr.data.at(i + 1).first.virginPos(0), fr.data.at(i + 1).second.lineNumber};
-            else
+            } else if (i + 1 < static_cast<long long int>(fr.m_data.size())) {
+                return {fr.m_data.at(i + 1).first.virginPos(0), fr.m_data.at(i + 1).second.m_lineNumber};
+            } else {
                 return {pos, line};
+            }
         }
     }
 
@@ -3513,43 +4003,50 @@ inline std::pair<long long int, long long int> nextPosition(const MdBlock<Trait>
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseParagraph(MdBlock<Trait> &fr,
-                                          std::shared_ptr<Block<Trait>> parent,
-                                          std::shared_ptr<Document<Trait>> doc,
-                                          typename Trait::StringList &linksToParse,
-                                          const typename Trait::String &workingPath,
-                                          const typename Trait::String &fileName,
-                                          bool collectRefLinks,
-                                          RawHtmlBlock<Trait> &html)
+inline void
+Parser<Trait>::parseParagraph(MdBlock<Trait> &fr,
+                              std::shared_ptr<Block<Trait>> parent,
+                              std::shared_ptr<Document<Trait>> doc,
+                              typename Trait::StringList &linksToParse,
+                              const typename Trait::String &workingPath,
+                              const typename Trait::String &fileName,
+                              bool collectRefLinks,
+                              RawHtmlBlock<Trait> &html)
 {
-    parseFormattedTextLinksImages(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, false, html, false);
+    parseFormattedTextLinksImages(fr, parent, doc, linksToParse, workingPath, fileName,
+        collectRefLinks, false, html, false);
 }
 
 template<class Trait>
 struct UnprotectedDocsMethods {
-    static bool isFreeTag(std::shared_ptr<RawHtml<Trait>> html)
+    static bool
+    isFreeTag(std::shared_ptr<RawHtml<Trait>> html)
     {
         return html->isFreeTag();
     }
 
-    static void setFreeTag(std::shared_ptr<RawHtml<Trait>> html, bool on)
+    static void
+    setFreeTag(std::shared_ptr<RawHtml<Trait>> html, bool on)
     {
         html->setFreeTag(on);
     }
 
-    static bool isDirty(std::shared_ptr<Paragraph<Trait>> p)
+    static bool
+    isDirty(std::shared_ptr<Paragraph<Trait>> p)
     {
         return p->isDirty();
     }
 
-    static void setDirty(std::shared_ptr<Paragraph<Trait>> p, bool on)
+    static void
+    setDirty(std::shared_ptr<Paragraph<Trait>> p, bool on)
     {
         p->setDirty(on);
     }
 };
 
 template<class Trait>
-inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
+inline typename Parser<Trait>::Delims
+Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
 {
     Delims d;
 
@@ -3558,13 +4055,13 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
         const auto p = skipSpaces<Trait>(0, str);
         const auto withoutSpaces = str.sliced(p);
 
-        if (isHorizontalLine<Trait>(withoutSpaces) && p < 4)
+        if (isHorizontalLine<Trait>(withoutSpaces) && p < 4) {
             d.push_back({Delimiter::HorizontalLine, line, 0, str.length(), false, false, false});
-        else if (isH1<Trait>(withoutSpaces) && p < 4)
+        } else if (isH1<Trait>(withoutSpaces) && p < 4) {
             d.push_back({Delimiter::H1, line, 0, str.length(), false, false, false});
-        else if (isH2<Trait>(withoutSpaces) && p < 4)
+        } else if (isH2<Trait>(withoutSpaces) && p < 4) {
             d.push_back({Delimiter::H2, line, 0, str.length(), false, false, false});
-        else {
+        } else {
             bool backslash = false;
             bool space = true;
             bool word = false;
@@ -3597,10 +4094,11 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
 
                         typename Delimiter::DelimiterType dt = Delimiter::Unknown;
 
-                        if (ch == Trait::latin1ToChar('*'))
+                        if (ch == Trait::latin1ToChar('*')) {
                             dt = Delimiter::Emphasis1;
-                        else
+                        } else {
                             dt = Delimiter::Emphasis2;
+                        }
 
                         const bool punctAfter = (i < str.length() ? str[i].isPunct() || str[i].isSymbol() : true);
                         const bool uWhitespaceAfter = (i < str.length() ? Trait::isUnicodeWhitespace(str[i]) : true);
@@ -3614,12 +4112,14 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
                             const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
 
                             for (auto j = 0; j < style.length(); ++j) {
-                                d.push_back({dt, line, i - style.length() + j, 1, space, spaceAfter, word, false, leftFlanking, rightFlanking});
+                                d.push_back({dt, line, i - style.length() + j, 1, space, spaceAfter,
+                                    word, false, leftFlanking, rightFlanking});
                             }
 
                             word = false;
-                        } else
+                        } else {
                             word = true;
+                        }
 
                         --i;
                     }
@@ -3657,10 +4157,12 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
                                              rightFlanking});
 
                                 word = false;
-                            } else
+                            } else {
                                 word = true;
-                        } else
+                            }
+                        } else {
                             word = true;
+                        }
 
                         --i;
                     }
@@ -3683,10 +4185,12 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
                                 ++i;
 
                                 word = false;
-                            } else
+                            } else {
                                 word = true;
-                        } else
+                            }
+                        } else {
                             word = true;
+                        }
                     }
                     // (
                     else if (str[i] == Trait::latin1ToChar('(') && !backslash) {
@@ -3741,8 +4245,9 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
                             if (i - code.length() - 2 >= 0) {
                                 if (str[i - code.length() - 2].isSpace())
                                     space = true;
-                            } else
+                            } else {
                                 space = true;
+                            }
                         }
 
                         const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
@@ -3770,14 +4275,16 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
                         }
 
                         if (m.length() <= 2 && !backslash) {
-                            d.push_back({Delimiter::Math, line, i - m.length(), m.length(), false, false, false, false});
+                            d.push_back({Delimiter::Math, line, i - m.length(), m.length(),
+                                false, false, false, false});
                         }
 
                         word = false;
 
                         --i;
-                    } else
+                    } else {
                         word = true;
+                    }
                 }
 
                 if (!now) {
@@ -3792,43 +4299,50 @@ inline typename Parser<Trait>::Delims Parser<Trait>::collectDelimiters(const typ
 }
 
 template<class Trait>
-inline bool isLineBreak(const typename Trait::String &s)
+inline bool
+isLineBreak(const typename Trait::String &s)
 {
     return (s.endsWith(Trait::latin1ToString("  ")) || s.endsWith(Trait::latin1ToString("\\")));
 }
 
 template<class Trait>
-inline long long int lineBreakLength(const typename Trait::String &s)
+inline long long int
+lineBreakLength(const typename Trait::String &s)
 {
     return (s.endsWith(Trait::latin1ToString("  ")) ? 2 : 1);
 }
 
 template<class Trait>
-inline typename Trait::String removeLineBreak(const typename Trait::String &s)
+inline typename Trait::String
+removeLineBreak(const typename Trait::String &s)
 {
-    if (s.endsWith(Trait::latin1ToString("\\")))
+    if (s.endsWith(Trait::latin1ToString("\\"))) {
         return s.sliced(0, s.size() - 1);
-    else
+    } else {
         return s;
+    }
 }
 
 template<class Trait>
-inline void initLastItemWithOpts(TextParsingOpts<Trait> &po, std::shared_ptr<ItemWithOpts<Trait>> item)
+inline void
+initLastItemWithOpts(TextParsingOpts<Trait> &po,
+                     std::shared_ptr<ItemWithOpts<Trait>> item)
 {
-    item->openStyles() = po.openStyles;
-    po.openStyles.clear();
-    po.lastItemWithStyle = item;
+    item->openStyles() = po.m_openStyles;
+    po.m_openStyles.clear();
+    po.m_lastItemWithStyle = item;
 }
 
 template<class Trait>
-inline void makeTextObject(const typename Trait::String &text,
-                           bool spaceBefore,
-                           bool spaceAfter,
-                           TextParsingOpts<Trait> &po,
-                           long long int startPos,
-                           long long int startLine,
-                           long long int endPos,
-                           long long int endLine)
+inline void
+makeTextObject(const typename Trait::String &text,
+               bool spaceBefore,
+               bool spaceAfter,
+               TextParsingOpts<Trait> &po,
+               long long int startPos,
+               long long int startLine,
+               long long int endPos,
+               long long int endLine)
 {
     auto s = replaceEntity<Trait>(text);
     s = removeBackslashes<Trait>(s).asString();
@@ -3841,95 +4355,100 @@ inline void makeTextObject(const typename Trait::String &text,
     s = s.simplified();
 
     if (!s.isEmpty()) {
-        po.rawTextData.push_back({text, startPos, startLine, spaceBefore, spaceAfter});
+        po.m_rawTextData.push_back({text, startPos, startLine, spaceBefore, spaceAfter});
 
         if (endPos < 0 && endLine - 1 >= 0) {
-            endPos = po.fr.data.at(endLine - 1).first.length() - 1;
+            endPos = po.m_fr.m_data.at(endLine - 1).first.length() - 1;
             --endLine;
         }
 
         std::shared_ptr<Text<Trait>> t(new Text<Trait>);
         t->setText(s);
-        t->setOpts(po.opts);
+        t->setOpts(po.m_opts);
         t->setSpaceBefore(spaceBefore);
         t->setSpaceAfter(spaceAfter);
-        t->setStartColumn(po.fr.data.at(startLine).first.virginPos(startPos));
-        t->setStartLine(po.fr.data.at(startLine).second.lineNumber);
-        t->setEndColumn(po.fr.data.at(endLine).first.virginPos(endPos));
-        t->setEndLine(po.fr.data.at(endLine).second.lineNumber);
+        t->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+        t->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+        t->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos));
+        t->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
 
         initLastItemWithOpts<Trait>(po, t);
 
-        po.parent->setEndColumn(po.fr.data.at(endLine).first.virginPos(endPos));
-        po.parent->setEndLine(po.fr.data.at(endLine).second.lineNumber);
+        po.m_parent->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos));
+        po.m_parent->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
 
-        po.wasRefLink = false;
-        po.firstInParagraph = false;
-        po.parent->appendItem(t);
+        po.m_wasRefLink = false;
+        po.m_firstInParagraph = false;
+        po.m_parent->appendItem(t);
 
-        po.lastText = t;
-    } else
-        po.pos = startPos;
+        po.m_lastText = t;
+    } else {
+        po.m_pos = startPos;
+    }
 }
 
 template<class Trait>
-inline void makeTextObjectWithLineBreak(const typename Trait::String &text,
-                                        bool spaceBefore,
-                                        bool spaceAfter,
-                                        TextParsingOpts<Trait> &po,
-                                        long long int startPos,
-                                        long long int startLine,
-                                        long long int endPos,
-                                        long long int endLine)
+inline void
+makeTextObjectWithLineBreak(const typename Trait::String &text,
+                            bool spaceBefore,
+                            bool spaceAfter,
+                            TextParsingOpts<Trait> &po,
+                            long long int startPos,
+                            long long int startLine,
+                            long long int endPos,
+                            long long int endLine)
 {
     MD_UNUSED(spaceAfter)
 
     makeTextObject(text, spaceBefore, true, po, startPos, startLine, endPos, endLine);
 
     std::shared_ptr<LineBreak<Trait>> hr(new LineBreak<Trait>);
-    hr->setText(po.fr.data.at(endLine).first.asString().sliced(endPos + 1));
+    hr->setText(po.m_fr.m_data.at(endLine).first.asString().sliced(endPos + 1));
     hr->setSpaceAfter(true);
-    hr->setSpaceBefore(po.fr.data.at(endLine).first.asString()[endPos].isSpace());
-    hr->setStartColumn(po.fr.data.at(endLine).first.virginPos(endPos + 1));
-    hr->setStartLine(po.fr.data.at(endLine).second.lineNumber);
-    hr->setEndColumn(po.fr.data.at(endLine).first.virginPos(po.fr.data.at(endLine).first.length() - 1));
-    hr->setEndLine(po.fr.data.at(endLine).second.lineNumber);
-    po.parent->setEndColumn(hr->endColumn());
-    po.parent->setEndLine(hr->endLine());
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
-    po.parent->appendItem(hr);
+    hr->setSpaceBefore(po.m_fr.m_data.at(endLine).first.asString()[endPos].isSpace());
+    hr->setStartColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos + 1));
+    hr->setStartLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
+    hr->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(po.m_fr.m_data.at(endLine).first.length() - 1));
+    hr->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
+    po.m_parent->setEndColumn(hr->endColumn());
+    po.m_parent->setEndLine(hr->endLine());
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
+    po.m_parent->appendItem(hr);
 }
 
 template<class Trait>
-inline void checkForTableInParagraph(TextParsingOpts<Trait> &po, long long int lastLine)
+inline void
+checkForTableInParagraph(TextParsingOpts<Trait> &po,
+                         long long int lastLine)
 {
-    if (!po.opts) {
-        long long int i = po.pos > 0 ? po.line + 1 : po.line;
+    if (!po.m_opts) {
+        long long int i = po.m_pos > 0 ? po.m_line + 1 : po.m_line;
 
         for (; i <= lastLine; ++i) {
-            const auto h = isTableHeader<Trait>(po.fr.data[i].first.asString());
-            const auto c = i + 1 < static_cast<long long int>(po.fr.data.size()) ?
-                                    isTableAlignment<Trait>(po.fr.data[i + 1].first.asString()) : 0;
+            const auto h = isTableHeader<Trait>(po.m_fr.m_data[i].first.asString());
+            const auto c = i + 1 < static_cast<long long int>(po.m_fr.m_data.size()) ?
+                                    isTableAlignment<Trait>(po.m_fr.m_data[i + 1].first.asString()) : 0;
 
             if (h && c && c == h) {
-                po.detected = TextParsingOpts<Trait>::Detected::Table;
-                po.startTableLine = i;
-                po.columnsCount = c;
-                po.lastTextLine = i - 1;
-                po.lastTextPos = po.fr.data[po.lastTextLine].first.length();
+                po.m_detected = TextParsingOpts<Trait>::Detected::Table;
+                po.m_startTableLine = i;
+                po.m_columnsCount = c;
+                po.m_lastTextLine = i - 1;
+                po.m_lastTextPos = po.m_fr.m_data[po.m_lastTextLine].first.length();
 
                 return;
             }
         }
     }
 
-    po.lastTextLine = po.fr.data.size() - 1;
-    po.lastTextPos = po.fr.data.back().first.length();
+    po.m_lastTextLine = po.m_fr.m_data.size() - 1;
+    po.m_lastTextPos = po.m_fr.m_data.back().first.length();
 }
 
 template<class Trait>
-inline void makeText(
+inline void
+makeText(
     // Inclusive. Don't pass lastLine > actual line position with 0 lastPos. Pass as is,
     // i.e. if line length is 18 and you need whole line then pass lastLine = index of line,
     //	and lastPos = 18, or you may crash here if you will pass lastLine = index of line + 1
@@ -3939,38 +4458,41 @@ inline void makeText(
     long long int lastPos,
     TextParsingOpts<Trait> &po)
 {
-    if (po.line > lastLine)
+    if (po.m_line > lastLine) {
         return;
-    else if (po.line == lastLine && po.pos >= lastPos)
+    } else if (po.m_line == lastLine && po.m_pos >= lastPos) {
         return;
+    }
 
     typename Trait::String text;
 
-    const auto isLastChar = po.pos >= po.fr.data.at(po.line).first.length();
-    long long int startPos = (isLastChar ? 0 : po.pos);
-    long long int startLine = (isLastChar ? po.line + 1 : po.line);
+    const auto isLastChar = po.m_pos >= po.m_fr.m_data.at(po.m_line).first.length();
+    long long int startPos = (isLastChar ? 0 : po.m_pos);
+    long long int startLine = (isLastChar ? po.m_line + 1 : po.m_line);
 
-    bool spaceBefore = (po.pos > 0 && po.pos < po.fr.data.at(po.line).first.length()
-                            ? po.fr.data.at(po.line).first[po.pos - 1].isSpace() || po.fr.data.at(po.line).first[po.pos].isSpace()
-                            : true)
-        || po.isSpaceBefore;
+    bool spaceBefore = (po.m_pos > 0 && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
+                            po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
+                                po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() :
+                            true) || po.m_isSpaceBefore;
 
-    po.isSpaceBefore = false;
+    po.m_isSpaceBefore = false;
 
     bool lineBreak =
-        (!po.ignoreLineBreak && po.line != (long long int)(po.fr.data.size() - 1)
-         && (po.line == lastLine ? (lastPos == po.fr.data.at(po.line).first.length() && isLineBreak<Trait>(po.fr.data.at(po.line).first.asString()))
-                                 : isLineBreak<Trait>(po.fr.data.at(po.line).first.asString())));
+        (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
+            (po.m_line == lastLine ? (lastPos == po.m_fr.m_data.at(po.m_line).first.length() &&
+                isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString())) :
+            isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString())));
 
     // makeTOWLB
     auto makeTOWLB = [&]() {
-        if (po.line != (long long int)(po.fr.data.size() - 1)) {
-            const auto &line = po.fr.data.at(po.line).first.asString();
+        if (po.m_line != (long long int)(po.m_fr.m_data.size() - 1)) {
+            const auto &line = po.m_fr.m_data.at(po.m_line).first.asString();
 
-            makeTextObjectWithLineBreak(text, spaceBefore, true, po, startPos, startLine, line.length() - lineBreakLength<Trait>(line) - 1, po.line);
+            makeTextObjectWithLineBreak(text, spaceBefore, true, po, startPos, startLine,
+                line.length() - lineBreakLength<Trait>(line) - 1, po.m_line);
 
             startPos = 0;
-            startLine = po.line + 1;
+            startLine = po.m_line + 1;
 
             text.clear();
 
@@ -3979,18 +4501,22 @@ inline void makeText(
     }; // makeTOWLB
 
     if (lineBreak) {
-        text.push_back(removeLineBreak<Trait>(po.fr.data.at(po.line).first.asString()).sliced(po.pos));
+        text.push_back(removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()).sliced(po.m_pos));
 
         makeTOWLB();
     } else {
         const auto s =
-            po.fr.data.at(po.line).first.asString().sliced(po.pos, (po.line == lastLine ? lastPos - po.pos : po.fr.data.at(po.line).first.length() - po.pos));
+            po.m_fr.m_data.at(po.m_line).first.asString().sliced(po.m_pos,
+                (po.m_line == lastLine ? lastPos - po.m_pos :
+                    po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos));
         text.push_back(s);
 
-        po.pos = (po.line == lastLine ? lastPos : po.fr.data.at(po.line).first.length());
+        po.m_pos = (po.m_line == lastLine ? lastPos : po.m_fr.m_data.at(po.m_line).first.length());
 
-        bool isSpaceAfter = po.pos > 0 ? po.fr.data.at(po.line).first[po.pos - 1].isSpace() || po.pos == po.fr.data.at(po.line).first.length() : true;
-        isSpaceAfter = !isSpaceAfter && po.pos < po.fr.data.at(po.line).first.length() ? po.fr.data.at(po.line).first[po.pos].isSpace() : isSpaceAfter;
+        bool isSpaceAfter = po.m_pos > 0 ? po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
+            po.m_pos == po.m_fr.m_data.at(po.m_line).first.length() : true;
+        isSpaceAfter = !isSpaceAfter && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
+            po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() : isSpaceAfter;
 
         makeTextObject(text,
                        spaceBefore,
@@ -3998,41 +4524,47 @@ inline void makeText(
                        po,
                        startPos,
                        startLine,
-                       po.line == lastLine ? lastPos - 1 : po.fr.data.at(po.line).first.length() - 1,
-                       po.line);
+                       po.m_line == lastLine ? lastPos - 1 : po.m_fr.m_data.at(po.m_line).first.length() - 1,
+                       po.m_line);
 
         text.clear();
     }
 
-    if (po.line != lastLine) {
-        ++po.line;
+    if (po.m_line != lastLine) {
+        ++po.m_line;
         startPos = 0;
-        startLine = po.line;
+        startLine = po.m_line;
 
-        for (; po.line < lastLine; ++po.line) {
-            lineBreak =
-                (!po.ignoreLineBreak && po.line != (long long int)(po.fr.data.size() - 1) && isLineBreak<Trait>(po.fr.data.at(po.line).first.asString()));
+        for (; po.m_line < lastLine; ++po.m_line) {
+            lineBreak = (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
+                isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()));
 
-            const auto s = (lineBreak ? removeLineBreak<Trait>(po.fr.data.at(po.line).first.asString()) : po.fr.data.at(po.line).first.asString());
+            const auto s = (lineBreak ? removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()) :
+                po.m_fr.m_data.at(po.m_line).first.asString());
             text.push_back(s);
 
-            if (lineBreak)
+            if (lineBreak) {
                 makeTOWLB();
-            else
-                makeTextObject(text, true, true, po, 0, po.line, po.fr.data.at(po.line).first.length() - 1, po.line);
+            } else {
+                makeTextObject(text, true, true, po, 0, po.m_line,
+                    po.m_fr.m_data.at(po.m_line).first.length() - 1, po.m_line);
+            }
 
             text.clear();
         }
 
-        lineBreak = (!po.ignoreLineBreak && po.line != (long long int)(po.fr.data.size() - 1) && lastPos == po.fr.data.at(po.line).first.length()
-                     && isLineBreak<Trait>(po.fr.data.at(po.line).first.asString()));
+        lineBreak = (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
+            lastPos == po.m_fr.m_data.at(po.m_line).first.length() &&
+            isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()));
 
-        auto s = po.fr.data.at(po.line).first.asString().sliced(0, lastPos);
+        auto s = po.m_fr.m_data.at(po.m_line).first.asString().sliced(0, lastPos);
 
-        po.pos = lastPos;
+        po.m_pos = lastPos;
 
-        bool isSpaceAfter = po.pos > 0 ? po.fr.data.at(po.line).first[po.pos - 1].isSpace() || po.pos == po.fr.data.at(po.line).first.length() : true;
-        isSpaceAfter = !isSpaceAfter && po.pos < po.fr.data.at(po.line).first.length() ? po.fr.data.at(po.line).first[po.pos].isSpace() : isSpaceAfter;
+        bool isSpaceAfter = po.m_pos > 0 ? po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
+            po.m_pos == po.m_fr.m_data.at(po.m_line).first.length() : true;
+        isSpaceAfter = !isSpaceAfter && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
+            po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() : isSpaceAfter;
 
         if (!lineBreak) {
             text.push_back(s);
@@ -4048,12 +4580,16 @@ inline void makeText(
 }
 
 template<class Trait>
-inline void skipSpacesInHtml(long long int &l, long long int &p, const typename MdBlock<Trait>::Data &fr)
+inline void
+skipSpacesInHtml(long long int &l,
+                 long long int &p,
+                 const typename MdBlock<Trait>::Data &fr)
 {
     while (l < (long long int)fr.size()) {
         while (p < fr[l].first.length()) {
-            if (!fr[l].first[p].isSpace())
+            if (!fr[l].first[p].isSpace()) {
                 return;
+            }
 
             ++p;
         }
@@ -4064,36 +4600,46 @@ inline void skipSpacesInHtml(long long int &l, long long int &p, const typename 
 }
 
 template<class Trait>
-inline std::pair<bool, bool> readUnquotedHtmlAttrValue(long long int &l, long long int &p, const typename MdBlock<Trait>::Data &fr)
+inline std::pair<bool, bool>
+readUnquotedHtmlAttrValue(long long int &l,
+                          long long int &p,
+                          const typename MdBlock<Trait>::Data &fr)
 {
     static const typename Trait::String notAllowed = Trait::latin1ToString("\"`=<'");
 
     const auto start = p;
 
     for (; p < fr[l].first.length(); ++p) {
-        if (fr[l].first[p].isSpace())
+        if (fr[l].first[p].isSpace()) {
             break;
-        else if (notAllowed.contains(fr[l].first[p]))
+        } else if (notAllowed.contains(fr[l].first[p])) {
             return {false, false};
-        else if (fr[l].first[p] == Trait::latin1ToChar('>'))
+        } else if (fr[l].first[p] == Trait::latin1ToChar('>')) {
             return {p - start > 0, p - start > 0};
+        }
     }
 
     return {p - start > 0, p - start > 0};
 }
 
 template<class Trait>
-inline std::pair<bool, bool> readHtmlAttrValue(long long int &l, long long int &p, const typename MdBlock<Trait>::Data &fr)
+inline std::pair<bool, bool>
+readHtmlAttrValue(long long int &l,
+                  long long int &p,
+                  const typename MdBlock<Trait>::Data &fr)
 {
-    if (p < fr[l].first.length() && fr[l].first[p] != Trait::latin1ToChar('"') && fr[l].first[p] != Trait::latin1ToChar('\''))
+    if (p < fr[l].first.length() && fr[l].first[p] != Trait::latin1ToChar('"') &&
+        fr[l].first[p] != Trait::latin1ToChar('\'')) {
         return readUnquotedHtmlAttrValue<Trait>(l, p, fr);
+    }
 
     const auto s = fr[l].first[p];
 
     ++p;
 
-    if (p >= fr[l].first.length())
+    if (p >= fr[l].first.length()) {
         return {false, false};
+    }
 
     for (; l < (long long int)fr.size(); ++l) {
         bool doBreak = false;
@@ -4108,20 +4654,24 @@ inline std::pair<bool, bool> readHtmlAttrValue(long long int &l, long long int &
             }
         }
 
-        if (doBreak)
+        if (doBreak) {
             break;
+        }
 
         p = 0;
     }
 
-    if (l >= (long long int)fr.size())
+    if (l >= (long long int)fr.size()) {
         return {false, false};
+    }
 
-    if (p >= fr[l].first.length())
+    if (p >= fr[l].first.length()) {
         return {false, false};
+    }
 
-    if (fr[l].first[p] != s)
+    if (fr[l].first[p] != s) {
         return {false, false};
+    }
 
     ++p;
 
@@ -4129,26 +4679,34 @@ inline std::pair<bool, bool> readHtmlAttrValue(long long int &l, long long int &
 }
 
 template<class Trait>
-inline std::pair<bool, bool> readHtmlAttr(long long int &l, long long int &p, const typename MdBlock<Trait>::Data &fr, bool checkForSpace)
+inline std::pair<bool, bool>
+readHtmlAttr(long long int &l,
+             long long int &p,
+             const typename MdBlock<Trait>::Data &fr,
+             bool checkForSpace)
 {
     long long int tl = l, tp = p;
 
     skipSpacesInHtml<Trait>(l, p, fr);
 
-    if (l >= (long long int)fr.size())
+    if (l >= (long long int)fr.size()) {
         return {false, false};
+    }
 
     // /
-    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('/'))
+    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('/')) {
         return {false, true};
+    }
 
     // >
-    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('>'))
+    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('>')) {
         return {false, true};
+    }
 
     if (checkForSpace) {
-        if (tl == l && tp == p)
+        if (tl == l && tp == p) {
             return {false, false};
+        }
     }
 
     const auto start = p;
@@ -4156,27 +4714,31 @@ inline std::pair<bool, bool> readHtmlAttr(long long int &l, long long int &p, co
     for (; p < fr[l].first.length(); ++p) {
         const auto ch = fr[l].first[p];
 
-        if (ch.isSpace() || ch == Trait::latin1ToChar('>') || ch == Trait::latin1ToChar('='))
+        if (ch.isSpace() || ch == Trait::latin1ToChar('>') || ch == Trait::latin1ToChar('=')) {
             break;
+        }
     }
 
     const typename Trait::String name = fr[l].first.asString().sliced(start, p - start).toLower();
 
-    if (!name.startsWith(Trait::latin1ToString("_")) && !name.startsWith(Trait::latin1ToString(":")) && !name.isEmpty()
-        && !(name[0].unicode() >= 97 && name[0].unicode() <= 122)) {
+    if (!name.startsWith(Trait::latin1ToString("_")) && !name.startsWith(Trait::latin1ToString(":")) &&
+        !name.isEmpty() && !(name[0].unicode() >= 97 && name[0].unicode() <= 122)) {
         return {false, false};
     }
 
-    static const typename Trait::String allowedInName = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789_.:-");
+    static const typename Trait::String allowedInName =
+        Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789_.:-");
 
     for (long long int i = 1; i < name.length(); ++i) {
-        if (!allowedInName.contains(name[i]))
+        if (!allowedInName.contains(name[i])) {
             return {false, false};
+        }
     }
 
     // >
-    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('>'))
+    if (p < fr[l].first.length() && fr[l].first[p] == Trait::latin1ToChar('>')) {
         return {false, true};
+    }
 
     tl = l;
     tp = p;
@@ -4193,15 +4755,18 @@ inline std::pair<bool, bool> readHtmlAttr(long long int &l, long long int &p, co
             p = tp;
 
             return {true, true};
-        } else
+        } else {
             ++p;
-    } else
+        }
+    } else {
         return {true, false};
+    }
 
     skipSpacesInHtml<Trait>(l, p, fr);
 
-    if (l >= (long long int)fr.size())
+    if (l >= (long long int)fr.size()) {
         return {false, false};
+    }
 
     return readHtmlAttrValue<Trait>(l, p, fr);
 }
@@ -4211,16 +4776,20 @@ inline std::tuple<bool, long long int, long long int, bool, typename Trait::Stri
 isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int rule);
 
 template<class Trait>
-inline bool isOnlyHtmlTagsAfterOrClosedRule1(long long int line, long long int pos, TextParsingOpts<Trait> &po, int rule)
+inline bool
+isOnlyHtmlTagsAfterOrClosedRule1(long long int line,
+                                 long long int pos,
+                                 TextParsingOpts<Trait> &po,
+                                 int rule)
 {
-    static const std::set<typename Trait::String> rule1Finish = {Trait::latin1ToString("/pre"),
-                                                                 Trait::latin1ToString("/script"),
-                                                                 Trait::latin1ToString("/style"),
-                                                                 Trait::latin1ToString("/textarea")};
+    static const std::set<typename Trait::String> s_rule1Finish = {Trait::latin1ToString("/pre"),
+                                                                   Trait::latin1ToString("/script"),
+                                                                   Trait::latin1ToString("/style"),
+                                                                   Trait::latin1ToString("/textarea")};
 
-    auto p = skipSpaces<Trait>(pos, po.fr.data[line].first.asString());
+    auto p = skipSpaces<Trait>(pos, po.m_fr.m_data[line].first.asString());
 
-    while (p < po.fr.data[line].first.length()) {
+    while (p < po.m_fr.m_data[line].first.length()) {
         bool ok = false;
 
         long long int l;
@@ -4231,37 +4800,46 @@ inline bool isOnlyHtmlTagsAfterOrClosedRule1(long long int line, long long int p
         ++p;
 
         if (rule != 1) {
-            if (!ok)
+            if (!ok) {
                 return false;
+            }
 
-            if (l > line)
+            if (l > line) {
                 return true;
+            }
         } else {
-            if (rule1Finish.find(tag.toLower()) != rule1Finish.cend() && l == line)
+            if (s_rule1Finish.find(tag.toLower()) != s_rule1Finish.cend() && l == line) {
                 return true;
+            }
 
-            if (l > line)
+            if (l > line) {
                 return false;
+            }
         }
 
-        p = skipSpaces<Trait>(p, po.fr.data[line].first.asString());
+        p = skipSpaces<Trait>(p, po.m_fr.m_data[line].first.asString());
     }
 
-    if (p >= po.fr.data[line].first.length())
+    if (p >= po.m_fr.m_data[line].first.length()) {
         return true;
+    }
 
     return false;
 }
 
 template<class Trait>
-inline bool isSetextHeadingBetween(const TextParsingOpts<Trait> &po, long long int startLine, long long int endLine)
+inline bool
+isSetextHeadingBetween(const TextParsingOpts<Trait> &po,
+                       long long int startLine,
+                       long long int endLine)
 {
     for (; startLine <= endLine; ++startLine) {
-        const auto pos = skipSpaces<Trait>(0, po.fr.data.at(startLine).first.asString());
-        const auto line = po.fr.data.at(startLine).first.asString().sliced(pos);
+        const auto pos = skipSpaces<Trait>(0, po.m_fr.m_data.at(startLine).first.asString());
+        const auto line = po.m_fr.m_data.at(startLine).first.asString().sliced(pos);
 
-        if ((isH1<Trait>(line) || isH2<Trait>(line)) && pos < 4)
+        if ((isH1<Trait>(line) || isH2<Trait>(line)) && pos < 4) {
             return true;
+        }
     }
 
     return false;
@@ -4269,10 +4847,14 @@ inline bool isSetextHeadingBetween(const TextParsingOpts<Trait> &po, long long i
 
 template<class Trait>
 inline std::tuple<bool, long long int, long long int, bool, typename Trait::String>
-isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int rule)
+isHtmlTag(long long int line,
+          long long int pos,
+          TextParsingOpts<Trait> &po,
+          int rule)
 {
-    if (po.fr.data[line].first[pos] != Trait::latin1ToChar('<'))
+    if (po.m_fr.m_data[line].first[pos] != Trait::latin1ToChar('<')) {
         return {false, line, pos, false, {}};
+    }
 
     typename Trait::String tag;
 
@@ -4281,16 +4863,17 @@ isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int
     bool first = false;
 
     {
-        const auto tmp = skipSpaces<Trait>(0, po.fr.data[l].first.asString());
+        const auto tmp = skipSpaces<Trait>(0, po.m_fr.m_data[l].first.asString());
         first = (tmp == pos);
     }
 
-    if (p >= po.fr.data[l].first.length())
+    if (p >= po.m_fr.m_data[l].first.length()) {
         return {false, line, pos, first, tag};
+    }
 
     bool closing = false;
 
-    if (po.fr.data[l].first[p] == Trait::latin1ToChar('/')) {
+    if (po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('/')) {
         closing = true;
 
         tag.push_back(Trait::latin1ToChar('/'));
@@ -4301,63 +4884,76 @@ isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int
     const auto start = p;
 
     // tag
-    for (; p < po.fr.data[l].first.length(); ++p) {
-        const auto ch = po.fr.data[l].first[p];
+    for (; p < po.m_fr.m_data[l].first.length(); ++p) {
+        const auto ch = po.m_fr.m_data[l].first[p];
 
-        if (ch.isSpace() || ch == Trait::latin1ToChar('>') || ch == Trait::latin1ToChar('/'))
+        if (ch.isSpace() || ch == Trait::latin1ToChar('>') || ch == Trait::latin1ToChar('/')) {
             break;
+        }
     }
 
-    tag.push_back(po.fr.data[l].first.asString().sliced(start, p - start));
+    tag.push_back(po.m_fr.m_data[l].first.asString().sliced(start, p - start));
 
-    if (p < po.fr.data[l].first.length() && po.fr.data[l].first[p] == Trait::latin1ToChar('/')) {
-        if (p + 1 < po.fr.data[l].first.length() && po.fr.data[l].first[p + 1] == Trait::latin1ToChar('>')) {
+    if (p < po.m_fr.m_data[l].first.length() && po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('/')) {
+        if (p + 1 < po.m_fr.m_data[l].first.length() &&
+            po.m_fr.m_data[l].first[p + 1] == Trait::latin1ToChar('>')) {
             long long int tmp = 0;
 
-            if (rule == 7)
-                tmp = skipSpaces<Trait>(p + 2, po.fr.data[l].first.asString());
+            if (rule == 7) {
+                tmp = skipSpaces<Trait>(p + 2, po.m_fr.m_data[l].first.asString());
+            }
 
-            bool onLine = (first && (rule == 7 ? tmp == po.fr.data[l].first.length() : isOnlyHtmlTagsAfterOrClosedRule1(l, p + 2, po, rule == 1)));
+            bool onLine = (first && (rule == 7 ? tmp == po.m_fr.m_data[l].first.length() :
+                isOnlyHtmlTagsAfterOrClosedRule1(l, p + 2, po, rule == 1)));
 
-            if (!isSetextHeadingBetween(po, line, l))
+            if (!isSetextHeadingBetween(po, line, l)) {
                 return {true, l, p + 1, onLine, tag};
-            else
+            } else {
                 return {false, line, pos, first, tag};
-        } else
+            }
+        } else {
             return {false, line, pos, first, tag};
+        }
     }
 
-    if (p < po.fr.data[l].first.length() && po.fr.data[l].first[p] == Trait::latin1ToChar('>')) {
+    if (p < po.m_fr.m_data[l].first.length() && po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('>')) {
         long long int tmp = 0;
 
-        if (rule == 7)
-            tmp = skipSpaces<Trait>(p + 1, po.fr.data[l].first.asString());
+        if (rule == 7) {
+            tmp = skipSpaces<Trait>(p + 1, po.m_fr.m_data[l].first.asString());
+        }
 
-        bool onLine = (first && (rule == 7 ? tmp == po.fr.data[l].first.length() : isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
+        bool onLine = (first && (rule == 7 ? tmp == po.m_fr.m_data[l].first.length() :
+            isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
 
-        if (!isSetextHeadingBetween(po, line, l))
+        if (!isSetextHeadingBetween(po, line, l)) {
             return {true, l, p, onLine, tag};
-        else
+        } else {
             return {false, line, pos, first, tag};
+        }
     }
 
-    skipSpacesInHtml<Trait>(l, p, po.fr.data);
+    skipSpacesInHtml<Trait>(l, p, po.m_fr.m_data);
 
-    if (l >= (long long int)po.fr.data.size())
+    if (l >= (long long int)po.m_fr.m_data.size()) {
         return {false, line, pos, first, tag};
+    }
 
-    if (po.fr.data[l].first[p] == Trait::latin1ToChar('>')) {
+    if (po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('>')) {
         long long int tmp = 0;
 
-        if (rule == 7)
-            tmp = skipSpaces<Trait>(p + 1, po.fr.data[l].first.asString());
+        if (rule == 7) {
+            tmp = skipSpaces<Trait>(p + 1, po.m_fr.m_data[l].first.asString());
+        }
 
-        bool onLine = (first && (rule == 7 ? tmp == po.fr.data[l].first.length() : isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
+        bool onLine = (first && (rule == 7 ? tmp == po.m_fr.m_data[l].first.length() :
+            isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
 
-        if (!isSetextHeadingBetween(po, line, l))
+        if (!isSetextHeadingBetween(po, line, l)) {
             return {true, l, p, onLine, tag};
-        else
+        } else {
             return {false, line, pos, first, tag};
+        }
     }
 
     bool attr = true;
@@ -4366,118 +4962,138 @@ isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int
     while (attr) {
         bool ok = false;
 
-        std::tie(attr, ok) = readHtmlAttr<Trait>(l, p, po.fr.data, !firstAttr);
+        std::tie(attr, ok) = readHtmlAttr<Trait>(l, p, po.m_fr.m_data, !firstAttr);
 
         firstAttr = false;
 
-        if (closing && attr)
+        if (closing && attr) {
             return {false, line, pos, first, tag};
+        }
 
-        if (!ok)
+        if (!ok) {
             return {false, line, pos, first, tag};
+        }
     }
 
-    if (po.fr.data[l].first[p] == Trait::latin1ToChar('/'))
+    if (po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('/')) {
         ++p;
-    else {
-        skipSpacesInHtml<Trait>(l, p, po.fr.data);
+    } else {
+        skipSpacesInHtml<Trait>(l, p, po.m_fr.m_data);
 
-        if (l >= (long long int)po.fr.data.size())
+        if (l >= (long long int)po.m_fr.m_data.size()) {
             return {false, line, pos, first, tag};
+        }
     }
 
-    if (po.fr.data[l].first[p] == Trait::latin1ToChar('>')) {
+    if (po.m_fr.m_data[l].first[p] == Trait::latin1ToChar('>')) {
         long long int tmp = 0;
 
-        if (rule == 7)
-            tmp = skipSpaces<Trait>(p + 1, po.fr.data[l].first.asString());
+        if (rule == 7) {
+            tmp = skipSpaces<Trait>(p + 1, po.m_fr.m_data[l].first.asString());
+        }
 
-        bool onLine = (first && (rule == 7 ? tmp == po.fr.data[l].first.length() : isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
+        bool onLine = (first && (rule == 7 ? tmp == po.m_fr.m_data[l].first.length() :
+            isOnlyHtmlTagsAfterOrClosedRule1(l, p + 1, po, rule == 1)));
 
-        if (!isSetextHeadingBetween(po, line, l))
+        if (!isSetextHeadingBetween(po, line, l)) {
             return {true, l, p, onLine, tag};
-        else
+        } else {
             return {false, line, pos, first, tag};
+        }
     }
 
     return {false, line, pos, first, {}};
 }
 
 template<class Trait>
-inline std::pair<typename Trait::String, bool> Parser<Trait>::readHtmlTag(typename Delims::const_iterator it, TextParsingOpts<Trait> &po)
+inline std::pair<typename Trait::String, bool>
+Parser<Trait>::readHtmlTag(typename Delims::const_iterator it,
+                           TextParsingOpts<Trait> &po)
 {
     long long int i = it->m_pos + 1;
     const auto start = i;
 
-    if (start >= po.fr.data[it->m_line].first.length())
+    if (start >= po.m_fr.m_data[it->m_line].first.length()) {
         return {{}, false};
-
-    for (; i < po.fr.data[it->m_line].first.length(); ++i) {
-        const auto ch = po.fr.data[it->m_line].first[i];
-
-        if (ch.isSpace() || ch == Trait::latin1ToChar('>'))
-            break;
     }
 
-    return {po.fr.data[it->m_line].first.asString().sliced(start, i - start),
-            i < po.fr.data[it->m_line].first.length() ? po.fr.data[it->m_line].first[i] == Trait::latin1ToChar('>') : false};
+    for (; i < po.m_fr.m_data[it->m_line].first.length(); ++i) {
+        const auto ch = po.m_fr.m_data[it->m_line].first[i];
+
+        if (ch.isSpace() || ch == Trait::latin1ToChar('>')) {
+            break;
+        }
+    }
+
+    return {po.m_fr.m_data[it->m_line].first.asString().sliced(start, i - start),
+            i < po.m_fr.m_data[it->m_line].first.length() ?
+                po.m_fr.m_data[it->m_line].first[i] == Trait::latin1ToChar('>') : false};
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::findIt(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::findIt(typename Delims::const_iterator it,
+                      typename Delims::const_iterator last,
+                      TextParsingOpts<Trait> &po)
 {
     auto ret = it;
 
     for (; it != last; ++it) {
-        if ((it->m_line == po.line && it->m_pos < po.pos) || it->m_line < po.line)
+        if ((it->m_line == po.m_line && it->m_pos < po.m_pos) || it->m_line < po.m_line) {
             ret = it;
-        else
+        } else {
             break;
+        }
     }
 
     return ret;
 }
 
 template<class Trait>
-inline void eatRawHtml(long long int line,
-                       long long int pos,
-                       long long int toLine,
-                       long long int toPos,
-                       TextParsingOpts<Trait> &po,
-                       bool finish,
-                       int htmlRule,
-                       bool onLine,
-                       bool continueEating = false)
+inline void
+eatRawHtml(long long int line,
+           long long int pos,
+           long long int toLine,
+           long long int toPos,
+           TextParsingOpts<Trait> &po,
+           bool finish,
+           int htmlRule,
+           bool onLine,
+           bool continueEating = false)
 {
     if (line <= toLine) {
-        typename Trait::String h = po.html.html->text();
+        typename Trait::String h = po.m_html.m_html->text();
 
         if (!h.isEmpty() && !continueEating) {
-            for (long long int i = 0; i < po.fr.emptyLinesBefore; ++i)
+            for (long long int i = 0; i < po.m_fr.m_emptyLinesBefore; ++i) {
                 h.push_back(Trait::latin1ToChar('\n'));
+            }
         }
 
-        const auto first = po.fr.data[line].first.asString().sliced(
+        const auto first = po.m_fr.m_data[line].first.asString().sliced(
             pos,
-            (line == toLine ? (toPos >= 0 ? toPos - pos : po.fr.data[line].first.length() - pos) : po.fr.data[line].first.length() - pos));
+            (line == toLine ? (toPos >= 0 ? toPos - pos : po.m_fr.m_data[line].first.length() - pos) :
+                po.m_fr.m_data[line].first.length() - pos));
 
-        if (!h.isEmpty() && !first.isEmpty())
+        if (!h.isEmpty() && !first.isEmpty()) {
             h.push_back(Trait::latin1ToChar('\n'));
+        }
 
-        if (!first.isEmpty())
+        if (!first.isEmpty()) {
             h.push_back(first);
+        }
 
         ++line;
 
         for (; line < toLine; ++line) {
             h.push_back(Trait::latin1ToChar('\n'));
-            h.push_back(po.fr.data[line].first.asString());
+            h.push_back(po.m_fr.m_data[line].first.asString());
         }
 
         if (line == toLine && toPos != 0) {
             h.push_back(Trait::latin1ToChar('\n'));
-            h.push_back(po.fr.data[line].first.asString().sliced(0, toPos > 0 ? toPos : po.fr.data[line].first.length()));
+            h.push_back(po.m_fr.m_data[line].first.asString().sliced(0, toPos > 0 ?
+                toPos : po.m_fr.m_data[line].first.length()));
         }
 
         auto endColumn = toPos;
@@ -4485,49 +5101,56 @@ inline void eatRawHtml(long long int line,
 
         if (endColumn == 0 && endLine > 0) {
             --endLine;
-            endColumn = po.fr.data.at(endLine).first.length();
+            endColumn = po.m_fr.m_data.at(endLine).first.length();
         }
 
-        po.html.html->setEndColumn(po.fr.data.at(endLine).first.virginPos(endColumn >= 0 ? endColumn - 1 : po.fr.data.at(endLine).first.length() - 1));
-        po.html.html->setEndLine(po.fr.data.at(endLine).second.lineNumber);
+        po.m_html.m_html->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endColumn >= 0 ?
+            endColumn - 1 : po.m_fr.m_data.at(endLine).first.length() - 1));
+        po.m_html.m_html->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
 
-        po.line = (toPos >= 0 ? toLine : toLine + 1);
-        po.pos = (toPos >= 0 ? toPos : 0);
+        po.m_line = (toPos >= 0 ? toLine : toLine + 1);
+        po.m_pos = (toPos >= 0 ? toPos : 0);
 
-        if (po.line + 1 < (long long int)po.fr.data.size() && po.pos >= po.fr.data.at(po.line).first.length()) {
-            ++po.line;
-            po.pos = 0;
+        if (po.m_line + 1 < static_cast<long long int>(po.m_fr.m_data.size()) &&
+            po.m_pos >= po.m_fr.m_data.at(po.m_line).first.length()) {
+            ++po.m_line;
+            po.m_pos = 0;
         }
 
-        po.html.html->setText(h);
+        po.m_html.m_html->setText(h);
     }
 
-    UnprotectedDocsMethods<Trait>::setFreeTag(po.html.html, onLine);
+    UnprotectedDocsMethods<Trait>::setFreeTag(po.m_html.m_html, onLine);
 
     if (finish) {
-        if (po.html.onLine || htmlRule == 7 || po.line < (long long int)po.fr.data.size()) {
-            if (!po.collectRefLinks) {
-                po.parent->appendItem(po.html.html);
-                po.parent->setEndColumn(po.html.html->endColumn());
-                po.parent->setEndLine(po.html.html->endLine());
-                initLastItemWithOpts<Trait>(po, po.html.html);
-                po.html.html->setOpts(po.opts);
-                po.isSpaceBefore = false;
-                po.lastText = nullptr;
-            } else
-                po.tmpHtml = po.html.html;
+        if (po.m_html.m_onLine || htmlRule == 7 || po.m_line < (long long int)po.m_fr.m_data.size()) {
+            if (!po.m_collectRefLinks) {
+                po.m_parent->appendItem(po.m_html.m_html);
+                po.m_parent->setEndColumn(po.m_html.m_html->endColumn());
+                po.m_parent->setEndLine(po.m_html.m_html->endLine());
+                initLastItemWithOpts<Trait>(po, po.m_html.m_html);
+                po.m_html.m_html->setOpts(po.m_opts);
+                po.m_isSpaceBefore = false;
+                po.m_lastText = nullptr;
+            } else {
+                po.m_tmpHtml = po.m_html.m_html;
+            }
 
-            resetHtmlTag(po.html);
+            resetHtmlTag(po.m_html);
         }
-    } else
-        po.html.continueHtml = true;
+    } else {
+        po.m_html.m_continueHtml = true;
+    }
 }
 
 template<class Trait>
-inline bool Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr, long long int startLine, long long int endLine)
+inline bool
+Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr,
+                            long long int startLine,
+                            long long int endLine)
 {
     for (auto i = startLine + 1; i <= endLine; ++i) {
-        const auto type = whatIsTheLine(fr.data[i].first);
+        const auto type = whatIsTheLine(fr.m_data[i].first);
 
         switch (type) {
         case Parser<Trait>::BlockType::Footnote:
@@ -4545,13 +5168,14 @@ inline bool Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr, long long int startL
             break;
         }
 
-        const auto ns = skipSpaces<Trait>(0, fr.data[i].first.asString());
+        const auto ns = skipSpaces<Trait>(0, fr.m_data[i].first.asString());
 
         if (ns < 4) {
-            const auto s = fr.data[i].first.asString().sliced(ns);
+            const auto s = fr.m_data[i].first.asString().sliced(ns);
 
-            if (isHorizontalLine<Trait>(s) || isH1<Trait>(s) || isH2<Trait>(s))
+            if (isHorizontalLine<Trait>(s) || isH1<Trait>(s) || isH2<Trait>(s)) {
                 return true;
+            }
         }
     }
 
@@ -4560,21 +5184,26 @@ inline bool Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr, long long int startL
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule1HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool skipFirst)
+Parser<Trait>::finishRule1HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po,
+                                  bool skipFirst)
 {
-    static const std::set<typename Trait::String> finish = {Trait::latin1ToString("/pre"),
-                                                            Trait::latin1ToString("/script"),
-                                                            Trait::latin1ToString("/style"),
-                                                            Trait::latin1ToString("/textarea")};
+    static const std::set<typename Trait::String> s_finish = {Trait::latin1ToString("/pre"),
+                                                              Trait::latin1ToString("/script"),
+                                                              Trait::latin1ToString("/style"),
+                                                              Trait::latin1ToString("/textarea")};
 
     if (it != last) {
         bool ok = false;
         long long int l = -1, p = -1;
 
-        if (po.html.html->text().isEmpty() && it->m_type == Delimiter::Less && skipFirst)
-            std::tie(ok, l, p, po.html.onLine, std::ignore) = isHtmlTag(it->m_line, it->m_pos, po, 1);
+        if (po.m_html.m_html->text().isEmpty() && it->m_type == Delimiter::Less && skipFirst) {
+            std::tie(ok, l, p, po.m_html.m_onLine, std::ignore) =
+                isHtmlTag(it->m_line, it->m_pos, po, 1);
+        }
 
-        if (po.html.onLine) {
+        if (po.m_html.m_onLine) {
             for (it = (skipFirst && it != last ? std::next(it) : it); it != last; ++it) {
                 if (it->m_type == Delimiter::Less) {
                     typename Trait::String tag;
@@ -4583,47 +5212,52 @@ Parser<Trait>::finishRule1HtmlTag(typename Delims::const_iterator it, typename D
                     std::tie(tag, closed) = readHtmlTag(it, po);
 
                     if (closed) {
-                        if (finish.find(tag.toLower()) != finish.cend()) {
-                            eatRawHtml(po.line, po.pos, it->m_line, -1, po, true, 1, po.html.onLine);
+                        if (s_finish.find(tag.toLower()) != s_finish.cend()) {
+                            eatRawHtml(po.m_line, po.m_pos, it->m_line, -1, po,
+                                true, 1, po.m_html.m_onLine);
 
                             return;
                         }
                     }
                 }
             }
-        } else if (ok && !isNewBlockIn(po.fr, it->m_line, l)) {
-            eatRawHtml(po.line, po.pos, l, p + 1, po, true, 1, false);
+        } else if (ok && !isNewBlockIn(po.m_fr, it->m_line, l)) {
+            eatRawHtml(po.m_line, po.m_pos, l, p + 1, po, true, 1, false);
 
             return;
         } else {
-            resetHtmlTag(po.html);
+            resetHtmlTag(po.m_html);
 
             return;
         }
     }
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 1, po.html.onLine);
-    else
-        resetHtmlTag(po.html);
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 1, po.m_html.m_onLine);
+    } else {
+        resetHtmlTag(po.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline void
+Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
     if (it != last) {
         const auto start = it;
 
         MdLineData::CommentData commentData = {2, true};
-        bool onLine = po.html.onLine;
+        bool onLine = po.m_html.m_onLine;
 
-        if (po.html.html->text().isEmpty() && it->m_type == Delimiter::Less) {
-            long long int i = po.fr.data[it->m_line].first.virginPos(it->m_pos);
+        if (po.m_html.m_html->text().isEmpty() && it->m_type == Delimiter::Less) {
+            long long int i = po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos);
 
-            commentData = po.fr.data[it->m_line].second.htmlCommentData[i];
+            commentData = po.m_fr.m_data[it->m_line].second.m_htmlCommentData[i];
 
-            onLine = (it->m_pos == skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString()));
-            po.html.onLine = onLine;
+            onLine = (it->m_pos == skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString()));
+            po.m_html.m_onLine = onLine;
         }
 
         if (commentData.first != -1 && commentData.second) {
@@ -4634,7 +5268,7 @@ inline void Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it
                     bool doContinue = false;
 
                     for (char i = 0; i < commentData.first; ++i) {
-                        if (!(p > 0 && po.fr.data[it->m_line].first[p - 1] == Trait::latin1ToChar('-'))) {
+                        if (!(p > 0 && po.m_fr.m_data[it->m_line].first[p - 1] == Trait::latin1ToChar('-'))) {
                             doContinue = true;
 
                             break;
@@ -4643,13 +5277,17 @@ inline void Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it
                         --p;
                     }
 
-                    if (doContinue)
+                    if (doContinue) {
                         continue;
+                    }
 
-                    if (onLine || !isNewBlockIn(po.fr, start->m_line, it->m_line))
-                        eatRawHtml(po.line, po.pos, it->m_line, onLine ? po.fr.data[it->m_line].first.length() : it->m_pos + 1, po, true, 2, onLine);
-                    else
-                        resetHtmlTag(po.html);
+                    if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
+                        eatRawHtml(po.m_line, po.m_pos, it->m_line,
+                            onLine ? po.m_fr.m_data[it->m_line].first.length() : it->m_pos + 1,
+                            po, true, 2, onLine);
+                    } else {
+                        resetHtmlTag(po.m_html);
+                    }
 
                     return;
                 }
@@ -4657,39 +5295,45 @@ inline void Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it
         }
     }
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 2, po.html.onLine);
-    else
-        resetHtmlTag(po.html);
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 2, po.m_html.m_onLine);
+    } else {
+        resetHtmlTag(po.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishRule3HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline void
+Parser<Trait>::finishRule3HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
-    bool onLine = po.html.onLine;
+    bool onLine = po.m_html.m_onLine;
 
     if (it != last) {
         const auto start = it;
 
-        if (po.html.html->text().isEmpty() && it->m_type == Delimiter::Less) {
-            onLine = (it->m_pos == skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString()));
-            po.html.onLine = onLine;
+        if (po.m_html.m_html->text().isEmpty() && it->m_type == Delimiter::Less) {
+            onLine = (it->m_pos == skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString()));
+            po.m_html.m_onLine = onLine;
         }
 
         for (; it != last; ++it) {
             if (it->m_type == Delimiter::Greater) {
-                if (it->m_pos > 0 && po.fr.data[it->m_line].first[it->m_pos - 1] == Trait::latin1ToChar('?')) {
+                if (it->m_pos > 0 && po.m_fr.m_data[it->m_line].first[it->m_pos - 1] == Trait::latin1ToChar('?')) {
                     long long int i = it->m_pos + 1;
 
-                    for (; i < po.fr.data[it->m_line].first.length(); ++i) {
-                        if (po.fr.data[it->m_line].first[i] == Trait::latin1ToChar('<'))
+                    for (; i < po.m_fr.m_data[it->m_line].first.length(); ++i) {
+                        if (po.m_fr.m_data[it->m_line].first[i] == Trait::latin1ToChar('<')) {
                             break;
+                        }
                     }
 
-                    if (onLine || !isNewBlockIn(po.fr, start->m_line, it->m_line))
-                        eatRawHtml(po.line, po.pos, it->m_line, i, po, true, 3, onLine);
-                    else
-                        resetHtmlTag(po.html);
+                    if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
+                        eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 3, onLine);
+                    } else {
+                        resetHtmlTag(po.m_html);
+                    }
 
                     return;
                 }
@@ -4697,78 +5341,90 @@ inline void Parser<Trait>::finishRule3HtmlTag(typename Delims::const_iterator it
         }
     }
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 3, onLine);
-    else
-        resetHtmlTag(po.html);
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 3, onLine);
+    } else {
+        resetHtmlTag(po.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishRule4HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline void
+Parser<Trait>::finishRule4HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
     if (it != last) {
         const auto start = it;
 
-        bool onLine = po.html.onLine;
+        bool onLine = po.m_html.m_onLine;
 
-        if (po.html.html->text().isEmpty() && it->m_type == Delimiter::Less) {
-            onLine = (it->m_pos == skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString()));
-            po.html.onLine = onLine;
+        if (po.m_html.m_html->text().isEmpty() && it->m_type == Delimiter::Less) {
+            onLine = (it->m_pos == skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString()));
+            po.m_html.m_onLine = onLine;
         }
 
         for (; it != last; ++it) {
             if (it->m_type == Delimiter::Greater) {
                 long long int i = it->m_pos + 1;
 
-                for (; i < po.fr.data[it->m_line].first.length(); ++i) {
-                    if (po.fr.data[it->m_line].first[i] == Trait::latin1ToChar('<'))
+                for (; i < po.m_fr.m_data[it->m_line].first.length(); ++i) {
+                    if (po.m_fr.m_data[it->m_line].first[i] == Trait::latin1ToChar('<')) {
                         break;
+                    }
                 }
 
-                if (onLine || !isNewBlockIn(po.fr, start->m_line, it->m_line))
-                    eatRawHtml(po.line, po.pos, it->m_line, i, po, true, 4, onLine);
-                else
-                    resetHtmlTag(po.html);
+                if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
+                    eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 4, onLine);
+                } else {
+                    resetHtmlTag(po.m_html);
+                }
 
                 return;
             }
         }
     }
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 4, true);
-    else
-        resetHtmlTag(po.html);
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 4, true);
+    } else {
+        resetHtmlTag(po.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishRule5HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline void
+Parser<Trait>::finishRule5HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
     if (it != last) {
         const auto start = it;
 
-        bool onLine = po.html.onLine;
+        bool onLine = po.m_html.m_onLine;
 
-        if (po.html.html->text().isEmpty() && it->m_type == Delimiter::Less) {
-            onLine = (it->m_pos == skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString()));
-            po.html.onLine = onLine;
+        if (po.m_html.m_html->text().isEmpty() && it->m_type == Delimiter::Less) {
+            onLine = (it->m_pos == skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString()));
+            po.m_html.m_onLine = onLine;
         }
 
         for (; it != last; ++it) {
             if (it->m_type == Delimiter::Greater) {
-                if (it->m_pos > 1 && po.fr.data[it->m_line].first[it->m_pos - 1] == Trait::latin1ToChar(']')
-                    && po.fr.data[it->m_line].first[it->m_pos - 2] == Trait::latin1ToChar(']')) {
+                if (it->m_pos > 1 && po.m_fr.m_data[it->m_line].first[it->m_pos - 1] == Trait::latin1ToChar(']') &&
+                    po.m_fr.m_data[it->m_line].first[it->m_pos - 2] == Trait::latin1ToChar(']')) {
                     long long int i = it->m_pos + 1;
 
-                    for (; i < po.fr.data[it->m_line].first.length(); ++i) {
-                        if (po.fr.data[it->m_line].first[i] == Trait::latin1ToChar('<'))
+                    for (; i < po.m_fr.m_data[it->m_line].first.length(); ++i) {
+                        if (po.m_fr.m_data[it->m_line].first[i] == Trait::latin1ToChar('<')) {
                             break;
+                        }
                     }
 
-                    if (onLine || !isNewBlockIn(po.fr, start->m_line, it->m_line))
-                        eatRawHtml(po.line, po.pos, it->m_line, i, po, true, 5, onLine);
-                    else
-                        resetHtmlTag(po.html);
+                    if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
+                        eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 5, onLine);
+                    } else {
+                        resetHtmlTag(po.m_html);
+                    }
 
                     return;
                 }
@@ -4776,39 +5432,51 @@ inline void Parser<Trait>::finishRule5HtmlTag(typename Delims::const_iterator it
         }
     }
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 5, true);
-    else
-        resetHtmlTag(po.html);
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 5, true);
+    } else {
+        resetHtmlTag(po.m_html);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::finishRule6HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline void
+Parser<Trait>::finishRule6HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
-    po.html.onLine = (it != last ? it->m_pos == skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString()) : true);
+    po.m_html.m_onLine = (it != last ?
+        it->m_pos == skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString()) : true);
 
-    if (po.html.onLine)
-        eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 6, po.html.onLine);
-    else {
+    if (po.m_html.m_onLine) {
+        eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po,
+            false, 6, po.m_html.m_onLine);
+    } else {
         const auto nit = std::find_if(std::next(it), last, [](const auto &d) {
             return (d.m_type == Delimiter::Greater);
         });
 
-        if (nit != last && !isNewBlockIn(po.fr, it->m_line, nit->m_line))
-            eatRawHtml(po.line, po.pos, nit->m_line, nit->m_pos + nit->m_len, po, true, 6, false);
+        if (nit != last && !isNewBlockIn(po.m_fr, it->m_line, nit->m_line)) {
+            eatRawHtml(po.m_line, po.m_pos, nit->m_line, nit->m_pos + nit->m_len, po,
+                true, 6, false);
+        }
     }
 
-    if (po.fr.emptyLineAfter && po.html.html)
-        po.html.continueHtml = false;
+    if (po.m_fr.m_emptyLineAfter && po.m_html.m_html) {
+        po.m_html.m_continueHtml = false;
+    }
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool skipFirst)
+Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it,
+                                typename Delims::const_iterator last,
+                                TextParsingOpts<Trait> &po,
+                                bool skipFirst)
 {
-    po.detected = TextParsingOpts<Trait>::Detected::HTML;
+    po.m_detected = TextParsingOpts<Trait>::Detected::HTML;
 
-    switch (po.html.htmlBlockType) {
+    switch (po.m_html.m_htmlBlockType) {
     case 1:
         finishRule1HtmlTag(it, last, po, skipFirst);
         break;
@@ -4837,7 +5505,7 @@ Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it, typename Del
         return finishRule7HtmlTag(it, last, po);
 
     default:
-        po.detected = TextParsingOpts<Trait>::Detected::Nothing;
+        po.m_detected = TextParsingOpts<Trait>::Detected::Nothing;
         break;
     }
 
@@ -4845,7 +5513,10 @@ Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it, typename Del
 }
 
 template<class Trait>
-inline int Parser<Trait>::htmlTagRule(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+inline int
+Parser<Trait>::htmlTagRule(typename Delims::const_iterator it,
+                           typename Delims::const_iterator last,
+                           TextParsingOpts<Trait> &po)
 {
     MD_UNUSED(last)
 
@@ -4853,12 +5524,14 @@ inline int Parser<Trait>::htmlTagRule(typename Delims::const_iterator it, typena
 
     std::tie(tag, std::ignore) = readHtmlTag(it, po);
 
-    if (tag.startsWith(Trait::latin1ToString("![CDATA[")))
+    if (tag.startsWith(Trait::latin1ToString("![CDATA["))) {
         return 5;
+    }
 
     tag = tag.toLower();
 
-    static const typename Trait::String c_validHtmlTagLetters = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789-");
+    static const typename Trait::String s_validHtmlTagLetters =
+        Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789-");
 
     bool closing = false;
 
@@ -4867,31 +5540,37 @@ inline int Parser<Trait>::htmlTagRule(typename Delims::const_iterator it, typena
         closing = true;
     }
 
-    if (tag.endsWith(Trait::latin1ToString("/")))
+    if (tag.endsWith(Trait::latin1ToString("/"))) {
         tag.remove(tag.size() - 1, 1);
+    }
 
-    if (tag.isEmpty())
+    if (tag.isEmpty()) {
         return -1;
+    }
 
-    if (!tag.startsWith(Trait::latin1ToString("!")) && !tag.startsWith(Trait::latin1ToString("?")) && !(tag[0].unicode() >= 97 && tag[0].unicode() <= 122))
+    if (!tag.startsWith(Trait::latin1ToString("!")) &&
+        !tag.startsWith(Trait::latin1ToString("?")) &&
+        !(tag[0].unicode() >= 97 && tag[0].unicode() <= 122)) {
         return -1;
+    }
 
-    static const std::set<typename Trait::String> rule1 = {Trait::latin1ToString("pre"),
-                                                           Trait::latin1ToString("script"),
-                                                           Trait::latin1ToString("style"),
-                                                           Trait::latin1ToString("textarea")};
+    static const std::set<typename Trait::String> s_rule1 = {Trait::latin1ToString("pre"),
+                                                             Trait::latin1ToString("script"),
+                                                             Trait::latin1ToString("style"),
+                                                             Trait::latin1ToString("textarea")};
 
-    if (!closing && rule1.find(tag) != rule1.cend())
+    if (!closing && s_rule1.find(tag) != s_rule1.cend()) {
         return 1;
-    else if (tag.startsWith(Trait::latin1ToString("!--")))
+    } else if (tag.startsWith(Trait::latin1ToString("!--"))) {
         return 2;
-    else if (tag.startsWith(Trait::latin1ToString("?")))
+    } else if (tag.startsWith(Trait::latin1ToString("?"))) {
         return 3;
-    else if (tag.startsWith(Trait::latin1ToString("!")) && tag.size() > 1
-             && ((tag[1].unicode() >= 65 && tag[1].unicode() <= 90) || (tag[1].unicode() >= 97 && tag[1].unicode() <= 122))) {
+    } else if (tag.startsWith(Trait::latin1ToString("!")) && tag.size() > 1 &&
+               ((tag[1].unicode() >= 65 && tag[1].unicode() <= 90) ||
+                    (tag[1].unicode() >= 97 && tag[1].unicode() <= 122))) {
         return 4;
     } else {
-        static const std::set<typename Trait::String> rule6 = {
+        static const std::set<typename Trait::String> s_rule6 = {
             Trait::latin1ToString("address"),  Trait::latin1ToString("article"),    Trait::latin1ToString("aside"),    Trait::latin1ToString("base"),
             Trait::latin1ToString("basefont"), Trait::latin1ToString("blockquote"), Trait::latin1ToString("body"),     Trait::latin1ToString("caption"),
             Trait::latin1ToString("center"),   Trait::latin1ToString("col"),        Trait::latin1ToString("colgroup"), Trait::latin1ToString("dd"),
@@ -4910,19 +5589,22 @@ inline int Parser<Trait>::htmlTagRule(typename Delims::const_iterator it, typena
             Trait::latin1ToString("track"),    Trait::latin1ToString("ul")};
 
         for (long long int i = 1; i < tag.size(); ++i) {
-            if (!c_validHtmlTagLetters.contains(tag[i]))
+            if (!s_validHtmlTagLetters.contains(tag[i])) {
                 return -1;
+            }
         }
 
-        if (rule6.find(tag) != rule6.cend())
+        if (s_rule6.find(tag) != s_rule6.cend()) {
             return 6;
-        else {
+        } else {
             bool tag = false;
 
-            std::tie(tag, std::ignore, std::ignore, std::ignore, std::ignore) = isHtmlTag(it->m_line, it->m_pos, po, 7);
+            std::tie(tag, std::ignore, std::ignore, std::ignore, std::ignore) =
+                isHtmlTag(it->m_line, it->m_pos, po, 7);
 
-            if (tag)
+            if (tag) {
                 return 7;
+            }
         }
     }
 
@@ -4931,29 +5613,33 @@ inline int Parser<Trait>::htmlTagRule(typename Delims::const_iterator it, typena
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForRawHtml(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::checkForRawHtml(typename Delims::const_iterator it,
+                               typename Delims::const_iterator last,
+                               TextParsingOpts<Trait> &po)
 {
     const auto rule = htmlTagRule(it, last, po);
 
     if (rule == -1) {
-        resetHtmlTag(po.html);
+        resetHtmlTag(po.m_html);
 
-        po.firstInParagraph = false;
+        po.m_firstInParagraph = false;
 
         return it;
     }
 
-    po.html.htmlBlockType = rule;
-    po.html.html.reset(new RawHtml<Trait>);
-    po.html.html->setStartColumn(po.fr.data.at(it->m_line).first.virginPos(it->m_pos));
-    po.html.html->setStartLine(po.fr.data.at(it->m_line).second.lineNumber);
+    po.m_html.m_htmlBlockType = rule;
+    po.m_html.m_html.reset(new RawHtml<Trait>);
+    po.m_html.m_html->setStartColumn(po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos));
+    po.m_html.m_html->setStartLine(po.m_fr.m_data.at(it->m_line).second.m_lineNumber);
 
     return finishRawHtmlTag(it, last, po, true);
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
     if (it != last) {
         const auto start = it;
@@ -4966,9 +5652,9 @@ Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it, typename D
         onLine = onLine && it->m_line == 0 && l == start->m_line;
 
         if (ok) {
-            eatRawHtml(po.line, po.pos, l, ++p, po, !onLine, 7, onLine);
+            eatRawHtml(po.m_line, po.m_pos, l, ++p, po, !onLine, 7, onLine);
 
-            po.html.onLine = onLine;
+            po.m_html.m_onLine = onLine;
 
             it = findIt(it, last, po);
 
@@ -4978,27 +5664,30 @@ Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it, typename D
                         const auto rule = htmlTagRule(it, last, po);
 
                         if (rule != -1 && rule != 7) {
-                            eatRawHtml(po.line, po.pos, it->m_line, it->m_pos, po, true, 7, onLine, true);
+                            eatRawHtml(po.m_line, po.m_pos, it->m_line, it->m_pos, po, true, 7, onLine, true);
 
                             return std::prev(it);
                         }
                     }
                 }
 
-                eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, false, 7, onLine, true);
+                eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, false, 7, onLine, true);
 
                 return std::prev(last);
-            } else
+            } else {
                 return it;
-        } else
+            }
+        } else {
             return it;
+        }
     } else {
-        if (po.html.onLine) {
-            eatRawHtml(po.line, po.pos, po.fr.data.size() - 1, -1, po, true, 7, true);
+        if (po.m_html.m_onLine) {
+            eatRawHtml(po.m_line, po.m_pos, po.m_fr.m_data.size() - 1, -1, po, true, 7, true);
 
             return last;
-        } else
-            resetHtmlTag(po.html);
+        } else {
+            resetHtmlTag(po.m_html);
+        }
     }
 
     return it;
@@ -5006,78 +5695,86 @@ Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it, typename D
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForMath(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::checkForMath(typename Delims::const_iterator it,
+                            typename Delims::const_iterator last,
+                            TextParsingOpts<Trait> &po)
 {
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
     const auto end = std::find_if(std::next(it), last, [&](const auto &d) {
         return (d.m_type == Delimiter::Math && d.m_len == it->m_len);
     });
 
-    if (end != last && end->m_line <= po.lastTextLine) {
+    if (end != last && end->m_line <= po.m_lastTextLine) {
         typename Trait::String math;
 
-        if (it->m_line == end->m_line)
-            math = po.fr.data[it->m_line].first.asString().sliced(it->m_pos + it->m_len, end->m_pos - (it->m_pos + it->m_len));
-        else {
-            math = po.fr.data[it->m_line].first.asString().sliced(it->m_pos + it->m_len);
+        if (it->m_line == end->m_line) {
+            math = po.m_fr.m_data[it->m_line].first.asString().sliced(
+                it->m_pos + it->m_len, end->m_pos - (it->m_pos + it->m_len));
+        } else {
+            math = po.m_fr.m_data[it->m_line].first.asString().sliced(it->m_pos + it->m_len);
 
             for (long long int i = it->m_line + 1; i < end->m_line; ++i) {
                 math.push_back(Trait::latin1ToChar('\n'));
-                math.push_back(po.fr.data[i].first.asString());
+                math.push_back(po.m_fr.m_data[i].first.asString());
             }
 
             math.push_back(Trait::latin1ToChar('\n'));
-            math.push_back(po.fr.data[end->m_line].first.asString().sliced(0, end->m_pos));
+            math.push_back(po.m_fr.m_data[end->m_line].first.asString().sliced(0, end->m_pos));
         }
 
-        if (!po.collectRefLinks) {
+        if (!po.m_collectRefLinks) {
             std::shared_ptr<Math<Trait>> m(new Math<Trait>);
 
-            auto startLine = po.fr.data.at(it->m_line).second.lineNumber;
-            auto startColumn = po.fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len);
+            auto startLine = po.m_fr.m_data.at(it->m_line).second.m_lineNumber;
+            auto startColumn = po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len);
 
-            if (it->m_pos + it->m_len >= po.fr.data.at(it->m_line).first.length())
-                std::tie(startColumn, startLine) = nextPosition(po.fr, startColumn, startLine);
+            if (it->m_pos + it->m_len >= po.m_fr.m_data.at(it->m_line).first.length()) {
+                std::tie(startColumn, startLine) = nextPosition(po.m_fr, startColumn, startLine);
+            }
 
-            auto endColumn = po.fr.data.at(end->m_line).first.virginPos(end->m_pos);
-            auto endLine = po.fr.data.at(end->m_line).second.lineNumber;
+            auto endColumn = po.m_fr.m_data.at(end->m_line).first.virginPos(end->m_pos);
+            auto endLine = po.m_fr.m_data.at(end->m_line).second.m_lineNumber;
 
-            if (endColumn == 0)
-                std::tie(endColumn, endLine) = prevPosition(po.fr, endColumn, endLine);
-            else
+            if (endColumn == 0) {
+                std::tie(endColumn, endLine) = prevPosition(po.m_fr, endColumn, endLine);
+            } else {
                 --endColumn;
+            }
 
             m->setStartColumn(startColumn);
             m->setStartLine(startLine);
             m->setEndColumn(endColumn);
             m->setEndLine(endLine);
             m->setInline(it->m_len == 1);
-            m->setStartDelim({po.fr.data[it->m_line].first.virginPos(it->m_pos),
-                              po.fr.data[it->m_line].second.lineNumber,
-                              po.fr.data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
-                              po.fr.data[it->m_line].second.lineNumber});
-            m->setEndDelim({po.fr.data[end->m_line].first.virginPos(end->m_pos),
-                            po.fr.data[end->m_line].second.lineNumber,
-                            po.fr.data[end->m_line].first.virginPos(end->m_pos + end->m_len - 1),
-                            po.fr.data[end->m_line].second.lineNumber});
+            m->setStartDelim({po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos),
+                              po.m_fr.m_data[it->m_line].second.m_lineNumber,
+                              po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
+                              po.m_fr.m_data[it->m_line].second.m_lineNumber});
+            m->setEndDelim({po.m_fr.m_data[end->m_line].first.virginPos(end->m_pos),
+                            po.m_fr.m_data[end->m_line].second.m_lineNumber,
+                            po.m_fr.m_data[end->m_line].first.virginPos(end->m_pos + end->m_len - 1),
+                            po.m_fr.m_data[end->m_line].second.m_lineNumber});
             m->setFensedCode(false);
 
             initLastItemWithOpts<Trait>(po, m);
 
-            if (math.startsWith(Trait::latin1ToString("`")) && math.endsWith(Trait::latin1ToString("`")) && !math.endsWith(Trait::latin1ToString("\\`"))
-                && math.length() > 1)
+            if (math.startsWith(Trait::latin1ToString("`")) &&
+                math.endsWith(Trait::latin1ToString("`")) &&
+                !math.endsWith(Trait::latin1ToString("\\`")) &&
+                math.length() > 1) {
                 math = math.sliced(1, math.length() - 2);
+            }
 
             m->setExpr(math);
 
-            po.parent->appendItem(m);
+            po.m_parent->appendItem(m);
 
-            po.pos = end->m_pos + end->m_len;
-            po.line = end->m_line;
-            po.isSpaceBefore = false;
-            po.lastText = nullptr;
+            po.m_pos = end->m_pos + end->m_len;
+            po.m_line = end->m_line;
+            po.m_isSpaceBefore = false;
+            po.m_lastText = nullptr;
         }
 
         return end;
@@ -5088,7 +5785,10 @@ Parser<Trait>::checkForMath(typename Delims::const_iterator it, typename Delims:
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, bool updatePos)
+Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it,
+                                    typename Delims::const_iterator last,
+                                    TextParsingOpts<Trait> &po,
+                                    bool updatePos)
 {
     const auto nit = std::find_if(std::next(it), last, [](const auto &d) {
         return (d.m_type == Delimiter::Greater);
@@ -5096,7 +5796,8 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it, typename
 
     if (nit != last) {
         if (nit->m_line == it->m_line) {
-            const auto url = po.fr.data.at(it->m_line).first.asString().sliced(it->m_pos + 1, nit->m_pos - it->m_pos - 1);
+            const auto url = po.m_fr.m_data.at(it->m_line).first.asString().sliced(
+                it->m_pos + 1, nit->m_pos - it->m_pos - 1);
 
             bool isUrl = true;
 
@@ -5109,70 +5810,78 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it, typename
             }
 
             if (isUrl) {
-                if (!isValidUrl<Trait>(url) && !isEmail<Trait>(url))
+                if (!isValidUrl<Trait>(url) && !isEmail<Trait>(url)) {
                     isUrl = false;
+                }
             }
 
             if (isUrl) {
-                if (!po.collectRefLinks) {
+                if (!po.m_collectRefLinks) {
                     std::shared_ptr<Link<Trait>> lnk(new Link<Trait>);
-                    lnk->setStartColumn(po.fr.data.at(it->m_line).first.virginPos(it->m_pos));
-                    lnk->setStartLine(po.fr.data.at(it->m_line).second.lineNumber);
-                    lnk->setEndColumn(po.fr.data.at(nit->m_line).first.virginPos(nit->m_pos + nit->m_len - 1));
-                    lnk->setEndLine(po.fr.data.at(nit->m_line).second.lineNumber);
+                    lnk->setStartColumn(po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos));
+                    lnk->setStartLine(po.m_fr.m_data.at(it->m_line).second.m_lineNumber);
+                    lnk->setEndColumn(po.m_fr.m_data.at(nit->m_line).first.virginPos(nit->m_pos + nit->m_len - 1));
+                    lnk->setEndLine(po.m_fr.m_data.at(nit->m_line).second.m_lineNumber);
                     lnk->setUrl(url.simplified());
-                    lnk->setOpts(po.opts);
-                    lnk->setTextPos({po.fr.data[it->m_line].first.virginPos(it->m_pos + 1),
-                                     po.fr.data[it->m_line].second.lineNumber,
-                                     po.fr.data[nit->m_line].first.virginPos(nit->m_pos - 1),
-                                     po.fr.data[nit->m_line].second.lineNumber});
+                    lnk->setOpts(po.m_opts);
+                    lnk->setTextPos({po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos + 1),
+                                     po.m_fr.m_data[it->m_line].second.m_lineNumber,
+                                     po.m_fr.m_data[nit->m_line].first.virginPos(nit->m_pos - 1),
+                                     po.m_fr.m_data[nit->m_line].second.m_lineNumber});
                     lnk->setUrlPos(lnk->textPos());
-                    po.parent->appendItem(lnk);
+                    po.m_parent->appendItem(lnk);
                 }
 
-                po.wasRefLink = false;
-                po.firstInParagraph = false;
-                po.isSpaceBefore = false;
-                po.lastText = nullptr;
+                po.m_wasRefLink = false;
+                po.m_firstInParagraph = false;
+                po.m_isSpaceBefore = false;
+                po.m_lastText = nullptr;
 
                 if (updatePos) {
-                    po.pos = nit->m_pos + nit->m_len;
-                    po.line = nit->m_line;
+                    po.m_pos = nit->m_pos + nit->m_len;
+                    po.m_line = nit->m_line;
                 }
 
                 return nit;
-            } else
+            } else {
                 return checkForRawHtml(it, last, po);
-        } else
+            }
+        } else {
             return checkForRawHtml(it, last, po);
-    } else
+        }
+    } else {
         return checkForRawHtml(it, last, po);
+    }
 }
 
 template<class Trait>
-inline void Parser<Trait>::makeInlineCode(long long int startLine,
-                                          long long int startPos,
-                                          long long int lastLine,
-                                          long long int lastPos,
-                                          TextParsingOpts<Trait> &po,
-                                          typename Delims::const_iterator startDelimIt,
-                                          typename Delims::const_iterator endDelimIt)
+inline void
+Parser<Trait>::makeInlineCode(long long int startLine,
+                              long long int startPos,
+                              long long int lastLine,
+                              long long int lastPos,
+                              TextParsingOpts<Trait> &po,
+                              typename Delims::const_iterator startDelimIt,
+                              typename Delims::const_iterator endDelimIt)
 {
     typename Trait::String c;
 
-    for (; po.line <= lastLine; ++po.line) {
-        c.push_back(
-            po.fr.data.at(po.line).first.asString().sliced(po.pos, (po.line == lastLine ? lastPos - po.pos : po.fr.data.at(po.line).first.length() - po.pos)));
+    for (; po.m_line <= lastLine; ++po.m_line) {
+        c.push_back(po.m_fr.m_data.at(po.m_line).first.asString().sliced(
+            po.m_pos, (po.m_line == lastLine ? lastPos - po.m_pos :
+                po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos)));
 
-        if (po.line < lastLine)
+        if (po.m_line < lastLine) {
             c.push_back(Trait::latin1ToChar(' '));
+        }
 
-        po.pos = 0;
+        po.m_pos = 0;
     }
 
-    po.line = lastLine;
+    po.m_line = lastLine;
 
-    if (c[0] == Trait::latin1ToChar(' ') && c[c.size() - 1] == Trait::latin1ToChar(' ') && skipSpaces<Trait>(0, c) < c.size()) {
+    if (c[0] == Trait::latin1ToChar(' ') && c[c.size() - 1] == Trait::latin1ToChar(' ') &&
+        skipSpaces<Trait>(0, c) < c.size()) {
         c.remove(0, 1);
         c.remove(c.size() - 1, 1);
         ++startPos;
@@ -5182,74 +5891,83 @@ inline void Parser<Trait>::makeInlineCode(long long int startLine,
     if (!c.isEmpty()) {
         auto code = std::make_shared<Code<Trait>>(c, false, true);
 
-        code->setStartColumn(po.fr.data.at(startLine).first.virginPos(startPos));
-        code->setStartLine(po.fr.data.at(startLine).second.lineNumber);
-        code->setEndColumn(po.fr.data.at(lastLine).first.virginPos(lastPos - 1));
-        code->setEndLine(po.fr.data.at(lastLine).second.lineNumber);
-        code->setStartDelim({po.fr.data.at(startDelimIt->m_line).first.virginPos(startDelimIt->m_pos + (startDelimIt->m_backslashed ? 1 : 0)),
-                             po.fr.data.at(startDelimIt->m_line).second.lineNumber,
-                             po.fr.data.at(startDelimIt->m_line).first.virginPos(startDelimIt->m_pos + (startDelimIt->m_backslashed ? 1 : 0))
-                                 + startDelimIt->m_len - 1 - (startDelimIt->m_backslashed ? 1 : 0),
-                             po.fr.data.at(startDelimIt->m_line).second.lineNumber});
+        code->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+        code->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+        code->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
+        code->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
+        code->setStartDelim({po.m_fr.m_data.at(startDelimIt->m_line).first.virginPos(
+                                startDelimIt->m_pos + (startDelimIt->m_backslashed ? 1 : 0)),
+                             po.m_fr.m_data.at(startDelimIt->m_line).second.m_lineNumber,
+                             po.m_fr.m_data.at(startDelimIt->m_line).first.virginPos(
+                                startDelimIt->m_pos + (startDelimIt->m_backslashed ? 1 : 0)) +
+                                startDelimIt->m_len - 1 - (startDelimIt->m_backslashed ? 1 : 0),
+                             po.m_fr.m_data.at(startDelimIt->m_line).second.m_lineNumber});
         code->setEndDelim(
-            {po.fr.data.at(endDelimIt->m_line).first.virginPos(endDelimIt->m_pos + (endDelimIt->m_backslashed ? 1 : 0)),
-             po.fr.data.at(endDelimIt->m_line).second.lineNumber,
-             po.fr.data.at(endDelimIt->m_line)
-                 .first.virginPos(endDelimIt->m_pos + (endDelimIt->m_backslashed ? 1 : 0) + endDelimIt->m_len - 1 - (endDelimIt->m_backslashed ? 1 : 0)),
-             po.fr.data.at(endDelimIt->m_line).second.lineNumber});
-        code->setOpts(po.opts);
+            {po.m_fr.m_data.at(endDelimIt->m_line).first.virginPos(
+                endDelimIt->m_pos + (endDelimIt->m_backslashed ? 1 : 0)),
+             po.m_fr.m_data.at(endDelimIt->m_line).second.m_lineNumber,
+             po.m_fr.m_data.at(endDelimIt->m_line).first.virginPos(
+                endDelimIt->m_pos + (endDelimIt->m_backslashed ? 1 : 0) +
+                    endDelimIt->m_len - 1 - (endDelimIt->m_backslashed ? 1 : 0)),
+             po.m_fr.m_data.at(endDelimIt->m_line).second.m_lineNumber});
+        code->setOpts(po.m_opts);
 
         initLastItemWithOpts<Trait>(po, code);
 
-        po.parent->appendItem(code);
+        po.m_parent->appendItem(code);
     }
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
-    po.isSpaceBefore = false;
-    po.lastText = nullptr;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
+    po.m_isSpaceBefore = false;
+    po.m_lastText = nullptr;
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForInlineCode(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::checkForInlineCode(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po)
 {
     const auto len = it->m_len;
     const auto start = it;
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
     ++it;
 
     for (; it != last; ++it) {
-        if (it->m_line <= po.lastTextLine) {
-            const auto p = skipSpaces<Trait>(0, po.fr.data.at(it->m_line).first.asString());
-            const auto withoutSpaces = po.fr.data.at(it->m_line).first.asString().sliced(p);
+        if (it->m_line <= po.m_lastTextLine) {
+            const auto p = skipSpaces<Trait>(0, po.m_fr.m_data.at(it->m_line).first.asString());
+            const auto withoutSpaces = po.m_fr.m_data.at(it->m_line).first.asString().sliced(p);
 
-            if ((it->m_type == Delimiter::HorizontalLine && withoutSpaces[0] == Trait::latin1ToChar('-')) || it->m_type == Delimiter::H1
-                || it->m_type == Delimiter::H2)
+            if ((it->m_type == Delimiter::HorizontalLine && withoutSpaces[0] == Trait::latin1ToChar('-')) ||
+                it->m_type == Delimiter::H1 || it->m_type == Delimiter::H2) {
                 break;
-            else if (it->m_type == Delimiter::InlineCode && (it->m_len - (it->m_backslashed ? 1 : 0)) == len) {
-                if (!po.collectRefLinks) {
+            } else if (it->m_type == Delimiter::InlineCode && (it->m_len - (it->m_backslashed ? 1 : 0)) == len) {
+                if (!po.m_collectRefLinks) {
                     makeText(start->m_line, start->m_pos, po);
 
-                    po.pos = start->m_pos + start->m_len;
+                    po.m_pos = start->m_pos + start->m_len;
 
-                    makeInlineCode(start->m_line, start->m_pos + start->m_len, it->m_line, it->m_pos + (it->m_backslashed ? 1 : 0), po, start, it);
+                    makeInlineCode(start->m_line, start->m_pos + start->m_len, it->m_line,
+                        it->m_pos + (it->m_backslashed ? 1 : 0), po, start, it);
 
-                    po.line = it->m_line;
-                    po.pos = it->m_pos + it->m_len;
+                    po.m_line = it->m_line;
+                    po.m_pos = it->m_pos + it->m_len;
                 }
 
                 return it;
             }
-        } else
+        } else {
             break;
+        }
     }
 
-    if (!po.collectRefLinks)
+    if (!po.m_collectRefLinks) {
         makeText(start->m_line, start->m_pos + start->m_len, po);
+    }
 
     return start;
 }
@@ -5263,58 +5981,69 @@ Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::const_iterator sta
                                              bool doNotCreateTextOnFail,
                                              WithPosition *pos)
 {
-    if (it != last && it->m_line <= po.lastTextLine) {
+    if (it != last && it->m_line <= po.m_lastTextLine) {
         if (start->m_line == it->m_line) {
             const auto p = start->m_pos + start->m_len;
             const auto n = it->m_pos - p;
 
             if (pos) {
                 long long int startPos, startLine, endPos, endLine;
-                std::tie(startPos, startLine) = nextPosition(po.fr,
-                                                             po.fr.data[start->m_line].first.virginPos(start->m_pos + start->m_len - 1),
-                                                             po.fr.data[start->m_line].second.lineNumber);
-                std::tie(endPos, endLine) = prevPosition(po.fr, po.fr.data[it->m_line].first.virginPos(it->m_pos), po.fr.data[it->m_line].second.lineNumber);
+                std::tie(startPos, startLine) = nextPosition(po.m_fr,
+                                                             po.m_fr.m_data[start->m_line].first.virginPos(
+                                                                start->m_pos + start->m_len - 1),
+                                                             po.m_fr.m_data[start->m_line].second.m_lineNumber);
+                std::tie(endPos, endLine) =
+                    prevPosition(po.m_fr, po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos),
+                        po.m_fr.m_data[it->m_line].second.m_lineNumber);
 
                 *pos = {startPos, startLine, endPos, endLine};
             }
 
-            return {{{po.fr.data.at(start->m_line).first.sliced(p, n).simplified(), {po.fr.data.at(start->m_line).second.lineNumber}}}, it};
+            return {{{po.m_fr.m_data.at(start->m_line).first.sliced(p, n).simplified(),
+                    {po.m_fr.m_data.at(start->m_line).second.m_lineNumber}}}, it};
         } else {
             if (it->m_line - start->m_line < 3) {
                 typename MdBlock<Trait>::Data res;
-                res.push_back({po.fr.data.at(start->m_line).first.sliced(start->m_pos + start->m_len).simplified(), po.fr.data.at(start->m_line).second});
+                res.push_back({po.m_fr.m_data.at(start->m_line).first.sliced(
+                    start->m_pos + start->m_len).simplified(), po.m_fr.m_data.at(start->m_line).second});
 
                 long long int i = start->m_line + 1;
 
                 for (; i <= it->m_line; ++i) {
-                    if (i == it->m_line)
-                        res.push_back({po.fr.data.at(i).first.sliced(0, it->m_pos).simplified(), po.fr.data.at(i).second});
-                    else
-                        res.push_back({po.fr.data.at(i).first.simplified(), po.fr.data.at(i).second});
+                    if (i == it->m_line) {
+                        res.push_back({po.m_fr.m_data.at(i).first.sliced(0, it->m_pos).simplified(),
+                            po.m_fr.m_data.at(i).second});
+                    } else {
+                        res.push_back({po.m_fr.m_data.at(i).first.simplified(), po.m_fr.m_data.at(i).second});
+                    }
                 }
 
                 if (pos) {
                     long long int startPos, startLine, endPos, endLine;
-                    std::tie(startPos, startLine) = nextPosition(po.fr,
-                                                                 po.fr.data[start->m_line].first.virginPos(start->m_pos + start->m_len - 1),
-                                                                 po.fr.data[start->m_line].second.lineNumber);
+                    std::tie(startPos, startLine) = nextPosition(po.m_fr,
+                                                                 po.m_fr.m_data[start->m_line].first.virginPos(
+                                                                    start->m_pos + start->m_len - 1),
+                                                                 po.m_fr.m_data[start->m_line].second.m_lineNumber);
                     std::tie(endPos, endLine) =
-                        prevPosition(po.fr, po.fr.data[it->m_line].first.virginPos(it->m_pos), po.fr.data[it->m_line].second.lineNumber);
+                        prevPosition(po.m_fr, po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos),
+                            po.m_fr.m_data[it->m_line].second.m_lineNumber);
 
                     *pos = {startPos, startLine, endPos, endLine};
                 }
 
                 return {res, it};
             } else {
-                if (!po.collectRefLinks && !doNotCreateTextOnFail)
+                if (!po.m_collectRefLinks && !doNotCreateTextOnFail) {
                     makeText(start->m_line, start->m_pos + start->m_len, po);
+                }
 
                 return {{}, start};
             }
         }
     } else {
-        if (!po.collectRefLinks && !doNotCreateTextOnFail)
+        if (!po.m_collectRefLinks && !doNotCreateTextOnFail) {
             makeText(start->m_line, start->m_pos + start->m_len, po);
+        }
 
         return {{}, start};
     }
@@ -5322,15 +6051,18 @@ Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::const_iterator sta
 
 template<class Trait>
 inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::const_iterator>
-Parser<Trait>::checkForLinkText(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *pos)
+Parser<Trait>::checkForLinkText(typename Delims::const_iterator it,
+                                typename Delims::const_iterator last,
+                                TextParsingOpts<Trait> &po,
+                                WithPosition *pos)
 {
     const auto start = it;
 
     long long int brackets = 0;
 
-    const bool collectRefLinks = po.collectRefLinks;
-    po.collectRefLinks = true;
-    long long int l = po.line, p = po.pos;
+    const bool collectRefLinks = po.m_collectRefLinks;
+    po.m_collectRefLinks = true;
+    long long int l = po.m_line, p = po.m_pos;
 
     for (it = std::next(it); it != last; ++it) {
         bool quit = false;
@@ -5360,23 +6092,27 @@ Parser<Trait>::checkForLinkText(typename Delims::const_iterator it, typename Del
             break;
         }
 
-        if (quit)
+        if (quit) {
             break;
+        }
     }
 
     const auto r = readTextBetweenSquareBrackets(start, it, last, po, false, pos);
 
-    po.collectRefLinks = collectRefLinks;
-    resetHtmlTag(po.html);
-    po.line = l;
-    po.pos = p;
+    po.m_collectRefLinks = collectRefLinks;
+    resetHtmlTag(po.m_html);
+    po.m_line = l;
+    po.m_pos = p;
 
     return r;
 }
 
 template<class Trait>
 inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::const_iterator>
-Parser<Trait>::checkForLinkLabel(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *pos)
+Parser<Trait>::checkForLinkLabel(typename Delims::const_iterator it,
+                                 typename Delims::const_iterator last,
+                                 TextParsingOpts<Trait> &po,
+                                 WithPosition *pos)
 {
     const auto start = it;
 
@@ -5406,14 +6142,16 @@ Parser<Trait>::checkForLinkLabel(typename Delims::const_iterator it, typename De
 }
 
 template<class Trait>
-inline typename Trait::String Parser<Trait>::toSingleLine(const typename MdBlock<Trait>::Data &d)
+inline typename Trait::String
+Parser<Trait>::toSingleLine(const typename MdBlock<Trait>::Data &d)
 {
     typename Trait::String res;
     bool first = true;
 
     for (const auto &s : d) {
-        if (!first)
+        if (!first) {
             res.push_back(Trait::latin1ToChar(' '));
+        }
         res.push_back(s.first.asString());
         first = false;
     }
@@ -5422,46 +6160,54 @@ inline typename Trait::String Parser<Trait>::toSingleLine(const typename MdBlock
 }
 
 template<class Trait>
-inline std::shared_ptr<Link<Trait>> Parser<Trait>::makeLink(const typename Trait::String &url,
-                                                            const typename MdBlock<Trait>::Data &text,
-                                                            TextParsingOpts<Trait> &po,
-                                                            bool doNotCreateTextOnFail,
-                                                            long long int startLine,
-                                                            long long int startPos,
-                                                            long long int lastLine,
-                                                            long long int lastPos,
-                                                            const WithPosition &textPos,
-                                                            const WithPosition &urlPos)
+inline std::shared_ptr<Link<Trait>>
+Parser<Trait>::makeLink(const typename Trait::String &url,
+                        const typename MdBlock<Trait>::Data &text,
+                        TextParsingOpts<Trait> &po,
+                        bool doNotCreateTextOnFail,
+                        long long int startLine,
+                        long long int startPos,
+                        long long int lastLine,
+                        long long int lastPos,
+                        const WithPosition &textPos,
+                        const WithPosition &urlPos)
 {
     MD_UNUSED(doNotCreateTextOnFail)
 
-    typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ? url : removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
+    typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ?
+        url : removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
 
     if (!u.isEmpty()) {
         if (!u.startsWith(Trait::latin1ToString("#"))) {
-            const auto checkForFile = [&](typename Trait::String &url, const typename Trait::String &ref = {}) -> bool {
+            const auto checkForFile = [&](typename Trait::String &url,
+                                          const typename Trait::String &ref = {}) -> bool {
                 if (Trait::fileExists(url)) {
                     url = Trait::absoluteFilePath(url);
 
-                    if (!po.collectRefLinks)
-                        po.linksToParse.push_back(url);
+                    if (!po.m_collectRefLinks) {
+                        po.m_linksToParse.push_back(url);
+                    }
 
-                    if (!ref.isEmpty())
+                    if (!ref.isEmpty()) {
                         url = ref + Trait::latin1ToString("/") + url;
+                    }
 
                     return true;
-                } else if (Trait::fileExists(url, po.workingPath)) {
-                    url = Trait::absoluteFilePath(po.workingPath + Trait::latin1ToString("/") + url);
+                } else if (Trait::fileExists(url, po.m_workingPath)) {
+                    url = Trait::absoluteFilePath(po.m_workingPath + Trait::latin1ToString("/") + url);
 
-                    if (!po.collectRefLinks)
-                        po.linksToParse.push_back(url);
+                    if (!po.m_collectRefLinks) {
+                        po.m_linksToParse.push_back(url);
+                    }
 
-                    if (!ref.isEmpty())
+                    if (!ref.isEmpty()) {
                         url = ref + Trait::latin1ToString("/") + url;
+                    }
 
                     return true;
-                } else
+                } else {
                     return false;
+                }
             };
 
             if (!checkForFile(u) && u.contains(Trait::latin1ToChar('#'))) {
@@ -5469,17 +6215,19 @@ inline std::shared_ptr<Link<Trait>> Parser<Trait>::makeLink(const typename Trait
                 const auto ref = u.sliced(i);
                 u = u.sliced(0, i);
 
-                if (!checkForFile(u, ref))
+                if (!checkForFile(u, ref)) {
                     u = u + ref;
+                }
             }
         } else
-            u = u + (po.workingPath.isEmpty() ? typename Trait::String() : Trait::latin1ToString("/") + po.workingPath) + Trait::latin1ToString("/")
-                + po.fileName;
+            u = u + (po.m_workingPath.isEmpty() ? typename Trait::String() :
+                Trait::latin1ToString("/") + po.m_workingPath) + Trait::latin1ToString("/") +
+                po.m_fileName;
     }
 
     std::shared_ptr<Link<Trait>> link(new Link<Trait>);
     link->setUrl(u);
-    link->setOpts(po.opts);
+    link->setOpts(po.m_opts);
     link->setTextPos(textPos);
     link->setUrlPos(urlPos);
 
@@ -5491,11 +6239,11 @@ inline std::shared_ptr<Link<Trait>> Parser<Trait>::makeLink(const typename Trait
 
     parseFormattedTextLinksImages(block,
                                   std::static_pointer_cast<Block<Trait>>(p),
-                                  po.doc,
-                                  po.linksToParse,
-                                  po.workingPath,
-                                  po.fileName,
-                                  po.collectRefLinks,
+                                  po.m_doc,
+                                  po.m_linksToParse,
+                                  po.m_workingPath,
+                                  po.m_fileName,
+                                  po.m_collectRefLinks,
                                   true,
                                   html,
                                   true);
@@ -5520,52 +6268,55 @@ inline std::shared_ptr<Link<Trait>> Parser<Trait>::makeLink(const typename Trait
                 }
             }
 
-            if (img.get())
+            if (img.get()) {
                 link->setImg(img);
+            }
 
             link->setP(ip);
         }
     }
 
-    if (html.html.get())
-        link->p()->appendItem(html.html);
+    if (html.m_html.get()) {
+        link->p()->appendItem(html.m_html);
+    }
 
     link->setText(toSingleLine(text).simplified());
-    link->setStartColumn(po.fr.data.at(startLine).first.virginPos(startPos));
-    link->setStartLine(po.fr.data.at(startLine).second.lineNumber);
-    link->setEndColumn(po.fr.data.at(lastLine).first.virginPos(lastPos - 1));
-    link->setEndLine(po.fr.data.at(lastLine).second.lineNumber);
+    link->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+    link->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+    link->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
+    link->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
 
     initLastItemWithOpts<Trait>(po, link);
 
-    po.isSpaceBefore = false;
-    po.lastText = nullptr;
+    po.m_isSpaceBefore = false;
+    po.m_lastText = nullptr;
 
     return link;
 }
 
 template<class Trait>
-inline bool Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
-                                              TextParsingOpts<Trait> &po,
-                                              long long int startLine,
-                                              long long int startPos,
-                                              long long int lastLineForText,
-                                              long long int lastPosForText,
-                                              typename Delims::const_iterator lastIt,
-                                              const typename MdBlock<Trait>::Data &linkText,
-                                              bool doNotCreateTextOnFail,
-                                              const WithPosition &textPos,
-                                              const WithPosition &linkTextPos)
+inline bool
+Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
+                                  TextParsingOpts<Trait> &po,
+                                  long long int startLine,
+                                  long long int startPos,
+                                  long long int lastLineForText,
+                                  long long int lastPosForText,
+                                  typename Delims::const_iterator lastIt,
+                                  const typename MdBlock<Trait>::Data &linkText,
+                                  bool doNotCreateTextOnFail,
+                                  const WithPosition &textPos,
+                                  const WithPosition &linkTextPos)
 {
     const auto u = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper();
-    const auto url =
-        u + Trait::latin1ToString("/") + (po.workingPath.isEmpty() ? typename Trait::String() : po.workingPath + Trait::latin1ToString("/")) + po.fileName;
+    const auto url = u + Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ?
+        typename Trait::String() : po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
-    if (po.doc->labeledLinks().find(url) != po.doc->labeledLinks().cend()) {
-        if (!po.collectRefLinks) {
+    if (po.m_doc->labeledLinks().find(url) != po.m_doc->labeledLinks().cend()) {
+        if (!po.m_collectRefLinks) {
             const auto isLinkTextEmpty = toSingleLine(linkText).simplified().isEmpty();
 
             const auto link = makeLink(u,
@@ -5580,50 +6331,55 @@ inline bool Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Dat
                                        textPos);
 
             if (link.get()) {
-                po.linksToParse.push_back(url);
-                po.parent->appendItem(link);
+                po.m_linksToParse.push_back(url);
+                po.m_parent->appendItem(link);
 
-                po.line = lastIt->m_line;
-                po.pos = lastIt->m_pos + lastIt->m_len;
+                po.m_line = lastIt->m_line;
+                po.m_pos = lastIt->m_pos + lastIt->m_len;
             } else {
-                if (!po.collectRefLinks && !doNotCreateTextOnFail)
+                if (!po.m_collectRefLinks && !doNotCreateTextOnFail) {
                     makeText(lastLineForText, lastPosForText, po);
+                }
 
                 return false;
             }
         }
 
         return true;
-    } else if (!po.collectRefLinks && !doNotCreateTextOnFail)
+    } else if (!po.m_collectRefLinks && !doNotCreateTextOnFail) {
         makeText(lastLineForText, lastPosForText, po);
+    }
 
     return false;
 }
 
 template<class Trait>
-inline std::shared_ptr<Image<Trait>> Parser<Trait>::makeImage(const typename Trait::String &url,
-                                                              const typename MdBlock<Trait>::Data &text,
-                                                              TextParsingOpts<Trait> &po,
-                                                              bool doNotCreateTextOnFail,
-                                                              long long int startLine,
-                                                              long long int startPos,
-                                                              long long int lastLine,
-                                                              long long int lastPos,
-                                                              const WithPosition &textPos,
-                                                              const WithPosition &urlPos)
+inline std::shared_ptr<Image<Trait>>
+Parser<Trait>::makeImage(const typename Trait::String &url,
+                         const typename MdBlock<Trait>::Data &text,
+                         TextParsingOpts<Trait> &po,
+                         bool doNotCreateTextOnFail,
+                         long long int startLine,
+                         long long int startPos,
+                         long long int lastLine,
+                         long long int lastPos,
+                         const WithPosition &textPos,
+                         const WithPosition &urlPos)
 {
     MD_UNUSED(doNotCreateTextOnFail)
 
     std::shared_ptr<Image<Trait>> img(new Image<Trait>);
 
-    typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ? url : removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
+    typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ? url :
+        removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
 
-    if (Trait::fileExists(u))
+    if (Trait::fileExists(u)) {
         img->setUrl(u);
-    else if (Trait::fileExists(u, po.workingPath))
-        img->setUrl(po.workingPath + Trait::latin1ToString("/") + u);
-    else
+    } else if (Trait::fileExists(u, po.m_workingPath)) {
+        img->setUrl(po.m_workingPath + Trait::latin1ToString("/") + u);
+    } else {
         img->setUrl(u);
+    }
 
     MdBlock<Trait> block = {text, 0};
 
@@ -5633,59 +6389,62 @@ inline std::shared_ptr<Image<Trait>> Parser<Trait>::makeImage(const typename Tra
 
     parseFormattedTextLinksImages(block,
                                   std::static_pointer_cast<Block<Trait>>(p),
-                                  po.doc,
-                                  po.linksToParse,
-                                  po.workingPath,
-                                  po.fileName,
-                                  po.collectRefLinks,
+                                  po.m_doc,
+                                  po.m_linksToParse,
+                                  po.m_workingPath,
+                                  po.m_fileName,
+                                  po.m_collectRefLinks,
                                   true,
                                   html,
                                   true);
 
     if (!p->isEmpty()) {
-        if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph)
+        if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph) {
             img->setP(std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0)));
+        }
     }
 
     img->setText(toSingleLine(removeBackslashes<Trait>(text)).simplified());
-    img->setStartColumn(po.fr.data.at(startLine).first.virginPos(startPos));
-    img->setStartLine(po.fr.data.at(startLine).second.lineNumber);
-    img->setEndColumn(po.fr.data.at(lastLine).first.virginPos(lastPos - 1));
-    img->setEndLine(po.fr.data.at(lastLine).second.lineNumber);
+    img->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+    img->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+    img->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
+    img->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
     img->setTextPos(textPos);
     img->setUrlPos(urlPos);
 
     initLastItemWithOpts<Trait>(po, img);
 
-    po.isSpaceBefore = false;
-    po.lastText = nullptr;
+    po.m_isSpaceBefore = false;
+    po.m_lastText = nullptr;
 
     return img;
 }
 
 template<class Trait>
-inline bool Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
-                                               TextParsingOpts<Trait> &po,
-                                               long long int startLine,
-                                               long long int startPos,
-                                               long long int lastLineForText,
-                                               long long int lastPosForText,
-                                               typename Delims::const_iterator lastIt,
-                                               const typename MdBlock<Trait>::Data &linkText,
-                                               bool doNotCreateTextOnFail,
-                                               const WithPosition &textPos,
-                                               const WithPosition &linkTextPos)
+inline bool
+Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
+                                   TextParsingOpts<Trait> &po,
+                                   long long int startLine,
+                                   long long int startPos,
+                                   long long int lastLineForText,
+                                   long long int lastPosForText,
+                                   typename Delims::const_iterator lastIt,
+                                   const typename MdBlock<Trait>::Data &linkText,
+                                   bool doNotCreateTextOnFail,
+                                   const WithPosition &textPos,
+                                   const WithPosition &linkTextPos)
 {
-    const auto url = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() + Trait::latin1ToString("/")
-        + (po.workingPath.isEmpty() ? typename Trait::String() : po.workingPath + Trait::latin1ToString("/")) + po.fileName;
+    const auto url = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() +
+        Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ? typename Trait::String() :
+            po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
-    const auto iit = po.doc->labeledLinks().find(url);
+    const auto iit = po.m_doc->labeledLinks().find(url);
 
-    if (iit != po.doc->labeledLinks().cend()) {
-        if (!po.collectRefLinks) {
+    if (iit != po.m_doc->labeledLinks().cend()) {
+        if (!po.m_collectRefLinks) {
             const auto isLinkTextEmpty = toSingleLine(linkText).simplified().isEmpty();
 
             const auto img = makeImage(iit->second->url(),
@@ -5699,21 +6458,25 @@ inline bool Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Da
                                        (isLinkTextEmpty ? textPos : linkTextPos),
                                        textPos);
 
-            po.parent->appendItem(img);
+            po.m_parent->appendItem(img);
 
-            po.line = lastIt->m_line;
-            po.pos = lastIt->m_pos + lastIt->m_len;
+            po.m_line = lastIt->m_line;
+            po.m_pos = lastIt->m_pos + lastIt->m_len;
         }
 
         return true;
-    } else if (!po.collectRefLinks && !doNotCreateTextOnFail)
+    } else if (!po.m_collectRefLinks && !doNotCreateTextOnFail) {
         makeText(lastLineForText, lastPosForText, po);
+    }
 
     return false;
 }
 
 template<class Trait>
-inline void skipSpacesUpTo1Line(long long int &line, long long int &pos, const typename MdBlock<Trait>::Data &fr)
+inline void
+skipSpacesUpTo1Line(long long int &line,
+                    long long int &pos,
+                    const typename MdBlock<Trait>::Data &fr)
 {
     pos = skipSpaces<Trait>(pos, fr.at(line).first.asString());
 
@@ -5725,21 +6488,24 @@ inline void skipSpacesUpTo1Line(long long int &line, long long int &pos, const t
 
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
-readLinkDestination(long long int line, long long int pos, const TextParsingOpts<Trait> &po, WithPosition *urlPos = nullptr)
+readLinkDestination(long long int line,
+                    long long int pos,
+                    const TextParsingOpts<Trait> &po,
+                    WithPosition *urlPos = nullptr)
 {
-    skipSpacesUpTo1Line<Trait>(line, pos, po.fr.data);
+    skipSpacesUpTo1Line<Trait>(line, pos, po.m_fr.m_data);
 
     const auto destLine = line;
-    const auto &s = po.fr.data.at(line).first.asString();
+    const auto &s = po.m_fr.m_data.at(line).first.asString();
     bool backslash = false;
 
-    if (pos < s.length() && line <= po.lastTextLine) {
+    if (pos < s.length() && line <= po.m_lastTextLine) {
         if (s[pos] == Trait::latin1ToChar('<')) {
             ++pos;
 
             if (urlPos) {
-                urlPos->setStartColumn(po.fr.data[line].first.virginPos(pos));
-                urlPos->setStartLine(po.fr.data[line].second.lineNumber);
+                urlPos->setStartColumn(po.m_fr.m_data[line].first.virginPos(pos));
+                urlPos->setStartLine(po.m_fr.m_data[line].second.m_lineNumber);
             }
 
             const auto start = pos;
@@ -5750,36 +6516,39 @@ readLinkDestination(long long int line, long long int pos, const TextParsingOpts
                 if (s[pos] == Trait::latin1ToChar('\\') && !backslash) {
                     backslash = true;
                     now = true;
-                } else if (!backslash && s[pos] == Trait::latin1ToChar('<'))
+                } else if (!backslash && s[pos] == Trait::latin1ToChar('<')) {
                     return {line, pos, false, {}, destLine};
-                else if (!backslash && s[pos] == Trait::latin1ToChar('>'))
+                } else if (!backslash && s[pos] == Trait::latin1ToChar('>')) {
                     break;
+                }
 
-                if (!now)
+                if (!now) {
                     backslash = false;
+                }
 
                 ++pos;
             }
 
             if (pos < s.size() && s[pos] == Trait::latin1ToChar('>')) {
                 if (urlPos) {
-                    urlPos->setEndColumn(po.fr.data[line].first.virginPos(pos - 1));
-                    urlPos->setEndLine(po.fr.data[line].second.lineNumber);
+                    urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                    urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
                 }
 
                 ++pos;
 
                 return {line, pos, true, s.sliced(start, pos - start - 1), destLine};
-            } else
+            } else {
                 return {line, pos, false, {}, destLine};
+            }
         } else {
             long long int pc = 0;
 
             const auto start = pos;
 
             if (urlPos) {
-                urlPos->setStartColumn(po.fr.data[line].first.virginPos(pos));
-                urlPos->setStartLine(po.fr.data[line].second.lineNumber);
+                urlPos->setStartColumn(po.m_fr.m_data[line].first.virginPos(pos));
+                urlPos->setStartLine(po.m_fr.m_data[line].second.m_lineNumber);
             }
 
             while (pos < s.size()) {
@@ -5791,66 +6560,77 @@ readLinkDestination(long long int line, long long int pos, const TextParsingOpts
                 } else if (!backslash && s[pos] == Trait::latin1ToChar(' ')) {
                     if (!pc) {
                         if (urlPos) {
-                            urlPos->setEndColumn(po.fr.data[line].first.virginPos(pos - 1));
-                            urlPos->setEndLine(po.fr.data[line].second.lineNumber);
+                            urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                            urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
                         }
 
                         return {line, pos, true, s.sliced(start, pos - start), destLine};
-                    } else
+                    } else {
                         return {line, pos, false, {}, destLine};
-                } else if (!backslash && s[pos] == Trait::latin1ToChar('('))
+                    }
+                } else if (!backslash && s[pos] == Trait::latin1ToChar('(')) {
                     ++pc;
-                else if (!backslash && s[pos] == Trait::latin1ToChar(')')) {
+                } else if (!backslash && s[pos] == Trait::latin1ToChar(')')) {
                     if (!pc) {
                         if (urlPos) {
-                            urlPos->setEndColumn(po.fr.data[line].first.virginPos(pos - 1));
-                            urlPos->setEndLine(po.fr.data[line].second.lineNumber);
+                            urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                            urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
                         }
 
                         return {line, pos, true, s.sliced(start, pos - start), destLine};
-                    } else
+                    } else {
                         --pc;
+                    }
                 }
 
-                if (!now)
+                if (!now) {
                     backslash = false;
+                }
 
                 ++pos;
             }
 
             if (urlPos) {
-                urlPos->setEndColumn(po.fr.data[line].first.virginPos(pos - 1));
-                urlPos->setEndLine(po.fr.data[line].second.lineNumber);
+                urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
             }
 
             return {line, pos, true, s.sliced(start, pos - start), destLine};
         }
-    } else
+    } else {
         return {line, pos, false, {}, destLine};
+    }
 }
 
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
-readLinkTitle(long long int line, long long int pos, const TextParsingOpts<Trait> &po)
+readLinkTitle(long long int line,
+              long long int pos,
+              const TextParsingOpts<Trait> &po)
 {
-    const auto space = (pos < po.fr.data.at(line).first.length() ? po.fr.data.at(line).first[pos].isSpace() : true);
+    const auto space = (pos < po.m_fr.m_data.at(line).first.length() ?
+        po.m_fr.m_data.at(line).first[pos].isSpace() : true);
 
     const auto firstLine = line;
 
-    skipSpacesUpTo1Line<Trait>(line, pos, po.fr.data);
+    skipSpacesUpTo1Line<Trait>(line, pos, po.m_fr.m_data);
 
-    if (pos >= po.fr.data.at(line).first.length())
+    if (pos >= po.m_fr.m_data.at(line).first.length()) {
         return {line, pos, true, {}, firstLine};
+    }
 
-    const auto sc = po.fr.data.at(line).first[pos];
+    const auto sc = po.m_fr.m_data.at(line).first[pos];
 
-    if (sc != Trait::latin1ToChar('"') && sc != Trait::latin1ToChar('\'') && sc != Trait::latin1ToChar('(') && sc != Trait::latin1ToChar(')'))
-        return {line, pos, (firstLine != line && line <= po.lastTextLine), {}, firstLine};
-    else if (!space && sc != Trait::latin1ToChar(')'))
+    if (sc != Trait::latin1ToChar('"') && sc != Trait::latin1ToChar('\'') &&
+        sc != Trait::latin1ToChar('(') && sc != Trait::latin1ToChar(')')) {
+        return {line, pos, (firstLine != line && line <= po.m_lastTextLine), {}, firstLine};
+    } else if (!space && sc != Trait::latin1ToChar(')')) {
         return {line, pos, false, {}, firstLine};
+    }
 
-    if (sc == Trait::latin1ToChar(')'))
-        return {line, pos, line <= po.lastTextLine, {}, firstLine};
+    if (sc == Trait::latin1ToChar(')')) {
+        return {line, pos, line <= po.m_lastTextLine, {}, firstLine};
+    }
 
     const auto startLine = line;
 
@@ -5858,34 +6638,39 @@ readLinkTitle(long long int line, long long int pos, const TextParsingOpts<Trait
 
     ++pos;
 
-    skipSpacesUpTo1Line<Trait>(line, pos, po.fr.data);
+    skipSpacesUpTo1Line<Trait>(line, pos, po.m_fr.m_data);
 
     typename Trait::String title;
 
-    while (line < (long long int)po.fr.data.size() && pos < po.fr.data.at(line).first.length()) {
+    while (line < (long long int)po.m_fr.m_data.size() && pos < po.m_fr.m_data.at(line).first.length()) {
         bool now = false;
 
-        if (po.fr.data.at(line).first[pos] == Trait::latin1ToChar('\\') && !backslash) {
+        if (po.m_fr.m_data.at(line).first[pos] == Trait::latin1ToChar('\\') && !backslash) {
             backslash = true;
             now = true;
-        } else if (sc == Trait::latin1ToChar('(') && po.fr.data.at(line).first[pos] == Trait::latin1ToChar(')') && !backslash) {
+        } else if (sc == Trait::latin1ToChar('(') &&
+            po.m_fr.m_data.at(line).first[pos] == Trait::latin1ToChar(')') && !backslash) {
             ++pos;
-            return {line, pos, line <= po.lastTextLine, title, startLine};
-        } else if (sc == Trait::latin1ToChar('(') && po.fr.data.at(line).first[pos] == Trait::latin1ToChar('(') && !backslash)
+            return {line, pos, line <= po.m_lastTextLine, title, startLine};
+        } else if (sc == Trait::latin1ToChar('(') &&
+            po.m_fr.m_data.at(line).first[pos] == Trait::latin1ToChar('(') && !backslash) {
             return {line, pos, false, {}, startLine};
-        else if (sc != Trait::latin1ToChar('(') && po.fr.data.at(line).first[pos] == sc && !backslash) {
+        } else if (sc != Trait::latin1ToChar('(') && po.m_fr.m_data.at(line).first[pos] == sc && !backslash) {
             ++pos;
-            return {line, pos, line <= po.lastTextLine, title, startLine};
-        } else
-            title.push_back(po.fr.data.at(line).first[pos]);
+            return {line, pos, line <= po.m_lastTextLine, title, startLine};
+        } else {
+            title.push_back(po.m_fr.m_data.at(line).first[pos]);
+        }
 
-        if (!now)
+        if (!now) {
             backslash = false;
+        }
 
         ++pos;
 
-        if (pos == po.fr.data.at(line).first.length())
-            skipSpacesUpTo1Line<Trait>(line, pos, po.fr.data);
+        if (pos == po.m_fr.m_data.at(line).first.length()) {
+            skipSpacesUpTo1Line<Trait>(line, pos, po.m_fr.m_data);
+        }
     }
 
     return {line, pos, false, {}, startLine};
@@ -5893,7 +6678,10 @@ readLinkTitle(long long int line, long long int pos, const TextParsingOpts<Trait
 
 template<class Trait>
 inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::const_iterator, bool>
-Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *urlPos)
+Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it,
+                                  typename Delims::const_iterator last,
+                                  TextParsingOpts<Trait> &po,
+                                  WithPosition *urlPos)
 {
     long long int p = it->m_pos + it->m_len;
     long long int l = it->m_line;
@@ -5903,21 +6691,25 @@ Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it, typename D
 
     std::tie(l, p, ok, dest, destStartLine) = readLinkDestination<Trait>(l, p, po, urlPos);
 
-    if (!ok)
+    if (!ok) {
         return {{}, {}, it, false};
+    }
 
     long long int s = 0;
 
     std::tie(l, p, ok, title, s) = readLinkTitle<Trait>(l, p, po);
 
-    skipSpacesUpTo1Line<Trait>(l, p, po.fr.data);
+    skipSpacesUpTo1Line<Trait>(l, p, po.m_fr.m_data);
 
-    if (!ok || (l >= (long long int)po.fr.data.size() || p >= po.fr.data.at(l).first.length() || po.fr.data.at(l).first[p] != Trait::latin1ToChar(')')))
+    if (!ok || (l >= (long long int)po.m_fr.m_data.size() || p >= po.m_fr.m_data.at(l).first.length() ||
+        po.m_fr.m_data.at(l).first[p] != Trait::latin1ToChar(')'))) {
         return {{}, {}, it, false};
+    }
 
     for (; it != last; ++it) {
-        if (it->m_line == l && it->m_pos == p)
+        if (it->m_line == l && it->m_pos == p) {
             return {dest, title, it, true};
+        }
     }
 
     return {{}, {}, it, false};
@@ -5925,7 +6717,10 @@ Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it, typename D
 
 template<class Trait>
 inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::const_iterator, bool>
-Parser<Trait>::checkForRefLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po, WithPosition *urlPos)
+Parser<Trait>::checkForRefLink(typename Delims::const_iterator it,
+                               typename Delims::const_iterator last,
+                               TextParsingOpts<Trait> &po,
+                               WithPosition *urlPos)
 {
     long long int p = it->m_pos + it->m_len + 1;
     long long int l = it->m_line;
@@ -5935,57 +6730,62 @@ Parser<Trait>::checkForRefLink(typename Delims::const_iterator it, typename Deli
 
     std::tie(l, p, ok, dest, destStartLine) = readLinkDestination<Trait>(l, p, po, urlPos);
 
-    if (!ok)
+    if (!ok) {
         return {{}, {}, it, false};
+    }
 
     long long int titleStartLine = 0;
 
     std::tie(l, p, ok, title, titleStartLine) = readLinkTitle<Trait>(l, p, po);
 
-    if (!ok)
+    if (!ok) {
         return {{}, {}, it, false};
+    }
 
     if (!title.isEmpty()) {
-        p = skipSpaces<Trait>(p, po.fr.data.at(l).first.asString());
+        p = skipSpaces<Trait>(p, po.m_fr.m_data.at(l).first.asString());
 
-        if (titleStartLine == destStartLine && p < po.fr.data.at(l).first.length())
+        if (titleStartLine == destStartLine && p < po.m_fr.m_data.at(l).first.length()) {
             return {{}, {}, it, false};
-        else if (titleStartLine != destStartLine && p < po.fr.data.at(l).first.length()) {
+        } else if (titleStartLine != destStartLine && p < po.m_fr.m_data.at(l).first.length()) {
             l = destStartLine;
-            p = po.fr.data.at(l).first.length();
+            p = po.m_fr.m_data.at(l).first.length();
             title.clear();
         }
     }
 
     for (; it != last; ++it) {
-        if (it->m_line > l || (it->m_line == l && it->m_pos >= p))
+        if (it->m_line > l || (it->m_line == l && it->m_pos >= p)) {
             break;
+        }
     }
 
-    po.line = l;
-    po.pos = p;
+    po.m_line = l;
+    po.m_pos = p;
 
     return {dest, title, std::prev(it), true};
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForImage(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::checkForImage(typename Delims::const_iterator it,
+                             typename Delims::const_iterator last,
+                             TextParsingOpts<Trait> &po)
 {
     const auto start = it;
 
     typename MdBlock<Trait>::Data text;
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
     WithPosition textPos;
     std::tie(text, it) = checkForLinkText(it, last, po, &textPos);
 
     if (it != start) {
-        if (it->m_pos + it->m_len < po.fr.data.at(it->m_line).first.length()) {
+        if (it->m_pos + it->m_len < po.m_fr.m_data.at(it->m_line).first.length()) {
             // Inline -> (
-            if (po.fr.data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
+            if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
                 typename Trait::String url, title;
                 typename Delims::const_iterator iit;
                 bool ok;
@@ -5994,20 +6794,23 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it, typename Delims
                 std::tie(url, title, iit, ok) = checkForInlineLink(std::next(it), last, po, &urlPos);
 
                 if (ok) {
-                    if (!po.collectRefLinks)
-                        po.parent->appendItem(
-                            makeImage(url, text, po, false, start->m_line, start->m_pos, iit->m_line, iit->m_pos + iit->m_len, textPos, urlPos));
+                    if (!po.m_collectRefLinks) {
+                        po.m_parent->appendItem(
+                            makeImage(url, text, po, false, start->m_line, start->m_pos,
+                                iit->m_line, iit->m_pos + iit->m_len, textPos, urlPos));
+                    }
 
-                    po.line = iit->m_line;
-                    po.pos = iit->m_pos + iit->m_len;
+                    po.m_line = iit->m_line;
+                    po.m_pos = iit->m_pos + iit->m_len;
 
                     return iit;
-                } else if (createShortcutImage(text, po, start->m_line, start->m_pos, start->m_line, start->m_pos + start->m_len, it, {}, false, textPos, {})) {
+                } else if (createShortcutImage(text, po, start->m_line, start->m_pos, start->m_line,
+                    start->m_pos + start->m_len, it, {}, false, textPos, {})) {
                     return it;
                 }
             }
             // Reference -> [
-            else if (po.fr.data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
+            else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
                 typename MdBlock<Trait>::Data label;
                 typename Delims::const_iterator lit;
 
@@ -6044,13 +6847,16 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it, typename Delims
                                                       {})) {
                         return lit;
                     }
-                } else if (createShortcutImage(text, po, start->m_line, start->m_pos, start->m_line, start->m_pos + start->m_len, it, {}, false, textPos, {})) {
+                } else if (createShortcutImage(text, po, start->m_line, start->m_pos, start->m_line,
+                    start->m_pos + start->m_len, it, {}, false, textPos, {})) {
                     return it;
                 }
-            } else
+            } else {
                 return checkShortcut(start, last, po, &Parser<Trait>::createShortcutImage);
-        } else
+            }
+        } else {
             return checkShortcut(start, last, po, &Parser<Trait>::createShortcutImage);
+        }
     }
 
     return start;
@@ -6058,42 +6864,47 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it, typename Delims
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::checkForLink(typename Delims::const_iterator it,
+                            typename Delims::const_iterator last,
+                            TextParsingOpts<Trait> &po)
 {
     const auto start = it;
 
     typename MdBlock<Trait>::Data text;
 
-    const auto wasRefLink = po.wasRefLink;
-    const auto firstInParagraph = po.firstInParagraph;
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    const auto wasRefLink = po.m_wasRefLink;
+    const auto firstInParagraph = po.m_firstInParagraph;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
-    const auto ns = skipSpaces<Trait>(0, po.fr.data.at(po.line).first.asString());
+    const auto ns = skipSpaces<Trait>(0, po.m_fr.m_data.at(po.m_line).first.asString());
 
     WithPosition textPos;
     std::tie(text, it) = checkForLinkText(it, last, po, &textPos);
 
     if (it != start) {
         // Footnote reference.
-        if (text.front().first.asString().startsWith(Trait::latin1ToString("^")) && text.front().first.asString().simplified().length() > 1 && text.size() == 1
-            && start->m_line == it->m_line) {
-            if (!po.collectRefLinks) {
+        if (text.front().first.asString().startsWith(Trait::latin1ToString("^")) &&
+            text.front().first.asString().simplified().length() > 1 && text.size() == 1 &&
+            start->m_line == it->m_line) {
+            if (!po.m_collectRefLinks) {
                 std::shared_ptr<FootnoteRef<Trait>> fnr(new FootnoteRef<Trait>(
-                    Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() + Trait::latin1ToString("/")
-                    + (po.workingPath.isEmpty() ? typename Trait::String() : po.workingPath + Trait::latin1ToString("/")) + po.fileName));
-                fnr->setStartColumn(po.fr.data.at(start->m_line).first.virginPos(start->m_pos));
-                fnr->setStartLine(po.fr.data.at(start->m_line).second.lineNumber);
-                fnr->setEndColumn(po.fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                fnr->setEndLine(po.fr.data.at(it->m_line).second.lineNumber);
+                    Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() +
+                    Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ? typename Trait::String() :
+                        po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName));
+                fnr->setStartColumn(po.m_fr.m_data.at(start->m_line).first.virginPos(start->m_pos));
+                fnr->setStartLine(po.m_fr.m_data.at(start->m_line).second.m_lineNumber);
+                fnr->setEndColumn(po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                fnr->setEndLine(po.m_fr.m_data.at(it->m_line).second.m_lineNumber);
                 fnr->setIdPos(textPos);
 
                 typename Trait::String fnrText = Trait::latin1ToString("[");
                 bool firstFnrText = true;
 
                 for (const auto &t : text) {
-                    if (!firstFnrText)
+                    if (!firstFnrText) {
                         fnrText.push_back(Trait::latin1ToString("\n"));
+                    }
 
                     firstFnrText = false;
 
@@ -6103,24 +6914,25 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims:
                 fnrText.push_back(Trait::latin1ToString("]"));
 
                 fnr->setText(fnrText);
-                fnr->setSpaceBefore(start->m_pos > 0 ? po.fr.data.at(start->m_line).first[start->m_pos - 1].isSpace() : true);
-                fnr->setSpaceAfter(
-                    it->m_pos + it->m_len < po.fr.data.at(it->m_line).first.length() ? po.fr.data.at(it->m_line).first[it->m_pos + it->m_len].isSpace() : true);
+                fnr->setSpaceBefore(start->m_pos > 0 ?
+                    po.m_fr.m_data.at(start->m_line).first[start->m_pos - 1].isSpace() : true);
+                fnr->setSpaceAfter(it->m_pos + it->m_len < po.m_fr.m_data.at(it->m_line).first.length() ?
+                    po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len].isSpace() : true);
 
-                po.parent->appendItem(fnr);
+                po.m_parent->appendItem(fnr);
 
                 initLastItemWithOpts<Trait>(po, fnr);
             }
 
-            po.line = it->m_line;
-            po.pos = it->m_pos + it->m_len;
+            po.m_line = it->m_line;
+            po.m_pos = it->m_pos + it->m_len;
 
             return it;
-        } else if (it->m_pos + it->m_len < po.fr.data.at(it->m_line).first.length()) {
+        } else if (it->m_pos + it->m_len < po.m_fr.m_data.at(it->m_line).first.length()) {
             // Reference definition -> :
-            if (po.fr.data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar(':')) {
+            if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar(':')) {
                 // Reference definitions allowed only at start of paragraph.
-                if ((po.line == 0 || wasRefLink || firstInParagraph) && ns < 4 && start->m_pos == ns) {
+                if ((po.m_line == 0 || wasRefLink || firstInParagraph) && ns < 4 && start->m_pos == ns) {
                     typename Trait::String url, title;
                     typename Delims::const_iterator iit;
                     bool ok;
@@ -6134,15 +6946,20 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims:
                         std::tie(url, title, iit, ok) = checkForRefLink(it, last, po, &urlPos);
 
                         if (ok) {
-                            const auto label = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper()
-                                + Trait::latin1ToString("/")
-                                + (po.workingPath.isEmpty() ? typename Trait::String() : po.workingPath + Trait::latin1ToString("/")) + po.fileName;
+                            const auto label = Trait::latin1ToString("#") +
+                                toSingleLine(text).simplified().toCaseFolded().toUpper() +
+                                Trait::latin1ToString("/") +
+                                (po.m_workingPath.isEmpty() ? typename Trait::String() :
+                                    po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
 
                             std::shared_ptr<Link<Trait>> link(new Link<Trait>);
-                            link->setStartColumn(po.fr.data.at(start->m_line).first.virginPos(start->m_pos));
-                            link->setStartLine(po.fr.data.at(start->m_line).second.lineNumber);
+                            link->setStartColumn(po.m_fr.m_data.at(start->m_line).first.virginPos(
+                                start->m_pos));
+                            link->setStartLine(po.m_fr.m_data.at(start->m_line).second.m_lineNumber);
 
-                            const auto endPos = prevPosition(po.fr, po.fr.data.at(po.line).first.virginPos(po.pos), po.fr.data.at(po.line).second.lineNumber);
+                            const auto endPos = prevPosition(po.m_fr,
+                                po.m_fr.m_data.at(po.m_line).first.virginPos(po.m_pos),
+                                po.m_fr.m_data.at(po.m_line).second.m_lineNumber);
 
                             link->setEndColumn(endPos.first);
                             link->setEndLine(endPos.second);
@@ -6153,30 +6970,36 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims:
                             url = removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString();
 
                             if (!url.isEmpty()) {
-                                if (Trait::fileExists(url))
+                                if (Trait::fileExists(url)) {
                                     url = Trait::absoluteFilePath(url);
-                                else if (Trait::fileExists(url, po.workingPath))
+                                } else if (Trait::fileExists(url, po.m_workingPath)) {
                                     url = Trait::absoluteFilePath(
-                                        (po.workingPath.isEmpty() ? typename Trait::String() : po.workingPath + Trait::latin1ToString("/")) + url);
+                                        (po.m_workingPath.isEmpty() ? typename Trait::String() :
+                                            po.m_workingPath + Trait::latin1ToString("/")) + url);
+                                }
                             }
 
                             link->setUrl(url);
 
-                            po.wasRefLink = true;
+                            po.m_wasRefLink = true;
 
-                            if (po.doc->labeledLinks().find(label) == po.doc->labeledLinks().cend())
-                                po.doc->insertLabeledLink(label, link);
+                            if (po.m_doc->labeledLinks().find(label) == po.m_doc->labeledLinks().cend()) {
+                                po.m_doc->insertLabeledLink(label, link);
+                            }
 
                             return iit;
-                        } else
+                        } else {
                             return checkShortcut(start, last, po, &Parser<Trait>::createShortcutLink);
-                    } else
+                        }
+                    } else {
                         return start;
-                } else
+                    }
+                } else {
                     return checkShortcut(start, last, po, &Parser<Trait>::createShortcutLink);
+                }
             }
             // Inline -> (
-            else if (po.fr.data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
+            else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
                 typename Trait::String url, title;
                 typename Delims::const_iterator iit;
                 bool ok;
@@ -6197,21 +7020,24 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims:
                                                urlPos);
 
                     if (link.get()) {
-                        if (!po.collectRefLinks)
-                            po.parent->appendItem(link);
+                        if (!po.m_collectRefLinks) {
+                            po.m_parent->appendItem(link);
+                        }
 
-                        po.line = iit->m_line;
-                        po.pos = iit->m_pos + iit->m_len;
+                        po.m_line = iit->m_line;
+                        po.m_pos = iit->m_pos + iit->m_len;
 
                         return iit;
-                    } else
+                    } else {
                         return start;
-                } else if (createShortcutLink(text, po, start->m_line, start->m_pos, start->m_line, start->m_pos + start->m_len, it, {}, false, textPos, {})) {
+                    }
+                } else if (createShortcutLink(text, po, start->m_line, start->m_pos, start->m_line,
+                    start->m_pos + start->m_len, it, {}, false, textPos, {})) {
                     return it;
                 }
             }
             // Reference -> [
-            else if (po.fr.data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
+            else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
                 typename MdBlock<Trait>::Data label;
                 typename Delims::const_iterator lit;
 
@@ -6246,24 +7072,29 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it, typename Delims:
                                                      false,
                                                      textPos,
                                                      {})) {
-                        po.line = lit->m_line;
-                        po.pos = lit->m_pos + lit->m_len;
+                        po.m_line = lit->m_line;
+                        po.m_pos = lit->m_pos + lit->m_len;
 
                         return lit;
                     }
-                } else if (createShortcutLink(text, po, start->m_line, start->m_pos, start->m_line, start->m_pos + start->m_len, it, {}, false, textPos, {})) {
+                } else if (createShortcutLink(text, po, start->m_line, start->m_pos, start->m_line,
+                    start->m_pos + start->m_len, it, {}, false, textPos, {})) {
                     return it;
                 }
-            } else
+            } else {
                 return checkShortcut(start, last, po, &Parser<Trait>::createShortcutLink);
-        } else
+            }
+        } else {
             return checkShortcut(start, last, po, &Parser<Trait>::createShortcutLink);
+        }
     }
 
     return start;
 }
 
-inline bool isClosingStyle(const std::vector<std::pair<Style, long long int>> &styles, Style s)
+inline bool
+isClosingStyle(const std::vector<std::pair<Style, long long int>> &styles,
+               Style s)
 {
     const auto it = std::find_if(styles.cbegin(), styles.cend(), [&](const auto &p) {
         return (p.first == s);
@@ -6272,17 +7103,22 @@ inline bool isClosingStyle(const std::vector<std::pair<Style, long long int>> &s
     return it != styles.cend();
 }
 
-inline void closeStyle(std::vector<std::pair<Style, long long int>> &styles, Style s)
+inline void
+closeStyle(std::vector<std::pair<Style, long long int>> &styles,
+           Style s)
 {
     const auto it = std::find_if(styles.crbegin(), styles.crend(), [&](const auto &p) {
         return (p.first == s);
     });
 
-    if (it != styles.crend())
+    if (it != styles.crend()) {
         styles.erase(it.base() - 1);
+    }
 }
 
-inline void applyStyles(int &opts, const std::vector<std::pair<Style, long long int>> &styles)
+inline void
+applyStyles(int &opts,
+            const std::vector<std::pair<Style, long long int>> &styles)
 {
     opts = 0;
 
@@ -6309,10 +7145,14 @@ inline void applyStyles(int &opts, const std::vector<std::pair<Style, long long 
 }
 
 inline void
-appendPossibleDelimiter(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars, long long int len, int type, bool leftAndRight)
+appendPossibleDelimiter(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
+                        long long int len,
+                        int type,
+                        bool leftAndRight)
 {
-    for (auto &v : vars)
+    for (auto &v : vars) {
         v.push_back({{len, leftAndRight}, type});
+    }
 }
 
 inline std::vector<std::pair<std::pair<long long int, bool>, int>>
@@ -6321,8 +7161,9 @@ longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<s
     size_t max = 0;
 
     for (const auto &s : vars) {
-        if (s.size() > max)
+        if (s.size() > max) {
             max = s.size();
+        }
     }
 
     std::vector<std::pair<std::pair<long long int, bool>, int>> ret;
@@ -6334,10 +7175,11 @@ longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<s
             size_t op = 0;
 
             for (const auto &v : s) {
-                if (v.first.first > 0)
+                if (v.first.first > 0) {
                     ++op;
-                else
+                } else {
                     break;
+                }
             }
 
             if (op > maxOp) {
@@ -6350,11 +7192,12 @@ longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<s
     return ret;
 }
 
-inline void collectDelimiterVariants(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
-                                     long long int itLength,
-                                     int type,
-                                     bool leftFlanking,
-                                     bool rightFlanking)
+inline void
+collectDelimiterVariants(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
+                         long long int itLength,
+                         int type,
+                         bool leftFlanking,
+                         bool rightFlanking)
 {
     {
         auto vars1 = vars;
@@ -6376,7 +7219,10 @@ inline void collectDelimiterVariants(std::vector<std::vector<std::pair<std::pair
 
 template<class Trait>
 inline void
-Parser<Trait>::createStyles(std::vector<std::pair<Style, long long int>> &s, long long int l, typename Delimiter::DelimiterType t, long long int &count)
+Parser<Trait>::createStyles(std::vector<std::pair<Style, long long int>> &s,
+                            long long int l,
+                            typename Delimiter::DelimiterType t,
+                            long long int &count)
 {
     if (t != Delimiter::Strikethrough) {
         if (l % 2 == 1) {
@@ -6397,18 +7243,23 @@ Parser<Trait>::createStyles(std::vector<std::pair<Style, long long int>> &s, lon
 }
 
 template<class Trait>
-inline bool Parser<Trait>::isSequence(typename Delims::const_iterator it, long long int itLine, long long int itPos, typename Delimiter::DelimiterType t)
+inline bool
+Parser<Trait>::isSequence(typename Delims::const_iterator it,
+                          long long int itLine,
+                          long long int itPos,
+                          typename Delimiter::DelimiterType t)
 {
     return (itLine == it->m_line && itPos + it->m_len == it->m_pos && it->m_type == t);
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::readSequence(typename Delims::const_iterator it,
-                                                                                  typename Delims::const_iterator last,
-                                                                                  long long int &line,
-                                                                                  long long int &pos,
-                                                                                  long long int &len,
-                                                                                  typename Delims::const_iterator &current)
+inline typename Parser<Trait>::Delims::const_iterator
+Parser<Trait>::readSequence(typename Delims::const_iterator it,
+                            typename Delims::const_iterator last,
+                            long long int &line,
+                            long long int &pos,
+                            long long int &len,
+                            typename Delims::const_iterator &current)
 {
     line = it->m_line;
     pos = it->m_pos;
@@ -6431,7 +7282,8 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::readSequenc
 }
 
 template<class Trait>
-inline int Parser<Trait>::emphasisToInt(typename Delimiter::DelimiterType t)
+inline int
+Parser<Trait>::emphasisToInt(typename Delimiter::DelimiterType t)
 {
     switch (t) {
     case Delimiter::Strikethrough:
@@ -6448,9 +7300,10 @@ inline int Parser<Trait>::emphasisToInt(typename Delimiter::DelimiterType t)
     }
 }
 
-//! \return Is sequence of emphasis closed, and closing index of the sequence?
 template<class Trait>
-inline std::pair<bool, size_t> Parser<Trait>::checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s, size_t idx)
+inline std::pair<bool, size_t>
+Parser<Trait>::checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+                                     size_t idx)
 {
     static const auto strikeType = emphasisToInt(Delimiter::Strikethrough);
 
@@ -6459,35 +7312,41 @@ inline std::pair<bool, size_t> Parser<Trait>::checkEmphasisSequence(const std::v
             const auto len = s[idx].first.first;
 
             const auto it = std::find_if(s.cbegin() + idx + 1, s.cend(), [len](const auto &p) {
-                if (p.first.first == -len && p.second == strikeType)
+                if (p.first.first == -len && p.second == strikeType) {
                     return true;
-                else
+                } else {
                     return false;
+                }
             });
 
-            if (it != s.cend())
+            if (it != s.cend()) {
                 return {true, std::distance(s.cbegin(), it)};
-            else
+            } else {
                 return {false, 0};
-        } else
+            }
+        } else {
             return {false, 0};
+        }
     }
 
     std::vector<std::pair<std::pair<long long int, bool>, int>> st;
 
     size_t i = 0;
 
-    for (; i <= idx; ++i)
+    for (; i <= idx; ++i) {
         st.push_back(s[i]);
+    }
 
     for (; i < s.size(); ++i) {
         if (s[i].first.first < 0) {
-            if (checkStack(st, s[i], idx))
+            if (checkStack(st, s[i], idx)) {
                 return {true, i};
-            else if (st.size() <= idx)
+            } else if (st.size() <= idx) {
                 return {false, 0};
-        } else
+            }
+        } else {
             st.push_back(s[i]);
+        }
     }
 
     return {false, 0};
@@ -6517,7 +7376,8 @@ Parser<Trait>::fixSequence(const std::vector<std::pair<std::pair<long long int, 
 
 template<class Trait>
 inline std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>>
-Parser<Trait>::closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars, size_t idx)
+Parser<Trait>::closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
+                               size_t idx)
 {
     std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> tmp;
 
@@ -6528,8 +7388,9 @@ Parser<Trait>::closedSequences(const std::vector<std::vector<std::pair<std::pair
             bool closed = false;
             std::tie(closed, std::ignore) = checkEmphasisSequence(v, idx);
 
-            if (closed)
+            if (closed) {
                 tmp.push_back(fixSequence(v));
+            }
         }
     }
 
@@ -6537,10 +7398,11 @@ Parser<Trait>::closedSequences(const std::vector<std::vector<std::pair<std::pair
 }
 
 template<class Trait>
-inline std::vector<std::pair<Style, long long int>> Parser<Trait>::createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                                                                                size_t i,
-                                                                                typename Delimiter::DelimiterType t,
-                                                                                long long int &count)
+inline std::vector<std::pair<Style, long long int>>
+Parser<Trait>::createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+                            size_t i,
+                            typename Delimiter::DelimiterType t,
+                            long long int &count)
 {
     std::vector<std::pair<Style, long long int>> styles;
 
@@ -6558,24 +7420,30 @@ inline std::vector<std::pair<Style, long long int>> Parser<Trait>::createStyles(
 
             len -= std::min(l, len);
 
-            if (!len)
+            if (!len) {
                 break;
+            }
         }
 
-        if (i == 0)
+        if (i == 0) {
             break;
+        }
     }
 
     return styles;
 }
 
 template<class Trait>
-inline bool isSkipAllEmphasis(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s, size_t idx)
+inline bool
+isSkipAllEmphasis(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
+                  size_t idx)
 {
     if (s[idx].first.second) {
         for (size_t i = idx + 1; i < s.size(); ++i) {
-            if (s[i].second == s[idx].second && s[i].first.first < 0)
-                return ((s[idx].first.first - s[i].first.first) % 3 == 0 && !(s[idx].first.first % 3 == 0 && s[i].first.first % 3 == 0));
+            if (s[i].second == s[idx].second && s[i].first.first < 0) {
+                return ((s[idx].first.first - s[i].first.first) % 3 == 0 &&
+                    !(s[idx].first.first % 3 == 0 && s[i].first.first % 3 == 0));
+            }
         }
     }
 
@@ -6584,7 +7452,9 @@ inline bool isSkipAllEmphasis(const std::vector<std::pair<std::pair<long long in
 
 template<class Trait>
 inline std::tuple<bool, std::vector<std::pair<Style, long long int>>, long long int, long long int>
-Parser<Trait>::isStyleClosed(typename Delims::const_iterator it, typename Delims::const_iterator last, TextParsingOpts<Trait> &po)
+Parser<Trait>::isStyleClosed(typename Delims::const_iterator it,
+                             typename Delims::const_iterator last,
+                             TextParsingOpts<Trait> &po)
 {
     const auto open = it;
     auto current = it;
@@ -6594,62 +7464,65 @@ Parser<Trait>::isStyleClosed(typename Delims::const_iterator it, typename Delims
 
     long long int itLine = open->m_line, itPos = open->m_pos, itLength = open->m_len;
 
-    const long long int line = po.line, pos = po.pos;
-    const bool collectRefLinks = po.collectRefLinks;
+    const long long int line = po.m_line, pos = po.m_pos;
+    const bool collectRefLinks = po.m_collectRefLinks;
 
-    po.collectRefLinks = true;
+    po.m_collectRefLinks = true;
 
     bool first = true;
 
-    std::for_each(po.styles.cbegin(), po.styles.cend(), [&vars](const auto &p) {
-        if (p.first == Style::Strikethrough)
+    std::for_each(po.m_styles.cbegin(), po.m_styles.cend(), [&vars](const auto &p) {
+        if (p.first == Style::Strikethrough) {
             vars.front().push_back({{p.second, false}, 0});
+        }
     });
 
     {
         {
-            const auto c1 = std::count_if(po.styles.cbegin(), po.styles.cend(), [&](const auto &p) {
+            const auto c1 = std::count_if(po.m_styles.cbegin(), po.m_styles.cend(), [&](const auto &p) {
                 return (p.first == Style::Italic1);
             });
 
-            if (c1)
+            if (c1) {
                 vars.front().push_back({{c1, false}, 1});
+            }
 
-            const auto c2 = std::count_if(po.styles.cbegin(),
-                                          po.styles.cend(),
+            const auto c2 = std::count_if(po.m_styles.cbegin(),
+                                          po.m_styles.cend(),
                                           [&](const auto &p) {
                                               return (p.first == Style::Bold1);
-                                          })
-                * 2;
+                                          }) * 2;
 
-            if (c2)
+            if (c2) {
                 vars.front().push_back({{c2, false}, 1});
+            }
         }
 
         {
-            const auto c1 = std::count_if(po.styles.cbegin(), po.styles.cend(), [&](const auto &p) {
+            const auto c1 = std::count_if(po.m_styles.cbegin(), po.m_styles.cend(), [&](const auto &p) {
                 return (p.first == Style::Italic2);
             });
 
-            if (c1)
+            if (c1) {
                 vars.front().push_back({{c1, false}, 2});
+            }
 
-            const auto c2 = std::count_if(po.styles.cbegin(),
-                                          po.styles.cend(),
+            const auto c2 = std::count_if(po.m_styles.cbegin(),
+                                          po.m_styles.cend(),
                                           [&](const auto &p) {
                                               return (p.first == Style::Bold2);
-                                          })
-                * 2;
+                                          }) * 2;
 
-            if (c2)
+            if (c2) {
                 vars.front().push_back({{c2, false}, 2});
+            }
         }
     }
 
     const auto idx = vars.front().size();
 
     for (; it != last; ++it) {
-        if (it->m_line <= po.lastTextLine) {
+        if (it->m_line <= po.m_lastTextLine) {
             switch (it->m_type) {
             case Delimiter::SquareBracketsOpen:
                 it = checkForLink(it, last, po);
@@ -6669,10 +7542,12 @@ Parser<Trait>::isStyleClosed(typename Delims::const_iterator it, typename Delims
                 it = readSequence(it, last, itLine, itPos, itLength, current);
 
                 if (first) {
-                    vars.front().push_back({{itLength, it->m_leftFlanking && it->m_rightFlanking}, emphasisToInt(open->m_type)});
+                    vars.front().push_back({{itLength, it->m_leftFlanking && it->m_rightFlanking},
+                        emphasisToInt(open->m_type)});
                     first = false;
                 } else {
-                    collectDelimiterVariants(vars, itLength, emphasisToInt(it->m_type), it->m_leftFlanking, it->m_rightFlanking);
+                    collectDelimiterVariants(vars, itLength, emphasisToInt(it->m_type),
+                        it->m_leftFlanking, it->m_rightFlanking);
                 }
             } break;
 
@@ -6683,53 +7558,64 @@ Parser<Trait>::isStyleClosed(typename Delims::const_iterator it, typename Delims
             default:
                 break;
             }
-        } else
+        } else {
             break;
+        }
     }
 
-    po.line = line;
-    po.pos = pos;
-    po.collectRefLinks = collectRefLinks;
+    po.m_line = line;
+    po.m_pos = pos;
+    po.m_collectRefLinks = collectRefLinks;
 
     closed = closedSequences(vars, idx);
 
     if (!closed.empty()) {
         long long int itCount = 0;
 
-        return {true, createStyles(longestSequenceWithMoreOpeningsAtStart(closed), idx, open->m_type, itCount), vars.front().at(idx).first.first, itCount};
-    } else
-        return {false, {{Style::Unknown, 0}}, isSkipAllEmphasis<Trait>(vars.front(), idx) ? vars.front().at(idx).first.first : open->m_len, 1};
+        return {true, createStyles(longestSequenceWithMoreOpeningsAtStart(closed), idx,
+            open->m_type, itCount), vars.front().at(idx).first.first, itCount};
+    } else {
+        return {false, {{Style::Unknown, 0}}, isSkipAllEmphasis<Trait>(vars.front(), idx) ?
+            vars.front().at(idx).first.first : open->m_len, 1};
+    }
 }
 
 template<class Trait>
 inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::incrementIterator(typename Delims::const_iterator it, typename Delims::const_iterator last, long long int count)
+Parser<Trait>::incrementIterator(typename Delims::const_iterator it,
+                                 typename Delims::const_iterator last,
+                                 long long int count)
 {
     const auto len = std::distance(it, last);
 
-    if (count < len)
+    if (count < len) {
         return it + count;
-    else
+    } else {
         return it + (len - 1);
+    }
 }
 
 template<class Trait>
-inline void appendCloseStyle(TextParsingOpts<Trait> &po, const StyleDelim &s)
+inline void
+appendCloseStyle(TextParsingOpts<Trait> &po,
+                 const StyleDelim &s)
 {
-    if (po.lastItemWithStyle)
-        po.lastItemWithStyle->closeStyles().push_back(s);
+    if (po.m_lastItemWithStyle) {
+        po.m_lastItemWithStyle->closeStyles().push_back(s);
+    }
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
-                                                                                   typename Delims::const_iterator it,
-                                                                                   typename Delims::const_iterator last,
-                                                                                   TextParsingOpts<Trait> &po)
+inline typename Parser<Trait>::Delims::const_iterator
+Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
+                             typename Delims::const_iterator it,
+                             typename Delims::const_iterator last,
+                             TextParsingOpts<Trait> &po)
 {
     long long int count = 1;
 
-    po.wasRefLink = false;
-    po.firstInParagraph = false;
+    po.m_wasRefLink = false;
+    po.m_firstInParagraph = false;
 
     if (it->m_rightFlanking) {
         long long int line = it->m_line, pos = it->m_pos + it->m_len, ppos = it->m_pos;
@@ -6741,8 +7627,9 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
                 len += j->m_len;
                 pos = j->m_pos + j->m_len;
                 ++count;
-            } else
+            } else {
                 break;
+            }
         }
 
         if (it != first) {
@@ -6751,17 +7638,19 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
                     len += j->m_len;
                     ppos = j->m_pos;
                     ++count;
-                } else
+                } else {
                     break;
+                }
 
-                if (j == first)
+                if (j == first) {
                     break;
+                }
             }
         }
 
         long long int opened = 0;
 
-        for (auto it = po.styles.crbegin(), last = po.styles.crend(); it != last; ++it) {
+        for (auto it = po.m_styles.crbegin(), last = po.m_styles.crend(); it != last; ++it) {
             bool doBreak = false;
 
             switch (t) {
@@ -6797,17 +7686,18 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
         const bool sumMult3 = (it->m_leftFlanking ? ((opened + len) % 3 == 0) : false);
 
         if (count && opened && (!sumMult3 || (count % 3 == 0 && opened % 3 == 0))) {
-            if (count > opened)
+            if (count > opened) {
                 count = opened;
+            }
 
-            auto pos = po.fr.data.at(it->m_line).first.virginPos(it->m_pos);
-            const auto line = po.fr.data.at(it->m_line).second.lineNumber;
+            auto pos = po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos);
+            const auto line = po.m_fr.m_data.at(it->m_line).second.m_lineNumber;
 
             if (it->m_type == Delimiter::Strikethrough) {
                 const auto len = it->m_len;
 
                 for (auto i = 0; i < count; ++i) {
-                    closeStyle(po.styles, Style::Strikethrough);
+                    closeStyle(po.m_styles, Style::Strikethrough);
                     appendCloseStyle(po, {StrikethroughText, pos, line, pos + len - 1, line});
                     pos += len;
                 }
@@ -6815,7 +7705,7 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
                 if (count % 2 == 1) {
                     const auto st = (it->m_type == Delimiter::Emphasis1 ? Style::Italic1 : Style::Italic2);
 
-                    closeStyle(po.styles, st);
+                    closeStyle(po.m_styles, st);
                     appendCloseStyle(po, {ItalicText, pos, line, pos, line});
                     ++pos;
                 }
@@ -6824,23 +7714,25 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
                     const auto st = (it->m_type == Delimiter::Emphasis1 ? Style::Bold1 : Style::Bold2);
 
                     for (auto i = 0; i < count / 2; ++i) {
-                        closeStyle(po.styles, st);
+                        closeStyle(po.m_styles, st);
                         appendCloseStyle(po, {BoldText, pos, line, pos + 1, line});
                         pos += 2;
                     }
                 }
             }
 
-            applyStyles(po.opts, po.styles);
+            applyStyles(po.m_opts, po.m_styles);
 
             const auto j = incrementIterator(it, last, count - 1);
 
-            po.pos = j->m_pos + j->m_len;
-            po.line = j->m_line;
+            po.m_pos = j->m_pos + j->m_len;
+            po.m_line = j->m_line;
 
-            if (po.lastText)
-                po.lastText->setSpaceAfter(po.lastText->isSpaceAfter()
-                                           || (po.pos < po.fr.data[po.line].first.length() ? po.fr.data[po.line].first[po.pos].isSpace() : true));
+            if (po.m_lastText) {
+                po.m_lastText->setSpaceAfter(po.m_lastText->isSpaceAfter() ||
+                    (po.m_pos < po.m_fr.m_data[po.m_line].first.length() ?
+                        po.m_fr.m_data[po.m_line].first[po.m_pos].isSpace() : true));
+            }
 
             return j;
         }
@@ -6860,45 +7752,54 @@ inline typename Parser<Trait>::Delims::const_iterator Parser<Trait>::checkForSty
             std::tie(closed, styles, len, count) = isStyleClosed(it, last, po);
 
             if (closed) {
-                auto pos = po.fr.data.at(it->m_line).first.virginPos(it->m_pos);
-                const auto line = po.fr.data.at(it->m_line).second.lineNumber;
+                auto pos = po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos);
+                const auto line = po.m_fr.m_data.at(it->m_line).second.m_lineNumber;
 
                 for (const auto &p : styles) {
-                    po.styles.push_back({p.first, p.second});
+                    po.m_styles.push_back({p.first, p.second});
 
-                    if (!po.collectRefLinks)
-                        po.openStyles.push_back({styleToTextOption(p.first), pos, line, pos + p.second - 1, line});
+                    if (!po.m_collectRefLinks) {
+                        po.m_openStyles.push_back({styleToTextOption(p.first), pos, line,
+                            pos + p.second - 1, line});
+                    }
 
                     pos += p.second;
                 }
 
-                po.pos = it->m_pos + len;
-                po.line = it->m_line;
+                po.m_pos = it->m_pos + len;
+                po.m_line = it->m_line;
 
-                po.isSpaceBefore = (it->m_pos > 0 ? po.fr.data[it->m_line].first[it->m_pos - 1].isSpace() : true) || po.isSpaceBefore;
+                po.m_isSpaceBefore = (it->m_pos > 0 ?
+                    po.m_fr.m_data[it->m_line].first[it->m_pos - 1].isSpace() : true) ||
+                        po.m_isSpaceBefore;
 
-                applyStyles(po.opts, po.styles);
-            } else if (!po.collectRefLinks)
+                applyStyles(po.m_opts, po.m_styles);
+            } else if (!po.m_collectRefLinks) {
                 makeText(it->m_line, it->m_pos + len, po);
+            }
         } break;
 
         default: {
-            if (!po.collectRefLinks)
+            if (!po.m_collectRefLinks) {
                 makeText(it->m_line, it->m_pos + it->m_len, po);
+            }
         } break;
         }
     }
 
-    if (!count)
+    if (!count) {
         count = 1;
+    }
 
-    resetHtmlTag(po.html);
+    resetHtmlTag(po.m_html);
 
     return incrementIterator(it, last, count - 1);
 }
 
 template<class Trait>
-inline std::shared_ptr<Text<Trait>> concatenateText(typename Block<Trait>::Items::const_iterator it, typename Block<Trait>::Items::const_iterator last)
+inline std::shared_ptr<Text<Trait>>
+concatenateText(typename Block<Trait>::Items::const_iterator it,
+                typename Block<Trait>::Items::const_iterator last)
 {
     std::shared_ptr<Text<Trait>> t(new Text<Trait>);
     t->setOpts(std::static_pointer_cast<Text<Trait>>(*it)->opts());
@@ -6913,19 +7814,25 @@ inline std::shared_ptr<Text<Trait>> concatenateText(typename Block<Trait>::Items
     for (; it != last; ++it) {
         const auto tt = std::static_pointer_cast<Text<Trait>>(*it);
 
-        if (tt->isSpaceBefore())
+        if (tt->isSpaceBefore()) {
             data.push_back(Trait::latin1ToChar(' '));
+        }
 
         data.push_back(tt->text());
 
-        if (tt->isSpaceAfter())
+        if (tt->isSpaceAfter()) {
             data.push_back(Trait::latin1ToChar(' '));
+        }
 
-        if (!tt->openStyles().empty())
-            std::copy(tt->openStyles().cbegin(), tt->openStyles().cend(), std::back_inserter(t->openStyles()));
+        if (!tt->openStyles().empty()) {
+            std::copy(tt->openStyles().cbegin(), tt->openStyles().cend(),
+                std::back_inserter(t->openStyles()));
+        }
 
-        if (!tt->closeStyles().empty())
-            std::copy(tt->closeStyles().cbegin(), tt->closeStyles().cend(), std::back_inserter(close));
+        if (!tt->closeStyles().empty()) {
+            std::copy(tt->closeStyles().cbegin(), tt->closeStyles().cend(),
+                std::back_inserter(close));
+        }
     }
 
     it = std::prev(it);
@@ -6939,7 +7846,8 @@ inline std::shared_ptr<Text<Trait>> concatenateText(typename Block<Trait>::Items
     return t;
 }
 
-inline bool isSemiOptimization(OptimizeParagraphType t)
+inline bool
+isSemiOptimization(OptimizeParagraphType t)
 {
     switch (t) {
     case OptimizeParagraphType::Semi:
@@ -6951,7 +7859,8 @@ inline bool isSemiOptimization(OptimizeParagraphType t)
     }
 }
 
-inline bool isWithoutRawDataOptimization(OptimizeParagraphType t)
+inline bool
+isWithoutRawDataOptimization(OptimizeParagraphType t)
 {
     switch (t) {
     case OptimizeParagraphType::FullWithoutRawData:
@@ -6965,7 +7874,9 @@ inline bool isWithoutRawDataOptimization(OptimizeParagraphType t)
 
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
-optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p, TextParsingOpts<Trait> &po, OptimizeParagraphType type = OptimizeParagraphType::Full)
+optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p,
+                  TextParsingOpts<Trait> &po,
+                  OptimizeParagraphType type = OptimizeParagraphType::Full)
 {
     std::shared_ptr<Paragraph<Trait>> np(new Paragraph<Trait>);
     np->setStartColumn(p->startColumn());
@@ -6989,7 +7900,8 @@ optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p, TextParsingOpts<Trait> &
                 line = t->endLine();
                 finished = (isSemiOptimization(type) && !t->closeStyles().empty());
             } else {
-                if (opts != t->opts() || t->startLine() != line || finished || (!t->openStyles().empty() && isSemiOptimization(type))) {
+                if (opts != t->opts() || t->startLine() != line || finished ||
+                    (!t->openStyles().empty() && isSemiOptimization(type))) {
                     if (!isWithoutRawDataOptimization(type)) {
                         po.concatenateAuxText(auxStart, auxIt);
                         auxIt = auxIt - (auxIt - auxStart) + 1;
@@ -7030,8 +7942,9 @@ optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p, TextParsingOpts<Trait> &
     if (start != p->items().cend()) {
         np->appendItem(concatenateText<Trait>(start, p->items().cend()));
 
-        if (!isWithoutRawDataOptimization(type))
-            po.concatenateAuxText(auxStart, po.rawTextData.size());
+        if (!isWithoutRawDataOptimization(type)) {
+            po.concatenateAuxText(auxStart, po.m_rawTextData.size());
+        }
     }
 
     p = np;
@@ -7040,28 +7953,36 @@ optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p, TextParsingOpts<Trait> &
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseTableInParagraph(TextParsingOpts<Trait> &po,
-                                                 std::shared_ptr<Paragraph<Trait>> parent,
-                                                 std::shared_ptr<Document<Trait>> doc,
-                                                 typename Trait::StringList &linksToParse,
-                                                 const typename Trait::String &workingPath,
-                                                 const typename Trait::String &fileName,
-                                                 bool collectRefLinks)
+inline void
+Parser<Trait>::parseTableInParagraph(TextParsingOpts<Trait> &po,
+                                     std::shared_ptr<Paragraph<Trait>> parent,
+                                     std::shared_ptr<Document<Trait>> doc,
+                                     typename Trait::StringList &linksToParse,
+                                     const typename Trait::String &workingPath,
+                                     const typename Trait::String &fileName,
+                                     bool collectRefLinks)
 {
     MdBlock<Trait> fr;
-    std::copy(po.fr.data.cbegin() + po.startTableLine, po.fr.data.cend(), std::back_inserter(fr.data));
-    fr.emptyLineAfter = po.fr.emptyLineAfter;
+    std::copy(po.m_fr.m_data.cbegin() + po.m_startTableLine, po.m_fr.m_data.cend(),
+        std::back_inserter(fr.m_data));
+    fr.m_emptyLineAfter = po.m_fr.m_emptyLineAfter;
 
-    parseTable(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, po.columnsCount);
+    parseTable(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks,
+        po.m_columnsCount);
 
-    po.line = po.fr.data.size() - fr.data.size();
-    po.pos = 0;
+    po.m_line = po.m_fr.m_data.size() - fr.m_data.size();
+    po.m_pos = 0;
 
-    if (!fr.data.empty())
-        po.detected = TextParsingOpts<Trait>::Detected::Code;
+    if (!fr.m_data.empty()) {
+        po.m_detected = TextParsingOpts<Trait>::Detected::Code;
+    }
 }
 
-inline void normalizePos(long long int &pos, long long int &line, long long int length, long long int linesCount)
+inline void
+normalizePos(long long int &pos,
+             long long int &line,
+             long long int length,
+             long long int linesCount)
 {
     if (pos != 0 && line < linesCount && pos == length) {
         pos = 0;
@@ -7070,41 +7991,46 @@ inline void normalizePos(long long int &pos, long long int &line, long long int 
 }
 
 template<class Trait>
-inline bool Parser<Trait>::isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po)
+inline bool
+Parser<Trait>::isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po)
 {
-    if (po.detected == TextParsingOpts<Trait>::Detected::HTML
-        && ((!po.parent->items().empty() && po.parent->items().back()->type() == ItemType::RawHtml) || po.tmpHtml.get())) {
-        auto html = (po.tmpHtml.get() ? po.tmpHtml : std::static_pointer_cast<RawHtml<Trait>>(po.parent->items().back()));
+    if (po.m_detected == TextParsingOpts<Trait>::Detected::HTML &&
+        ((!po.m_parent->items().empty() &&
+            po.m_parent->items().back()->type() == ItemType::RawHtml) || po.m_tmpHtml.get())) {
+        auto html = (po.m_tmpHtml.get() ? po.m_tmpHtml :
+            std::static_pointer_cast<RawHtml<Trait>>(po.m_parent->items().back()));
 
         bool dontClearDetection = false;
 
-        long long int line = po.line;
-        long long int pos = po.pos;
+        long long int line = po.m_line;
+        long long int pos = po.m_pos;
 
-        normalizePos(pos, line, line < static_cast<long long int>(po.fr.data.size()) ?
-                                    po.fr.data[line].first.length() : 0, po.fr.data.size());
+        normalizePos(pos, line, line < static_cast<long long int>(po.m_fr.m_data.size()) ?
+                                    po.m_fr.m_data[line].first.length() : 0, po.m_fr.m_data.size());
 
         if (pos == 0) {
-            if (line < static_cast<long long int>(po.fr.data.size())) {
-                const auto type = whatIsTheLine(po.fr.data[line].first);
+            if (line < static_cast<long long int>(po.m_fr.m_data.size())) {
+                const auto type = whatIsTheLine(po.m_fr.m_data[line].first);
 
                 switch (type) {
                 case Parser<Trait>::BlockType::List: {
                     int num = 0;
 
-                    if (isOrderedList<Trait>(po.fr.data[line].first.asString(), &num)) {
+                    if (isOrderedList<Trait>(po.m_fr.m_data[line].first.asString(), &num)) {
                         if (num == 1)
                             return true;
-                    } else
+                    } else {
                         return true;
+                    }
                 } break;
 
                 case Parser<Trait>::BlockType::Blockquote:
                     return true;
 
                 case Parser<Trait>::BlockType::ListWithFirstEmptyLine: {
-                    if (UnprotectedDocsMethods<Trait>::isFreeTag(html))
+                    if (UnprotectedDocsMethods<Trait>::isFreeTag(html)) {
                         return true;
+                    }
                 } break;
 
                 case Parser<Trait>::BlockType::EmptyLine:
@@ -7117,17 +8043,20 @@ inline bool Parser<Trait>::isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po)
             }
         }
 
-        if (!dontClearDetection)
-            po.detected = TextParsingOpts<Trait>::Detected::Nothing;
+        if (!dontClearDetection) {
+            po.m_detected = TextParsingOpts<Trait>::Detected::Nothing;
+        }
     }
 
-    po.tmpHtml.reset();
+    po.m_tmpHtml.reset();
 
     return false;
 }
 
 template<class Trait>
-inline std::shared_ptr<Paragraph<Trait>> makeParagraph(typename Block<Trait>::Items::const_iterator first, typename Block<Trait>::Items::const_iterator last)
+inline std::shared_ptr<Paragraph<Trait>>
+makeParagraph(typename Block<Trait>::Items::const_iterator first,
+              typename Block<Trait>::Items::const_iterator last)
 {
     auto p = std::make_shared<Paragraph<Trait>>();
 
@@ -7144,16 +8073,19 @@ inline std::shared_ptr<Paragraph<Trait>> makeParagraph(typename Block<Trait>::It
 }
 
 template<class Trait>
-inline void concatenateParagraphsIfNeededOrAppend(std::shared_ptr<Block<Trait>> parent, std::shared_ptr<Paragraph<Trait>> p)
+inline void
+concatenateParagraphsIfNeededOrAppend(std::shared_ptr<Block<Trait>> parent,
+                                      std::shared_ptr<Paragraph<Trait>> p)
 {
-    if (!parent->items().empty() && parent->items().back()->type() == ItemType::Paragraph && !p->items().empty()
-        && p->items().front()->type() == ItemType::RawHtml) {
+    if (!parent->items().empty() && parent->items().back()->type() == ItemType::Paragraph &&
+        !p->items().empty() && p->items().front()->type() == ItemType::RawHtml) {
         auto pp = std::static_pointer_cast<Paragraph<Trait>>(parent->items().back());
         auto h = std::static_pointer_cast<RawHtml<Trait>>(p->items().front());
 
         if (UnprotectedDocsMethods<Trait>::isDirty(pp) && !UnprotectedDocsMethods<Trait>::isFreeTag(h)) {
-            for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it)
+            for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it) {
                 pp->appendItem(*it);
+            }
 
             UnprotectedDocsMethods<Trait>::setDirty(pp, UnprotectedDocsMethods<Trait>::isDirty(p));
 
@@ -7168,30 +8100,35 @@ inline void concatenateParagraphsIfNeededOrAppend(std::shared_ptr<Block<Trait>> 
 }
 
 template<class Trait>
-inline std::shared_ptr<Paragraph<Trait>> splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
-                                                                    std::shared_ptr<Paragraph<Trait>> p,
-                                                                    TextParsingOpts<Trait> &po,
-                                                                    bool collectRefLinks,
-                                                                    bool fullyOptimizeParagraphs = true)
+inline std::shared_ptr<Paragraph<Trait>>
+splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
+                           std::shared_ptr<Paragraph<Trait>> p,
+                           TextParsingOpts<Trait> &po,
+                           bool collectRefLinks,
+                           bool fullyOptimizeParagraphs = true)
 {
     auto first = p->items().cbegin();
     auto it = first;
     auto last = p->items().cend();
 
     for (; it != last; ++it) {
-        if (first == last)
+        if (first == last) {
             first = it;
+        }
 
-        if ((*it)->type() == ItemType::RawHtml && UnprotectedDocsMethods<Trait>::isFreeTag(std::static_pointer_cast<RawHtml<Trait>>(*it))) {
+        if ((*it)->type() == ItemType::RawHtml &&
+            UnprotectedDocsMethods<Trait>::isFreeTag(std::static_pointer_cast<RawHtml<Trait>>(*it))) {
             auto p = makeParagraph<Trait>(first, it);
 
             if (!collectRefLinks) {
-                if (!p->isEmpty())
+                if (!p->isEmpty()) {
                     concatenateParagraphsIfNeededOrAppend(parent,
-                                                          optimizeParagraph<Trait>(p,
-                                                                                   po,
-                                                                                   fullyOptimizeParagraphs ? OptimizeParagraphType::FullWithoutRawData
-                                                                                                           : OptimizeParagraphType::SemiWithoutRawData));
+                        optimizeParagraph<Trait>(p,
+                                                 po,
+                                                 fullyOptimizeParagraphs ?
+                                                    OptimizeParagraphType::FullWithoutRawData :
+                                                    OptimizeParagraphType::SemiWithoutRawData));
+                }
 
                 parent->appendItem(*it);
             }
@@ -7205,30 +8142,33 @@ inline std::shared_ptr<Paragraph<Trait>> splitParagraphsAndFreeHtml(std::shared_
             const auto c = std::count_if(first, last, [](const auto &i) {
                 return (i->type() == MD::ItemType::Text);
             });
-            po.rawTextData.erase(po.rawTextData.cbegin(), po.rawTextData.cbegin() + (po.rawTextData.size() - c));
+            po.m_rawTextData.erase(po.m_rawTextData.cbegin(), po.m_rawTextData.cbegin() +
+                (po.m_rawTextData.size() - c));
 
             return makeParagraph<Trait>(first, last);
-        } else
+        } else {
             return p;
+        }
     } else {
-        po.rawTextData.clear();
+        po.m_rawTextData.clear();
 
         return std::make_shared<Paragraph<Trait>>();
     }
 }
 
 template<class Trait>
-inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
-                        std::shared_ptr<Document<Trait>> doc,
-                        std::shared_ptr<Paragraph<Trait>> p,
-                        long long int lastColumn,
-                        long long int lastLine,
-                        int level,
-                        const typename Trait::String &workingPath,
-                        const typename Trait::String &fileName,
-                        bool collectRefLinks,
-                        const WithPosition &delim,
-                        TextParsingOpts<Trait> &po)
+inline void
+makeHeading(std::shared_ptr<Block<Trait>> parent,
+            std::shared_ptr<Document<Trait>> doc,
+            std::shared_ptr<Paragraph<Trait>> p,
+            long long int lastColumn,
+            long long int lastLine,
+            int level,
+            const typename Trait::String &workingPath,
+            const typename Trait::String &fileName,
+            bool collectRefLinks,
+            const WithPosition &delim,
+            TextParsingOpts<Trait> &po)
 {
     if (!collectRefLinks) {
         if (p->items().back()->type() == ItemType::LineBreak) {
@@ -7238,10 +8178,11 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
 
             if (p->items().back()->type() == ItemType::Text) {
                 auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
-                lt->setText(typename Trait::String(lt->text() + (lb->isSpaceBefore() ? Trait::latin1ToString(" ") : typename Trait::String()) + lb->text())
-                                .simplified());
+                lt->setText(typename Trait::String(lt->text() + (lb->isSpaceBefore() ?
+                    Trait::latin1ToString(" ") : typename Trait::String()) + lb->text()).simplified());
                 lt->setEndColumn(lt->endColumn() + lb->text().length());
-                po.rawTextData.back().str += (lb->isSpaceBefore() ? Trait::latin1ToString(" ") : typename Trait::String()) + lb->text();
+                po.m_rawTextData.back().m_str += (lb->isSpaceBefore() ?
+                    Trait::latin1ToString(" ") : typename Trait::String()) + lb->text();
             } else {
                 auto t = std::make_shared<Text<Trait>>();
                 t->setText(lb->text());
@@ -7254,9 +8195,10 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
 
                 p->appendItem(t);
 
-                const auto pos = localPosFromVirgin(po.fr, lb->startColumn(), lb->startLine());
+                const auto pos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
 
-                po.rawTextData.push_back({lb->text(), pos.first, pos.second, lb->isSpaceBefore(), true});
+                po.m_rawTextData.push_back({lb->text(), pos.first, pos.second,
+                    lb->isSpaceBefore(), true});
             }
         }
 
@@ -7266,10 +8208,11 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
             auto t = std::static_pointer_cast<Text<Trait>>(p->items().back());
 
             if (t->opts() == TextWithoutFormat) {
-                auto text = po.rawTextData.back();
-                typename Trait::InternalString tmp(text.str);
+                auto text = po.m_rawTextData.back();
+                typename Trait::InternalString tmp(text.m_str);
                 label = findAndRemoveHeaderLabel<Trait>(tmp);
-                const auto ns = (label.second.startColumn() != -1 ? skipSpaces<Trait>(label.second.startColumn(), text.str) : tmp.length());
+                const auto ns = (label.second.startColumn() != -1 ?
+                    skipSpaces<Trait>(label.second.startColumn(), text.m_str) : tmp.length());
                 label.second.setStartColumn(t->startColumn() + label.second.startColumn());
                 label.second.setEndColumn(t->startColumn() + label.second.endColumn());
                 label.second.setStartLine(t->startLine());
@@ -7294,8 +8237,9 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
                         t->setSpaceAfter(true);
                         p->setEndColumn(t->endColumn());
                     }
-                } else
+                } else {
                     label.first.clear();
+                }
             }
         }
 
@@ -7306,19 +8250,21 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
         h->setEndLine(lastLine);
         h->setLevel(level);
 
-        if (!p->items().empty())
+        if (!p->items().empty()) {
             h->setText(p);
+        }
 
         h->setDelims({delim});
 
-        if (label.first.isEmpty() && !p->items().empty())
+        if (label.first.isEmpty() && !p->items().empty()) {
             label.first = Trait::latin1ToString("#") + paragraphToLabel(p.get());
-        else
+        } else {
             h->setLabelPos(label.second);
+        }
 
         if (!label.first.isEmpty()) {
-            label.first +=
-                Trait::latin1ToString("/") + (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName;
+            label.first += Trait::latin1ToString("/") + (!workingPath.isEmpty() ?
+                workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName;
 
             h->setLabel(label.first);
 
@@ -7330,14 +8276,17 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
 }
 
 template<class Trait>
-inline long long int textAtIdx(std::shared_ptr<Paragraph<Trait>> p, size_t idx)
+inline long long int
+textAtIdx(std::shared_ptr<Paragraph<Trait>> p,
+          size_t idx)
 {
     size_t i = 0;
 
     for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it) {
         if ((*it)->type() == ItemType::Text) {
-            if (i == idx)
+            if (i == idx) {
                 return std::distance(p->items().cbegin(), it);
+            }
 
             ++i;
         }
@@ -7347,98 +8296,113 @@ inline long long int textAtIdx(std::shared_ptr<Paragraph<Trait>> p, size_t idx)
 }
 
 template<class Trait>
-inline void checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p, TextParsingOpts<Trait> &po, const TextPluginsMap<Trait> &textPlugins, bool inLink)
+inline void
+checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p,
+                    TextParsingOpts<Trait> &po,
+                    const TextPluginsMap<Trait> &textPlugins,
+                    bool inLink)
 {
     for (const auto &plugin : textPlugins) {
-        if (inLink && !std::get<bool>(plugin.second))
+        if (inLink && !std::get<bool>(plugin.second)) {
             continue;
+        }
 
-        std::get<TextPluginFunc<Trait>>(plugin.second)(p, po, std::get<typename Trait::StringList>(plugin.second));
+        std::get<TextPluginFunc<Trait>>(plugin.second)(p, po,
+            std::get<typename Trait::StringList>(plugin.second));
     }
 }
 
 template<class Trait>
-inline void makeHorLine(const typename MdBlock<Trait>::Line &line, std::shared_ptr<Block<Trait>> parent)
+inline void
+makeHorLine(const typename MdBlock<Trait>::Line &line,
+            std::shared_ptr<Block<Trait>> parent)
 {
     std::shared_ptr<Item<Trait>> hr(new HorizontalLine<Trait>);
     hr->setStartColumn(line.first.virginPos(skipSpaces<Trait>(0, line.first.asString())));
-    hr->setStartLine(line.second.lineNumber);
+    hr->setStartLine(line.second.m_lineNumber);
     hr->setEndColumn(line.first.virginPos(line.first.length() - 1));
-    hr->setEndLine(line.second.lineNumber);
+    hr->setEndLine(line.second.m_lineNumber);
     parent->appendItem(hr);
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
-                                                         std::shared_ptr<Block<Trait>> parent,
-                                                         std::shared_ptr<Document<Trait>> doc,
-                                                         typename Trait::StringList &linksToParse,
-                                                         const typename Trait::String &workingPath,
-                                                         const typename Trait::String &fileName,
-                                                         bool collectRefLinks,
-                                                         bool ignoreLineBreak,
-                                                         RawHtmlBlock<Trait> &html,
-                                                         bool inLink)
+inline void
+Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
+                                             std::shared_ptr<Block<Trait>> parent,
+                                             std::shared_ptr<Document<Trait>> doc,
+                                             typename Trait::StringList &linksToParse,
+                                             const typename Trait::String &workingPath,
+                                             const typename Trait::String &fileName,
+                                             bool collectRefLinks,
+                                             bool ignoreLineBreak,
+                                             RawHtmlBlock<Trait> &html,
+                                             bool inLink)
 
 {
-    if (fr.data.empty())
+    if (fr.m_data.empty()) {
         return;
+    }
 
     std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-    p->setStartColumn(fr.data.at(0).first.virginPos(0));
-    p->setStartLine(fr.data.at(0).second.lineNumber);
+    p->setStartColumn(fr.m_data.at(0).first.virginPos(0));
+    p->setStartLine(fr.m_data.at(0).second.m_lineNumber);
     std::shared_ptr<Paragraph<Trait>> pt(new Paragraph<Trait>);
 
-    const auto delims = collectDelimiters(fr.data);
+    const auto delims = collectDelimiters(fr.m_data);
 
-    TextParsingOpts<Trait> po = {fr, p, nullptr, doc, linksToParse, workingPath, fileName, collectRefLinks, ignoreLineBreak, html, m_textPlugins};
+    TextParsingOpts<Trait> po = {fr, p, nullptr, doc, linksToParse, workingPath, fileName,
+        collectRefLinks, ignoreLineBreak, html, m_textPlugins};
 
     if (!delims.empty()) {
         for (auto it = delims.cbegin(), last = delims.cend(); it != last; ++it) {
-            if (html.html.get() && html.continueHtml)
+            if (html.m_html.get() && html.m_continueHtml) {
                 it = finishRawHtmlTag(it, last, po, false);
-            else {
-                if (isListOrQuoteAfterHtml(po))
+            } else {
+                if (isListOrQuoteAfterHtml(po)) {
                     break;
+                }
 
-                if (po.line > po.lastTextLine)
-                    checkForTableInParagraph(po, fr.data.size() - 1);
+                if (po.m_line > po.m_lastTextLine) {
+                    checkForTableInParagraph(po, fr.m_data.size() - 1);
+                }
 
-                if (po.shouldStopParsing() && po.lastTextLine < it->m_line)
+                if (po.shouldStopParsing() && po.m_lastTextLine < it->m_line) {
                     break;
-                else if (!collectRefLinks)
-                    makeText(po.lastTextLine < it->m_line ? po.lastTextLine : it->m_line, po.lastTextLine < it->m_line ? po.lastTextPos : it->m_pos, po);
-                else {
-                    const auto prevLine = po.line;
+                } else if (!collectRefLinks) {
+                    makeText(po.m_lastTextLine < it->m_line ? po.m_lastTextLine : it->m_line,
+                        po.m_lastTextLine < it->m_line ? po.m_lastTextPos : it->m_pos, po);
+                } else {
+                    const auto prevLine = po.m_line;
 
-                    po.line = (po.lastTextLine < it->m_line ? po.lastTextLine : it->m_line);
-                    po.pos = (po.lastTextLine < it->m_line ? po.lastTextPos : it->m_pos);
+                    po.m_line = (po.m_lastTextLine < it->m_line ? po.m_lastTextLine : it->m_line);
+                    po.m_pos = (po.m_lastTextLine < it->m_line ? po.m_lastTextPos : it->m_pos);
 
-                    if (po.line > prevLine)
-                        po.firstInParagraph = false;
-                    else if (po.pos > skipSpaces<Trait>(0, po.fr.data[po.line].first.asString()))
-                        po.firstInParagraph = false;
+                    if (po.m_line > prevLine) {
+                        po.m_firstInParagraph = false;
+                    } else if (po.m_pos > skipSpaces<Trait>(0, po.m_fr.m_data[po.m_line].first.asString())) {
+                        po.m_firstInParagraph = false;
+                    }
                 }
 
                 switch (it->m_type) {
                 case Delimiter::SquareBracketsOpen: {
                     it = checkForLink(it, last, po);
-                    p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                    p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                    p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                    p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                 } break;
 
                 case Delimiter::ImageOpen: {
                     it = checkForImage(it, last, po);
-                    p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                    p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                    p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                    p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                 } break;
 
                 case Delimiter::Less: {
                     it = checkForAutolinkHtml(it, last, po, true);
 
-                    if (!html.html.get()) {
-                        p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                        p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                    if (!html.m_html.get()) {
+                        p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                        p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                     }
                 } break;
 
@@ -7446,30 +8410,30 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                 case Delimiter::Emphasis1:
                 case Delimiter::Emphasis2: {
                     it = checkForStyle(delims.cbegin(), it, last, po);
-                    p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                    p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                    p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                    p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                 } break;
 
                 case Delimiter::Math: {
                     it = checkForMath(it, last, po);
-                    p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                    p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                    p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                    p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                 } break;
 
                 case Delimiter::InlineCode: {
                     if (!it->m_backslashed) {
                         it = checkForInlineCode(it, last, po);
-                        p->setEndColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                        p->setEndLine(fr.data.at(it->m_line).second.lineNumber);
+                        p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                        p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                     }
                 } break;
 
                 case Delimiter::HorizontalLine: {
-                    po.wasRefLink = false;
-                    po.firstInParagraph = false;
+                    po.m_wasRefLink = false;
+                    po.m_firstInParagraph = false;
 
-                    const auto pos = skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString());
-                    const auto withoutSpaces = po.fr.data[it->m_line].first.asString().sliced(pos);
+                    const auto pos = skipSpaces<Trait>(0, po.m_fr.m_data[it->m_line].first.asString());
+                    const auto withoutSpaces = po.m_fr.m_data[it->m_line].first.asString().sliced(pos);
 
                     auto h2 = isH2<Trait>(withoutSpaces);
 
@@ -7479,15 +8443,17 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                         checkForTextPlugins<Trait>(p, po, m_textPlugins, inLink);
 
                         if (it->m_line - 1 >= 0) {
-                            p->setEndColumn(fr.data.at(it->m_line - 1).first.virginPos(fr.data.at(it->m_line - 1).first.length() - 1));
-                            p->setEndLine(fr.data.at(it->m_line - 1).second.lineNumber);
+                            p->setEndColumn(fr.m_data.at(it->m_line - 1).first.virginPos(
+                                fr.m_data.at(it->m_line - 1).first.length() - 1));
+                            p->setEndLine(fr.m_data.at(it->m_line - 1).second.m_lineNumber);
                         }
 
                         p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
 
                         if (!p->isEmpty()) {
                             if (!collectRefLinks) {
-                                if (!h2 || (p->items().size() == 1 && p->items().front()->type() == ItemType::LineBreak)) {
+                                if (!h2 || (p->items().size() == 1 &&
+                                    p->items().front()->type() == ItemType::LineBreak)) {
                                     concatenateParagraphsIfNeededOrAppend(parent, p);
 
                                     h2 = false;
@@ -7495,158 +8461,174 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                                     makeHeading(parent,
                                                 doc,
                                                 optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()),
-                                                fr.data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
-                                                fr.data[it->m_line].second.lineNumber,
+                                                fr.m_data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
+                                                fr.m_data[it->m_line].second.m_lineNumber,
                                                 2,
                                                 workingPath,
                                                 fileName,
                                                 collectRefLinks,
-                                                {po.fr.data[it->m_line].first.virginPos(pos),
-                                                 fr.data[it->m_line].second.lineNumber,
-                                                 po.fr.data[it->m_line].first.virginPos(lastNonSpacePos<Trait>(po.fr.data[it->m_line].first.asString())),
-                                                 fr.data[it->m_line].second.lineNumber},
+                                                {po.m_fr.m_data[it->m_line].first.virginPos(pos),
+                                                 fr.m_data[it->m_line].second.m_lineNumber,
+                                                 po.m_fr.m_data[it->m_line].first.virginPos(
+                                                    lastNonSpacePos<Trait>(po.m_fr.m_data[it->m_line].first.asString())),
+                                                 fr.m_data[it->m_line].second.m_lineNumber},
                                                 po);
 
-                                    po.checkLineOnNewType = true;
+                                    po.m_checkLineOnNewType = true;
                                 }
                             }
-                        } else
+                        } else {
                             h2 = false;
-                    } else
+                        }
+                    } else {
                         h2 = false;
-
-                    p.reset(new Paragraph<Trait>);
-                    po.rawTextData.clear();
-
-                    if (it->m_line + 1 < static_cast<long long int>(fr.data.size())) {
-                        p->setStartColumn(fr.data.at(it->m_line + 1).first.virginPos(0));
-                        p->setStartLine(fr.data.at(it->m_line + 1).second.lineNumber);
                     }
 
-                    po.parent = p;
-                    po.line = it->m_line;
-                    po.pos = it->m_pos + it->m_len;
+                    p.reset(new Paragraph<Trait>);
+                    po.m_rawTextData.clear();
 
-                    if (!h2 && !collectRefLinks)
-                        makeHorLine<Trait>(fr.data[it->m_line], parent);
+                    if (it->m_line + 1 < static_cast<long long int>(fr.m_data.size())) {
+                        p->setStartColumn(fr.m_data.at(it->m_line + 1).first.virginPos(0));
+                        p->setStartLine(fr.m_data.at(it->m_line + 1).second.m_lineNumber);
+                    }
+
+                    po.m_parent = p;
+                    po.m_line = it->m_line;
+                    po.m_pos = it->m_pos + it->m_len;
+
+                    if (!h2 && !collectRefLinks) {
+                        makeHorLine<Trait>(fr.m_data[it->m_line], parent);
+                    }
                 } break;
 
                 case Delimiter::H1:
                 case Delimiter::H2: {
-                    po.wasRefLink = false;
-                    po.firstInParagraph = false;
+                    po.m_wasRefLink = false;
+                    po.m_firstInParagraph = false;
 
                     optimizeParagraph<Trait>(p, po, OptimizeParagraphType::Semi);
 
                     checkForTextPlugins<Trait>(p, po, m_textPlugins, inLink);
 
                     if (it->m_line - 1 >= 0) {
-                        p->setEndColumn(fr.data.at(it->m_line - 1).first.virginPos(fr.data.at(it->m_line - 1).first.length() - 1));
-                        p->setEndLine(fr.data.at(it->m_line - 1).second.lineNumber);
+                        p->setEndColumn(fr.m_data.at(it->m_line - 1).first.virginPos(
+                            fr.m_data.at(it->m_line - 1).first.length() - 1));
+                        p->setEndLine(fr.m_data.at(it->m_line - 1).second.m_lineNumber);
                     }
 
-                    p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
+                    p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks,
+                        m_fullyOptimizeParagraphs);
 
-                    if (!p->isEmpty() && !((p->items().size() == 1 && p->items().front()->type() == ItemType::LineBreak))) {
+                    if (!p->isEmpty() && !((p->items().size() == 1 &&
+                        p->items().front()->type() == ItemType::LineBreak))) {
                         makeHeading(parent,
                                     doc,
                                     optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()),
-                                    fr.data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
-                                    fr.data[it->m_line].second.lineNumber,
+                                    fr.m_data[it->m_line].first.virginPos(it->m_pos + it->m_len - 1),
+                                    fr.m_data[it->m_line].second.m_lineNumber,
                                     it->m_type == Delimiter::H1 ? 1 : 2,
                                     workingPath,
                                     fileName,
                                     collectRefLinks,
-                                    {po.fr.data[it->m_line].first.virginPos(skipSpaces<Trait>(0, po.fr.data[it->m_line].first.asString())),
-                                     fr.data[it->m_line].second.lineNumber,
-                                     po.fr.data[it->m_line].first.virginPos(lastNonSpacePos<Trait>(po.fr.data[it->m_line].first.asString())),
-                                     fr.data[it->m_line].second.lineNumber},
+                                    {po.m_fr.m_data[it->m_line].first.virginPos(skipSpaces<Trait>(
+                                        0, po.m_fr.m_data[it->m_line].first.asString())),
+                                     fr.m_data[it->m_line].second.m_lineNumber,
+                                     po.m_fr.m_data[it->m_line].first.virginPos(lastNonSpacePos<Trait>(
+                                        po.m_fr.m_data[it->m_line].first.asString())),
+                                     fr.m_data[it->m_line].second.m_lineNumber},
                                     po);
 
-                        po.checkLineOnNewType = true;
+                        po.m_checkLineOnNewType = true;
 
                         p.reset(new Paragraph<Trait>);
-                        po.rawTextData.clear();
+                        po.m_rawTextData.clear();
 
-                        if (it->m_line + 1 < static_cast<long long int>(fr.data.size())) {
-                            p->setStartColumn(fr.data.at(it->m_line + 1).first.virginPos(0));
-                            p->setStartLine(fr.data.at(it->m_line + 1).second.lineNumber);
+                        if (it->m_line + 1 < static_cast<long long int>(fr.m_data.size())) {
+                            p->setStartColumn(fr.m_data.at(it->m_line + 1).first.virginPos(0));
+                            p->setStartLine(fr.m_data.at(it->m_line + 1).second.m_lineNumber);
                         }
 
-                        po.line = it->m_line;
-                        po.pos = it->m_pos + it->m_len;
+                        po.m_line = it->m_line;
+                        po.m_pos = it->m_pos + it->m_len;
                     } else if (p->startColumn() == -1) {
-                        p->setStartColumn(fr.data.at(it->m_line).first.virginPos(it->m_pos));
-                        p->setStartLine(fr.data.at(it->m_line).second.lineNumber);
+                        p->setStartColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos));
+                        p->setStartLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                     }
 
-                    po.parent = p;
+                    po.m_parent = p;
                 } break;
 
                 default: {
                     if (!po.shouldStopParsing()) {
-                        po.wasRefLink = false;
-                        po.firstInParagraph = false;
+                        po.m_wasRefLink = false;
+                        po.m_firstInParagraph = false;
 
-                        if (!collectRefLinks)
+                        if (!collectRefLinks) {
                             makeText(it->m_line, it->m_pos + it->m_len, po);
-                        else {
-                            po.line = it->m_line;
-                            po.pos = it->m_pos + it->m_len;
+                        } else {
+                            po.m_line = it->m_line;
+                            po.m_pos = it->m_pos + it->m_len;
                         }
                     }
                 } break;
                 }
 
-                if (po.shouldStopParsing())
+                if (po.shouldStopParsing()) {
                     break;
+                }
 
-                if (po.checkLineOnNewType) {
-                    if (po.line + 1 < static_cast<long long int>(po.fr.data.size())) {
-                        const auto type = Parser<Trait>::whatIsTheLine(po.fr.data[po.line + 1].first);
+                if (po.m_checkLineOnNewType) {
+                    if (po.m_line + 1 < static_cast<long long int>(po.m_fr.m_data.size())) {
+                        const auto type = Parser<Trait>::whatIsTheLine(po.m_fr.m_data[po.m_line + 1].first);
 
                         if (type == Parser<Trait>::BlockType::CodeIndentedBySpaces) {
-                            po.detected = TextParsingOpts<Trait>::Detected::Code;
+                            po.m_detected = TextParsingOpts<Trait>::Detected::Code;
 
                             break;
                         }
                     }
 
-                    po.checkLineOnNewType = false;
+                    po.m_checkLineOnNewType = false;
                 }
             }
         }
     } else {
-        if (html.html.get() && html.continueHtml)
+        if (html.m_html.get() && html.m_continueHtml) {
             finishRawHtmlTag(delims.cend(), delims.cend(), po, false);
+        }
     }
 
-    if (po.lastTextLine == -1)
-        checkForTableInParagraph(po, po.fr.data.size() - 1);
+    if (po.m_lastTextLine == -1) {
+        checkForTableInParagraph(po, po.m_fr.m_data.size() - 1);
+    }
 
-    if (po.detected == TextParsingOpts<Trait>::Detected::Table) {
-        if (!collectRefLinks)
-            makeText(po.lastTextLine, po.lastTextPos, po);
+    if (po.m_detected == TextParsingOpts<Trait>::Detected::Table) {
+        if (!collectRefLinks) {
+            makeText(po.m_lastTextLine, po.m_lastTextPos, po);
+        }
 
         parseTableInParagraph(po, pt, doc, linksToParse, workingPath, fileName, collectRefLinks);
     }
 
-    while (po.detected == TextParsingOpts<Trait>::Detected::HTML &&
-           po.line < static_cast<long long int>(po.fr.data.size())) {
+    while (po.m_detected == TextParsingOpts<Trait>::Detected::HTML &&
+           po.m_line < static_cast<long long int>(po.m_fr.m_data.size())) {
         if (!isListOrQuoteAfterHtml(po)) {
-            if (!collectRefLinks)
-                makeText(po.line, po.fr.data[po.line].first.length(), po);
+            if (!collectRefLinks) {
+                makeText(po.m_line, po.m_fr.m_data[po.m_line].first.length(), po);
+            }
 
-            po.pos = 0;
-            ++po.line;
-        } else
+            po.m_pos = 0;
+            ++po.m_line;
+        } else {
             break;
+        }
     }
 
-    if (po.detected == TextParsingOpts<Trait>::Detected::Nothing &&
-        po.line <= static_cast<long long int>(po.fr.data.size() - 1)) {
-        if (!collectRefLinks)
-            makeText(po.fr.data.size() - 1, po.fr.data.back().first.length(), po);
+    if (po.m_detected == TextParsingOpts<Trait>::Detected::Nothing &&
+        po.m_line <= static_cast<long long int>(po.m_fr.m_data.size() - 1)) {
+        if (!collectRefLinks) {
+            makeText(po.m_fr.m_data.size() - 1, po.m_fr.m_data.back().first.length(), po);
+        }
     }
 
     if (!p->isEmpty()) {
@@ -7656,25 +8638,29 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
 
         p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
 
-        if (html.html.get() && !html.onLine)
+        if (html.m_html.get() && !html.m_onLine) {
             UnprotectedDocsMethods<Trait>::setDirty(p, true);
+        }
 
-        if (!p->isEmpty() && !collectRefLinks)
-            concatenateParagraphsIfNeededOrAppend(parent, optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()));
+        if (!p->isEmpty() && !collectRefLinks) {
+            concatenateParagraphsIfNeededOrAppend(parent,
+                optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()));
+        }
 
-        po.rawTextData.clear();
+        po.m_rawTextData.clear();
     }
 
-    if (!pt->isEmpty() && !collectRefLinks)
+    if (!pt->isEmpty() && !collectRefLinks) {
         parent->appendItem(pt->items().front());
+    }
 
-    normalizePos(po.pos, po.line, po.line < static_cast<long long int>(po.fr.data.size()) ?
-                                    po.fr.data[po.line].first.length() : 0, po.fr.data.size());
+    normalizePos(po.m_pos, po.m_line, po.m_line < static_cast<long long int>(po.m_fr.m_data.size()) ?
+                                    po.m_fr.m_data[po.m_line].first.length() : 0, po.m_fr.m_data.size());
 
-    if (po.detected != TextParsingOpts<Trait>::Detected::Nothing &&
-        po.line < static_cast<long long int>(po.fr.data.size())) {
+    if (po.m_detected != TextParsingOpts<Trait>::Detected::Nothing &&
+        po.m_line < static_cast<long long int>(po.m_fr.m_data.size())) {
         typename MdBlock<Trait>::Data tmp;
-        std::copy(fr.data.cbegin() + po.line, fr.data.cend(), std::back_inserter(tmp));
+        std::copy(fr.m_data.cbegin() + po.m_line, fr.m_data.cend(), std::back_inserter(tmp));
 
         StringListStream<Trait> stream(tmp);
 
@@ -7683,92 +8669,104 @@ inline void Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
-                                         std::shared_ptr<Block<Trait>>,
-                                         std::shared_ptr<Document<Trait>> doc,
-                                         typename Trait::StringList &linksToParse,
-                                         const typename Trait::String &workingPath,
-                                         const typename Trait::String &fileName,
-                                         bool collectRefLinks)
+inline void
+Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
+                             std::shared_ptr<Block<Trait>>,
+                             std::shared_ptr<Document<Trait>> doc,
+                             typename Trait::StringList &linksToParse,
+                             const typename Trait::String &workingPath,
+                             const typename Trait::String &fileName,
+                             bool collectRefLinks)
 {
     {
-        const auto it = (std::find_if(fr.data.rbegin(), fr.data.rend(), [](const auto &s) {
+        const auto it = (std::find_if(fr.m_data.rbegin(), fr.m_data.rend(), [](const auto &s) {
                             return !s.first.simplified().isEmpty();
                         })).base();
 
-        if (it != fr.data.end())
-            fr.data.erase(it, fr.data.end());
+        if (it != fr.m_data.end()) {
+            fr.m_data.erase(it, fr.m_data.end());
+        }
     }
 
-    if (!fr.data.empty()) {
+    if (!fr.m_data.empty()) {
         std::shared_ptr<Footnote<Trait>> f(new Footnote<Trait>);
-        f->setStartColumn(fr.data.front().first.virginPos(0));
-        f->setStartLine(fr.data.front().second.lineNumber);
-        f->setEndColumn(fr.data.back().first.virginPos(fr.data.back().first.length() - 1));
-        f->setEndLine(fr.data.back().second.lineNumber);
+        f->setStartColumn(fr.m_data.front().first.virginPos(0));
+        f->setStartLine(fr.m_data.front().second.m_lineNumber);
+        f->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+        f->setEndLine(fr.m_data.back().second.m_lineNumber);
 
-        const auto delims = collectDelimiters(fr.data);
+        const auto delims = collectDelimiters(fr.m_data);
 
         RawHtmlBlock<Trait> html;
 
-        TextParsingOpts<Trait> po = {fr, f, nullptr, doc, linksToParse, workingPath, fileName, collectRefLinks, false, html, m_textPlugins};
-        po.lastTextLine = fr.data.size();
-        po.lastTextPos = fr.data.back().first.length();
+        TextParsingOpts<Trait> po = {fr, f, nullptr, doc, linksToParse, workingPath, fileName,
+            collectRefLinks, false, html, m_textPlugins};
+        po.m_lastTextLine = fr.m_data.size();
+        po.m_lastTextPos = fr.m_data.back().first.length();
 
-        if (!delims.empty() && delims.cbegin()->m_type == Delimiter::SquareBracketsOpen && !delims.cbegin()->m_isWordBefore) {
+        if (!delims.empty() && delims.cbegin()->m_type == Delimiter::SquareBracketsOpen &&
+            !delims.cbegin()->m_isWordBefore) {
             typename MdBlock<Trait>::Data id;
             typename Delims::const_iterator it = delims.cend();
 
-            po.line = delims.cbegin()->m_line;
-            po.pos = delims.cbegin()->m_pos;
+            po.m_line = delims.cbegin()->m_line;
+            po.m_pos = delims.cbegin()->m_pos;
 
             std::tie(id, it) = checkForLinkText(delims.cbegin(), delims.cend(), po);
 
-            if (!toSingleLine(id).simplified().isEmpty() && id.front().first.asString().startsWith(Trait::latin1ToString("^")) && it != delims.cend()
-                && fr.data.at(it->m_line).first.length() > it->m_pos + 2 && fr.data.at(it->m_line).first[it->m_pos + 1] == Trait::latin1ToChar(':')
-                && fr.data.at(it->m_line).first[it->m_pos + 2].isSpace()) {
-                f->setIdPos({fr.data[delims.cbegin()->m_line].first.virginPos(delims.cbegin()->m_pos),
-                             fr.data[delims.cbegin()->m_line].second.lineNumber,
-                             fr.data.at(it->m_line).first.virginPos(it->m_pos + 1),
-                             fr.data.at(it->m_line).second.lineNumber});
+            if (!toSingleLine(id).simplified().isEmpty() &&
+                id.front().first.asString().startsWith(Trait::latin1ToString("^")) &&
+                it != delims.cend() &&
+                fr.m_data.at(it->m_line).first.length() > it->m_pos + 2 &&
+                fr.m_data.at(it->m_line).first[it->m_pos + 1] == Trait::latin1ToChar(':') &&
+                fr.m_data.at(it->m_line).first[it->m_pos + 2].isSpace()) {
+                f->setIdPos({fr.m_data[delims.cbegin()->m_line].first.virginPos(delims.cbegin()->m_pos),
+                             fr.m_data[delims.cbegin()->m_line].second.m_lineNumber,
+                             fr.m_data.at(it->m_line).first.virginPos(it->m_pos + 1),
+                             fr.m_data.at(it->m_line).second.m_lineNumber});
 
                 {
                     typename MdBlock<Trait>::Data tmp;
-                    std::copy(fr.data.cbegin() + it->m_line, fr.data.cend(), std::back_inserter(tmp));
-                    fr.data = tmp;
+                    std::copy(fr.m_data.cbegin() + it->m_line, fr.m_data.cend(),
+                        std::back_inserter(tmp));
+                    fr.m_data = tmp;
                 }
 
-                fr.data.front().first = fr.data.front().first.sliced(it->m_pos + 3);
+                fr.m_data.front().first = fr.m_data.front().first.sliced(it->m_pos + 3);
 
-                for (auto it = fr.data.begin(), last = fr.data.end(); it != last; ++it) {
-                    if (it->first.asString().startsWith(Trait::latin1ToString("    ")))
+                for (auto it = fr.m_data.begin(), last = fr.m_data.end(); it != last; ++it) {
+                    if (it->first.asString().startsWith(Trait::latin1ToString("    "))) {
                         it->first = it->first.sliced(4);
+                    }
                 }
 
-                StringListStream<Trait> stream(fr.data);
+                StringListStream<Trait> stream(fr.m_data);
 
                 parse(stream, f, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
-                if (!f->isEmpty())
-                    doc->insertFootnote(Trait::latin1ToString("#") + toSingleLine(id).simplified() + Trait::latin1ToString("/")
-                                            + (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName,
-                                        f);
+                if (!f->isEmpty()) {
+                    doc->insertFootnote(Trait::latin1ToString("#") + toSingleLine(id).simplified() +
+                        Trait::latin1ToString("/") + (!workingPath.isEmpty() ?
+                            workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName,
+                        f);
+                }
             }
         }
     }
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
-                                           std::shared_ptr<Block<Trait>> parent,
-                                           std::shared_ptr<Document<Trait>> doc,
-                                           typename Trait::StringList &linksToParse,
-                                           const typename Trait::String &workingPath,
-                                           const typename Trait::String &fileName,
-                                           bool collectRefLinks,
-                                           RawHtmlBlock<Trait> &)
+inline void
+Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
+                               std::shared_ptr<Block<Trait>> parent,
+                               std::shared_ptr<Document<Trait>> doc,
+                               typename Trait::StringList &linksToParse,
+                               const typename Trait::String &workingPath,
+                               const typename Trait::String &fileName,
+                               bool collectRefLinks,
+                               RawHtmlBlock<Trait> &)
 {
-    const long long int pos = fr.data.front().first.asString().indexOf(Trait::latin1ToChar('>'));
+    const long long int pos = fr.m_data.front().first.asString().indexOf(Trait::latin1ToChar('>'));
     long long int extra = 0;
 
     if (pos > -1) {
@@ -7778,30 +8776,35 @@ inline void Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
 
         BlockType bt = BlockType::EmptyLine;
 
-        for (auto it = fr.data.begin(), last = fr.data.end(); it != last; ++it, ++i) {
+        for (auto it = fr.m_data.begin(), last = fr.m_data.end(); it != last; ++it, ++i) {
             const auto ns = skipSpaces<Trait>(0, it->first.asString());
             const auto gt = (ns < it->first.length() ? (it->first[ns] == Trait::latin1ToChar('>') ? ns : -1) : -1);
 
             if (gt > -1) {
                 const auto dp = it->first.virginPos(gt);
-                delims.push_back({dp, it->second.lineNumber, dp, it->second.lineNumber});
+                delims.push_back({dp, it->second.m_lineNumber, dp, it->second.m_lineNumber});
 
-                if (it == fr.data.begin())
-                    extra = gt + (it->first.length() > gt + 1 ? (it->first[gt + 1] == Trait::latin1ToChar(' ') ? 1 : 0) : 0) + 1;
+                if (it == fr.m_data.begin()) {
+                    extra = gt + (it->first.length() > gt + 1 ?
+                        (it->first[gt + 1] == Trait::latin1ToChar(' ') ? 1 : 0) : 0) + 1;
+                }
 
-                it->first = it->first.sliced(gt + (it->first.length() > gt + 1 ? (it->first[gt + 1] == Trait::latin1ToChar(' ') ? 1 : 0) : 0) + 1);
+                it->first = it->first.sliced(gt + (it->first.length() > gt + 1 ?
+                    (it->first[gt + 1] == Trait::latin1ToChar(' ') ? 1 : 0) : 0) + 1);
 
                 bt = whatIsTheLine(it->first);
             }
             // Process lazyness...
             else {
-                if (ns < 4 && isHorizontalLine<Trait>(it->first.asString().sliced(ns)))
+                if (ns < 4 && isHorizontalLine<Trait>(it->first.asString().sliced(ns))) {
                     break;
+                }
 
                 const auto tmpBt = whatIsTheLine(it->first);
 
-                if (isListType(tmpBt))
+                if (isListType(tmpBt)) {
                     break;
+                }
 
                 if (bt == BlockType::Text) {
                     if (isH1<Trait>(it->first.asString())) {
@@ -7822,34 +8825,37 @@ inline void Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                 if ((bt == BlockType::Text || bt == BlockType::Blockquote || bt == BlockType::List)
                     && (tmpBt == BlockType::Text || tmpBt == BlockType::CodeIndentedBySpaces)) {
                     continue;
-                } else
+                } else {
                     break;
+                }
             }
         }
 
         typename MdBlock<Trait>::Data tmp;
 
-        for (; j < i; ++j)
-            tmp.push_back(fr.data.at(j));
+        for (; j < i; ++j) {
+            tmp.push_back(fr.m_data.at(j));
+        }
 
         StringListStream<Trait> stream(tmp);
 
         std::shared_ptr<Blockquote<Trait>> bq(new Blockquote<Trait>);
-        bq->setStartColumn(fr.data.at(0).first.virginPos(0) - extra);
-        bq->setStartLine(fr.data.at(0).second.lineNumber);
-        bq->setEndColumn(fr.data.at(j - 1).first.virginPos(fr.data.at(j - 1).first.length() - 1));
-        bq->setEndLine(fr.data.at(j - 1).second.lineNumber);
+        bq->setStartColumn(fr.m_data.at(0).first.virginPos(0) - extra);
+        bq->setStartLine(fr.m_data.at(0).second.m_lineNumber);
+        bq->setEndColumn(fr.m_data.at(j - 1).first.virginPos(fr.m_data.at(j - 1).first.length() - 1));
+        bq->setEndLine(fr.m_data.at(j - 1).second.m_lineNumber);
         bq->delims() = delims;
 
         parse(stream, bq, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
-        if (!collectRefLinks)
+        if (!collectRefLinks) {
             parent->appendItem(bq);
+        }
 
-        if (i < (long long int)fr.data.size()) {
+        if (i < (long long int)fr.m_data.size()) {
             tmp.clear();
 
-            std::copy(fr.data.cbegin() + i, fr.data.cend(), std::back_inserter(tmp));
+            std::copy(fr.m_data.cbegin() + i, fr.m_data.cend(), std::back_inserter(tmp));
 
             StringListStream<Trait> stream(tmp);
 
@@ -7859,72 +8865,89 @@ inline void Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
 }
 
 template<class Trait>
-inline bool isListItemAndNotNested(const typename Trait::String &s, long long int indent)
+inline bool
+isListItemAndNotNested(const typename Trait::String &s,
+                       long long int indent)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
-    if (p >= indent || p == s.size())
+    if (p >= indent || p == s.size()) {
         return false;
+    }
 
     bool space = false;
 
-    if (p + 1 >= s.size())
+    if (p + 1 >= s.size()) {
         space = true;
-    else
+    } else {
         space = s[p + 1].isSpace();
+    }
 
     if (p < 4) {
-        if (s[p] == Trait::latin1ToChar('*') && space)
+        if (s[p] == Trait::latin1ToChar('*') && space) {
             return true;
-        else if (s[p] == Trait::latin1ToChar('-') && space)
+        } else if (s[p] == Trait::latin1ToChar('-') && space) {
             return true;
-        else if (s[p] == Trait::latin1ToChar('+') && space)
+        } else if (s[p] == Trait::latin1ToChar('+') && space) {
             return true;
-        else
+        } else {
             return isOrderedList<Trait>(s);
+        }
     } else
         return false;
 }
 
 template<class Trait>
-inline std::pair<long long int, long long int> calculateIndent(const typename Trait::String &s, long long int p)
+inline std::pair<long long int, long long int>
+calculateIndent(const typename Trait::String &s,
+                long long int p)
 {
     return {0, skipSpaces<Trait>(p, s)};
 }
 
 template<class Trait>
-inline std::tuple<bool, long long int, typename Trait::Char, bool> listItemData(const typename Trait::String &s, bool wasText)
+inline std::tuple<bool, long long int, typename Trait::Char, bool>
+listItemData(const typename Trait::String &s,
+             bool wasText)
 {
     long long int p = skipSpaces<Trait>(0, s);
 
-    if (p == s.size())
+    if (p == s.size()) {
         return {false, 0, typename Trait::Char(), false};
+    }
 
     bool space = false;
 
-    if (p + 1 >= s.size())
+    if (p + 1 >= s.size()) {
         space = true;
-    else
+    } else {
         space = s[p + 1].isSpace();
+    }
 
     if (p < 4) {
-        if (s[p] == Trait::latin1ToChar('*') && space)
-            return {true, p + 2, Trait::latin1ToChar('*'), p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
-        else if (s[p] == Trait::latin1ToChar('-')) {
-            if (isH2<Trait>(s) && wasText)
+        if (s[p] == Trait::latin1ToChar('*') && space) {
+            return {true, p + 2, Trait::latin1ToChar('*'),
+                p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+        } else if (s[p] == Trait::latin1ToChar('-')) {
+            if (isH2<Trait>(s) && wasText) {
                 return {false, p + 2, Trait::latin1ToChar('-'), false};
-            else if (space)
-                return {true, p + 2, Trait::latin1ToChar('-'), p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
-        } else if (s[p] == Trait::latin1ToChar('+') && space)
-            return {true, p + 2, Trait::latin1ToChar('+'), p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
-        else {
+            } else if (space) {
+                return {true, p + 2, Trait::latin1ToChar('-'),
+                    p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+            }
+        } else if (s[p] == Trait::latin1ToChar('+') && space) {
+            return {true, p + 2, Trait::latin1ToChar('+'),
+                p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+        } else {
             int d = 0, l = 0;
             typename Trait::Char c;
 
-            if (isOrderedList<Trait>(s, &d, &l, &c))
-                return {true, p + l + 2, c, p + l + 2 < s.size() ? !s.sliced(p + l + 2).simplified().isEmpty() : false};
-            else
+            if (isOrderedList<Trait>(s, &d, &l, &c)) {
+                return {true, p + l + 2, c,
+                    p + l + 2 < s.size() ? !s.sliced(p + l + 2).simplified().isEmpty() : false};
+            } else {
                 return {false, 0, typename Trait::Char(), false};
+            }
         }
     }
 
@@ -7932,97 +8955,108 @@ inline std::tuple<bool, long long int, typename Trait::Char, bool> listItemData(
 }
 
 template<class Trait>
-inline void setLastPos(std::shared_ptr<Item<Trait>> item, long long int pos, long long int line)
+inline void
+setLastPos(std::shared_ptr<Item<Trait>> item,
+           long long int pos,
+           long long int line)
 {
     item->setEndColumn(pos);
     item->setEndLine(line);
 }
 
 template<class Trait>
-inline void updateLastPosInList(const RawHtmlBlock<Trait> &html)
+inline void
+updateLastPosInList(const RawHtmlBlock<Trait> &html)
 {
-    if (html.parent != html.topParent) {
-        const auto it = html.toAdjustLastPos.find(html.parent);
+    if (html.m_parent != html.m_topParent) {
+        const auto it = html.m_toAdjustLastPos.find(html.m_parent);
 
-        if (it != html.toAdjustLastPos.end()) {
+        if (it != html.m_toAdjustLastPos.end()) {
             for (auto &i : it->second) {
-                i.first->setEndColumn(html.html->endColumn());
-                i.first->setEndLine(html.html->endLine());
+                i.first->setEndColumn(html.m_html->endColumn());
+                i.first->setEndLine(html.m_html->endLine());
             }
         }
     }
 }
 
 template<class Trait>
-inline long long int Parser<Trait>::parseList(MdBlock<Trait> &fr,
-                                              std::shared_ptr<Block<Trait>> parent,
-                                              std::shared_ptr<Document<Trait>> doc,
-                                              typename Trait::StringList &linksToParse,
-                                              const typename Trait::String &workingPath,
-                                              const typename Trait::String &fileName,
-                                              bool collectRefLinks,
-                                              RawHtmlBlock<Trait> &html)
+inline long long int
+Parser<Trait>::parseList(MdBlock<Trait> &fr,
+                         std::shared_ptr<Block<Trait>> parent,
+                         std::shared_ptr<Document<Trait>> doc,
+                         typename Trait::StringList &linksToParse,
+                         const typename Trait::String &workingPath,
+                         const typename Trait::String &fileName,
+                         bool collectRefLinks,
+                         RawHtmlBlock<Trait> &html)
 {
     bool resetTopParent = false;
     long long int line = -1;
 
-    if (!html.topParent) {
-        html.topParent = parent;
+    if (!html.m_topParent) {
+        html.m_topParent = parent;
         resetTopParent = true;
     }
 
-    const auto p = skipSpaces<Trait>(0, fr.data.front().first.asString());
+    const auto p = skipSpaces<Trait>(0, fr.m_data.front().first.asString());
 
-    if (p != fr.data.front().first.length()) {
+    if (p != fr.m_data.front().first.length()) {
         std::shared_ptr<List<Trait>> list(new List<Trait>);
 
         typename MdBlock<Trait>::Data listItem;
-        auto it = fr.data.begin();
+        auto it = fr.m_data.begin();
         listItem.push_back(*it);
         list->setStartColumn(it->first.virginPos(p));
-        list->setStartLine(it->second.lineNumber);
+        list->setStartLine(it->second.m_lineNumber);
         ++it;
 
         long long int indent = 0;
         typename Trait::Char marker;
 
-        std::tie(std::ignore, indent, marker, std::ignore) = listItemData<Trait>(listItem.front().first.asString(), false);
+        std::tie(std::ignore, indent, marker, std::ignore) =
+            listItemData<Trait>(listItem.front().first.asString(), false);
 
-        html.blocks.push_back({list, list->startColumn() + indent});
+        html.m_blocks.push_back({list, list->startColumn() + indent});
 
-        if (!collectRefLinks)
-            html.toAdjustLastPos.insert({list, html.blocks});
+        if (!collectRefLinks) {
+            html.m_toAdjustLastPos.insert({list, html.m_blocks});
+        }
 
         bool updateIndent = false;
 
         auto addListMakeNew = [&]() {
-            if (!list->isEmpty() && !collectRefLinks)
+            if (!list->isEmpty() && !collectRefLinks) {
                 parent->appendItem(list);
+            }
 
-            html.blocks.pop_back();
+            html.m_blocks.pop_back();
 
             list.reset(new List<Trait>);
 
-            html.blocks.push_back({list, indent});
+            html.m_blocks.push_back({list, indent});
 
-            if (!collectRefLinks)
-                html.toAdjustLastPos.insert({list, html.blocks});
+            if (!collectRefLinks) {
+                html.m_toAdjustLastPos.insert({list, html.m_blocks});
+            }
         };
 
         auto processLastHtml = [&](std::shared_ptr<ListItem<Trait>> resItem) {
-            if (html.html && resItem) {
-                auto htmlParent = (resItem->startLine() == html.html->startLine() || html.html->startColumn() >= resItem->startColumn() + indent
-                                       ? resItem
-                                       : html.findParent(html.html->startColumn()));
+            if (html.m_html && resItem) {
+                auto htmlParent = (resItem->startLine() == html.m_html->startLine() ||
+                    html.m_html->startColumn() >= resItem->startColumn() + indent ?
+                        resItem : html.findParent(html.m_html->startColumn()));
 
-                if (!htmlParent)
-                    htmlParent = html.topParent;
+                if (!htmlParent) {
+                    htmlParent = html.m_topParent;
+                }
 
-                if (htmlParent != resItem)
+                if (htmlParent != resItem) {
                     addListMakeNew();
+                }
 
                 if (!collectRefLinks) {
-                    htmlParent->appendItem(html.html);
+                    htmlParent->appendItem(html.m_html);
                     updateLastPosInList<Trait>(html);
                 }
 
@@ -8035,18 +9069,21 @@ inline long long int Parser<Trait>::parseList(MdBlock<Trait> &fr,
 
             std::shared_ptr<ListItem<Trait>> resItem;
 
-            line = parseListItem(block, list, doc, linksToParse, workingPath, fileName, collectRefLinks, html, &resItem);
+            line = parseListItem(block, list, doc, linksToParse, workingPath, fileName,
+                collectRefLinks, html, &resItem);
             listItem.clear();
 
             processLastHtml(resItem);
         };
 
-        for (auto last = fr.data.end(); it != last; ++it) {
+        for (auto last = fr.m_data.end(); it != last; ++it) {
             if (updateIndent) {
-                std::tie(std::ignore, indent, marker, std::ignore) = listItemData<Trait>(it->first.asString(), false);
+                std::tie(std::ignore, indent, marker, std::ignore) =
+                    listItemData<Trait>(it->first.asString(), false);
 
-                if (!collectRefLinks)
-                    html.blocks.back().second = indent;
+                if (!collectRefLinks) {
+                    html.m_blocks.back().second = indent;
+                }
 
                 updateIndent = false;
             }
@@ -8057,94 +9094,108 @@ inline long long int Parser<Trait>::parseList(MdBlock<Trait> &fr,
                 const auto p = it->first.asString().indexOf(Trait::latin1ToChar('='));
 
                 it->first.insert(p, Trait::latin1ToChar('\\'));
-            } else if (isHorizontalLine<Trait>(it->first.asString().sliced(ns)) && ns < indent && !listItem.empty()) {
+            } else if (isHorizontalLine<Trait>(it->first.asString().sliced(ns)) &&
+                ns < indent && !listItem.empty()) {
                 updateIndent = true;
 
                 processListItem();
 
-                if (!list->isEmpty())
+                if (!list->isEmpty()) {
                     addListMakeNew();
+                }
 
-                if (!collectRefLinks)
+                if (!collectRefLinks) {
                     makeHorLine<Trait>(*it, parent);
+                }
 
                 continue;
-            } else if (isListItemAndNotNested<Trait>(it->first.asString(), indent) && !listItem.empty()) {
+            } else if (isListItemAndNotNested<Trait>(it->first.asString(), indent) &&
+                !listItem.empty()) {
                 typename Trait::Char tmpMarker;
-                std::tie(std::ignore, indent, tmpMarker, std::ignore) = listItemData<Trait>(it->first.asString(), false);
+                std::tie(std::ignore, indent, tmpMarker, std::ignore) =
+                    listItemData<Trait>(it->first.asString(), false);
 
                 processListItem();
 
                 if (tmpMarker != marker) {
-                    if (!list->isEmpty())
+                    if (!list->isEmpty()) {
                         addListMakeNew();
+                    }
 
                     marker = tmpMarker;
                 }
             }
 
-            if (line > 0)
+            if (line > 0) {
                 break;
+            }
 
             listItem.push_back(*it);
 
             if (list->startColumn() == -1) {
                 list->setStartColumn(
-                    it->first.virginPos(std::min(it->first.length() ? it->first.length() - 1 : 0, skipSpaces<Trait>(0, it->first.asString()))));
-                list->setStartLine(it->second.lineNumber);
+                    it->first.virginPos(std::min(it->first.length() ?
+                        it->first.length() - 1 : 0, skipSpaces<Trait>(0, it->first.asString()))));
+                list->setStartLine(it->second.m_lineNumber);
 
-                if (!collectRefLinks)
-                    html.blocks.back().second += list->startColumn();
+                if (!collectRefLinks) {
+                    html.m_blocks.back().second += list->startColumn();
+                }
             }
         }
 
         if (!listItem.empty()) {
             MdBlock<Trait> block = {listItem, 0};
-            line = parseListItem(block, list, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
+            line = parseListItem(block, list, doc, linksToParse, workingPath, fileName,
+                collectRefLinks, html);
         }
 
-        if (!list->isEmpty() && !collectRefLinks)
+        if (!list->isEmpty() && !collectRefLinks) {
             parent->appendItem(list);
+        }
 
-        html.blocks.pop_back();
+        html.m_blocks.pop_back();
     }
 
-    if (resetTopParent)
-        html.topParent.reset();
+    if (resetTopParent) {
+        html.m_topParent.reset();
+    }
 
     return line;
 }
 
 template<class Trait>
-inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
-                                                  std::shared_ptr<Block<Trait>> parent,
-                                                  std::shared_ptr<Document<Trait>> doc,
-                                                  typename Trait::StringList &linksToParse,
-                                                  const typename Trait::String &workingPath,
-                                                  const typename Trait::String &fileName,
-                                                  bool collectRefLinks,
-                                                  RawHtmlBlock<Trait> &html,
-                                                  std::shared_ptr<ListItem<Trait>> *resItem)
+inline long long int
+Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
+                             std::shared_ptr<Block<Trait>> parent,
+                             std::shared_ptr<Document<Trait>> doc,
+                             typename Trait::StringList &linksToParse,
+                             const typename Trait::String &workingPath,
+                             const typename Trait::String &fileName,
+                             bool collectRefLinks,
+                             RawHtmlBlock<Trait> &html,
+                             std::shared_ptr<ListItem<Trait>> *resItem)
 {
     {
-        const auto it = (std::find_if(fr.data.rbegin(), fr.data.rend(), [](const auto &s) {
+        const auto it = (std::find_if(fr.m_data.rbegin(), fr.m_data.rend(), [](const auto &s) {
                             return !s.first.simplified().isEmpty();
                         })).base();
 
-        if (it != fr.data.end())
-            fr.data.erase(it, fr.data.end());
+        if (it != fr.m_data.end()) {
+            fr.m_data.erase(it, fr.m_data.end());
+        }
     }
 
-    const auto p = skipSpaces<Trait>(0, fr.data.front().first.asString());
+    const auto p = skipSpaces<Trait>(0, fr.m_data.front().first.asString());
 
     std::shared_ptr<ListItem<Trait>> item(new ListItem<Trait>);
 
-    item->setStartColumn(fr.data.front().first.virginPos(p));
-    item->setStartLine(fr.data.front().second.lineNumber);
+    item->setStartColumn(fr.m_data.front().first.virginPos(p));
+    item->setStartLine(fr.m_data.front().second.m_lineNumber);
 
     int i = 0, len = 0;
 
-    if (isOrderedList<Trait>(fr.data.front().first.asString(), &i, &len)) {
+    if (isOrderedList<Trait>(fr.m_data.front().first.asString(), &i, &len)) {
         item->setListType(ListItem<Trait>::Ordered);
         item->setStartNumber(i);
         item->setDelim({item->startColumn(), item->startLine(), item->startColumn() + len, item->startLine()});
@@ -8153,12 +9204,13 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         item->setDelim({item->startColumn(), item->startLine(), item->startColumn(), item->startLine()});
     }
 
-    if (item->listType() == ListItem<Trait>::Ordered)
+    if (item->listType() == ListItem<Trait>::Ordered) {
         item->setOrderedListPreState(i == 1 ? ListItem<Trait>::Start : ListItem<Trait>::Continue);
+    }
 
     typename MdBlock<Trait>::Data data;
 
-    auto it = fr.data.begin();
+    auto it = fr.m_data.begin();
     ++it;
 
     int pos = 1;
@@ -8166,19 +9218,25 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     long long int indent = 0;
     bool wasText = false;
 
-    std::tie(std::ignore, indent, std::ignore, wasText) = listItemData<Trait>(fr.data.front().first.asString(), wasText);
+    std::tie(std::ignore, indent, std::ignore, wasText) =
+        listItemData<Trait>(fr.m_data.front().first.asString(), wasText);
 
-    html.blocks.push_back({item, item->startColumn() + indent});
+    html.m_blocks.push_back({item, item->startColumn() + indent});
 
     if (!collectRefLinks)
-        html.toAdjustLastPos.insert({item, html.blocks});
+        html.m_toAdjustLastPos.insert({item, html.m_blocks});
 
-    const auto firstNonSpacePos = calculateIndent<Trait>(fr.data.front().first.asString(), indent).second;
-    if (firstNonSpacePos - indent < 4)
+    const auto firstNonSpacePos = calculateIndent<Trait>(
+        fr.m_data.front().first.asString(), indent).second;
+
+    if (firstNonSpacePos - indent < 4) {
         indent = firstNonSpacePos;
+    }
 
-    if (indent < fr.data.front().first.length())
-        data.push_back({fr.data.front().first.right(fr.data.front().first.length() - indent), fr.data.front().second});
+    if (indent < fr.m_data.front().first.length()) {
+        data.push_back({fr.m_data.front().first.right(fr.m_data.front().first.length() - indent),
+            fr.m_data.front().second});
+    }
 
     bool taskList = false;
     bool checked = false;
@@ -8193,9 +9251,11 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                 ++p;
 
                 if (p < data.front().first.length()) {
-                    if (data.front().first[p] == Trait::latin1ToChar(' ') || data.front().first[p].toLower() == Trait::latin1ToChar('x')) {
-                        if (data.front().first[p].toLower() == Trait::latin1ToChar('x'))
+                    if (data.front().first[p] == Trait::latin1ToChar(' ') ||
+                        data.front().first[p].toLower() == Trait::latin1ToChar('x')) {
+                        if (data.front().first[p].toLower() == Trait::latin1ToChar('x')) {
                             checked = true;
+                        }
 
                         ++p;
 
@@ -8230,25 +9290,25 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     {
         const auto tmpHtml = html;
         html = parse(stream, item, doc, linksToParse, workingPath, fileName, collectRefLinks, false, true);
-        html.topParent = tmpHtml.topParent;
-        html.blocks = tmpHtml.blocks;
-        html.toAdjustLastPos = tmpHtml.toAdjustLastPos;
+        html.m_topParent = tmpHtml.m_topParent;
+        html.m_blocks = tmpHtml.m_blocks;
+        html.m_toAdjustLastPos = tmpHtml.m_toAdjustLastPos;
     };
 
-    for (auto last = fr.data.end(); it != last; ++it, ++pos) {
+    for (auto last = fr.m_data.end(); it != last; ++it, ++pos) {
         if (!fensedCode) {
-            fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' ')))
-                                                 ? it->first.asString().sliced(indent)
-                                                 : it->first.asString());
+            fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(
+                typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                    it->first.asString().sliced(indent) : it->first.asString());
 
-            if (fensedCode)
+            if (fensedCode) {
                 startOfCode = startSequence<Trait>(it->first.asString());
-        } else if (fensedCode
-                   && isCodeFences<Trait>(it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' ')))
-                                              ? it->first.asString().sliced(indent)
-                                              : it->first.asString(),
-                                          true)
-                   && startSequence<Trait>(it->first.asString()).contains(startOfCode)) {
+            }
+        } else if (fensedCode &&
+                   isCodeFences<Trait>(it->first.asString().startsWith(
+                        typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                            it->first.asString().sliced(indent) : it->first.asString(),
+                        true) && startSequence<Trait>(it->first.asString()).contains(startOfCode)) {
             fensedCode = false;
         }
 
@@ -8257,8 +9317,8 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
             bool ok = false;
 
             std::tie(ok, newIndent, std::ignore, wasText) = listItemData<Trait>(
-                it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))) ? it->first.asString().sliced(indent)
-                                                                                                          : it->first.asString(),
+                it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                    it->first.asString().sliced(indent) : it->first.asString(),
                 wasText);
 
             if (ok) {
@@ -8268,29 +9328,31 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 
                 data.clear();
 
-                if (html.html.get()) {
-                    html.parent = html.findParent(html.html->startColumn());
+                if (html.m_html.get()) {
+                    html.m_parent = html.findParent(html.m_html->startColumn());
 
-                    if (!html.parent)
-                        html.parent = html.topParent;
+                    if (!html.m_parent) {
+                        html.m_parent = html.m_topParent;
+                    }
 
-                    if (html.continueHtml) {
+                    if (html.m_continueHtml) {
                         MdBlock<Trait> tmp;
-                        tmp.emptyLineAfter = fr.emptyLineAfter;
-                        std::copy(it, last, std::back_inserter(tmp.data));
+                        tmp.m_emptyLineAfter = fr.m_emptyLineAfter;
+                        std::copy(it, last, std::back_inserter(tmp.m_data));
 
-                        parseText(tmp, html.parent, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
+                        parseText(tmp, html.m_parent, doc, linksToParse, workingPath, fileName,
+                            collectRefLinks, html);
 
                         break;
                     }
 
-                    htmlToAdd.push_back({html, html.parent->items().size()});
+                    htmlToAdd.push_back({html, html.m_parent->items().size()});
                     updateLastPosInList<Trait>(html);
                     resetHtmlTag<Trait>(html);
                 }
 
-                if (!htmlToAdd.empty() && htmlToAdd.back().first.parent == html.topParent) {
-                    line = it->second.lineNumber;
+                if (!htmlToAdd.empty() && htmlToAdd.back().first.m_parent == html.m_topParent) {
+                    line = it->second.m_lineNumber;
 
                     break;
                 } else {
@@ -8303,37 +9365,48 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                     for (; it != last; ++it) {
                         const auto ns = skipSpaces<Trait>(0, it->first.asString());
                         std::tie(ok, std::ignore, std::ignore, wasText) =
-                            listItemData<Trait>((ns >= indent ? it->first.asString().sliced(indent) : it->first.asString()), wasText);
+                            listItemData<Trait>((ns >= indent ? it->first.asString().sliced(indent) :
+                                it->first.asString()), wasText);
 
-                        if (ok)
+                        if (ok) {
                             wasEmptyLine = false;
+                        }
 
-                        if (ok || ns >= indent + newIndent || ns == it->first.length() || !wasEmptyLine)
+                        if (ok || ns >= indent + newIndent || ns == it->first.length() || !wasEmptyLine) {
                             nestedList.push_back(*it);
-                        else
+                        } else {
                             break;
+                        }
 
                         wasEmptyLine = (ns == it->first.length());
 
                         wasText = (wasEmptyLine ? false : wasText);
                     }
 
-                    for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it)
-                        it->first = it->first.sliced(std::min(skipSpaces<Trait>(0, it->first.asString()), indent));
+                    for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it) {
+                        it->first = it->first.sliced(std::min(skipSpaces<Trait>(
+                            0, it->first.asString()), indent));
+                    }
 
-                    while (!nestedList.empty() && nestedList.back().first.asString().simplified().isEmpty())
+                    while (!nestedList.empty() &&
+                        nestedList.back().first.asString().simplified().isEmpty()) {
                         nestedList.pop_back();
+                    }
 
                     MdBlock<Trait> block = {nestedList, 0};
 
-                    line = parseList(block, item, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
+                    line = parseList(block, item, doc, linksToParse, workingPath, fileName,
+                        collectRefLinks, html);
 
-                    if (line >= 0)
+                    if (line >= 0) {
                         break;
+                    }
 
                     for (; it != last; ++it) {
-                        if (it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))))
+                        if (it->first.asString().startsWith(typename Trait::String(
+                            indent, Trait::latin1ToChar(' ')))) {
                             it->first = it->first.sliced(indent);
+                        }
 
                         data.push_back(*it);
                     }
@@ -8341,8 +9414,10 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                     break;
                 }
             } else {
-                if (it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))))
+                if (it->first.asString().startsWith(typename Trait::String(
+                    indent, Trait::latin1ToChar(' ')))) {
                     it->first = it->first.sliced(indent);
+                }
 
                 data.push_back(*it);
 
@@ -8351,8 +9426,10 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                 wasText = !wasEmptyLine;
             }
         } else {
-            if (it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))))
+            if (it->first.asString().startsWith(typename Trait::String(
+                indent, Trait::latin1ToChar(' ')))) {
                 it->first = it->first.sliced(indent);
+            }
 
             data.push_back(*it);
         }
@@ -8363,11 +9440,12 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 
         parseStream(stream);
 
-        if (html.html) {
-            html.parent = html.findParent(html.html->startColumn());
+        if (html.m_html) {
+            html.m_parent = html.findParent(html.m_html->startColumn());
 
-            if (!html.parent)
-                html.parent = html.topParent;
+            if (!html.m_parent) {
+                html.m_parent = html.m_topParent;
+            }
         }
     }
 
@@ -8377,8 +9455,8 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         long long int i = 0;
 
         for (auto &h : htmlToAdd) {
-            if (h.first.parent != h.first.topParent) {
-                h.first.parent->insertItem(h.second + i, h.first.html);
+            if (h.first.m_parent != h.first.m_topParent) {
+                h.first.m_parent->insertItem(h.second + i, h.first.m_html);
 
                 ++i;
 
@@ -8393,20 +9471,23 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         long long int htmlStartColumn = -1;
         long long int htmlStartLine = -1;
 
-        if (html.html) {
-            std::tie(htmlStartColumn, htmlStartLine) = localPosFromVirgin<Trait>(fr, html.html->startColumn(), html.html->startLine());
+        if (html.m_html) {
+            std::tie(htmlStartColumn, htmlStartLine) =
+                localPosFromVirgin<Trait>(fr, html.m_html->startColumn(), html.m_html->startLine());
         }
 
-        long long int localLine = (html.html ? htmlStartLine : fr.data.size() - 1);
+        long long int localLine = (html.m_html ? htmlStartLine : fr.m_data.size() - 1);
 
-        if (html.html) {
-            if (skipSpaces<Trait>(0, fr.data[localLine].first.asString()) >= htmlStartColumn)
+        if (html.m_html) {
+            if (skipSpaces<Trait>(0, fr.m_data[localLine].first.asString()) >= htmlStartColumn) {
                 --localLine;
+            }
         }
 
-        const auto lastLine = fr.data[localLine].second.lineNumber;
+        const auto lastLine = fr.m_data[localLine].second.m_lineNumber;
 
-        const auto lastColumn = fr.data[localLine].first.virginPos(fr.data[localLine].first.length() ? fr.data[localLine].first.length() - 1 : 0);
+        const auto lastColumn = fr.m_data[localLine].first.virginPos(
+            fr.m_data[localLine].first.length() ? fr.m_data[localLine].first.length() - 1 : 0);
 
         item->setEndColumn(lastColumn);
         item->setEndLine(lastLine);
@@ -8414,65 +9495,70 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         parent->setEndLine(lastLine);
     }
 
-    if (resItem)
+    if (resItem) {
         *resItem = item;
+    }
 
-    html.blocks.pop_back();
+    html.m_blocks.pop_back();
 
     return line;
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<Trait>> parent, bool collectRefLinks)
+inline void
+Parser<Trait>::parseCode(MdBlock<Trait> &fr,
+                         std::shared_ptr<Block<Trait>> parent,
+                         bool collectRefLinks)
 {
     if (!collectRefLinks) {
-        const auto indent = skipSpaces<Trait>(0, fr.data.front().first.asString());
+        const auto indent = skipSpaces<Trait>(0, fr.m_data.front().first.asString());
 
-        if (indent != fr.data.front().first.length()) {
+        if (indent != fr.m_data.front().first.length()) {
             WithPosition startDelim, endDelim, syntaxPos;
             typename Trait::String syntax;
-            isStartOfCode<Trait>(fr.data.front().first.asString(), &syntax, &startDelim, &syntaxPos);
+            isStartOfCode<Trait>(fr.m_data.front().first.asString(), &syntax, &startDelim, &syntaxPos);
             syntax = replaceEntity<Trait>(syntax);
-            startDelim.setStartLine(fr.data.front().second.lineNumber);
+            startDelim.setStartLine(fr.m_data.front().second.m_lineNumber);
             startDelim.setEndLine(startDelim.startLine());
-            startDelim.setStartColumn(fr.data.front().first.virginPos(startDelim.startColumn()));
-            startDelim.setEndColumn(fr.data.front().first.virginPos(startDelim.endColumn()));
+            startDelim.setStartColumn(fr.m_data.front().first.virginPos(startDelim.startColumn()));
+            startDelim.setEndColumn(fr.m_data.front().first.virginPos(startDelim.endColumn()));
 
             if (syntaxPos.startColumn() != -1) {
                 syntaxPos.setStartLine(startDelim.startLine());
                 syntaxPos.setEndLine(startDelim.startLine());
-                syntaxPos.setStartColumn(fr.data.front().first.virginPos(syntaxPos.startColumn()));
-                syntaxPos.setEndColumn(fr.data.front().first.virginPos(syntaxPos.endColumn()));
+                syntaxPos.setStartColumn(fr.m_data.front().first.virginPos(syntaxPos.startColumn()));
+                syntaxPos.setEndColumn(fr.m_data.front().first.virginPos(syntaxPos.endColumn()));
             }
 
-            const long long int startPos = fr.data.front().first.virginPos(indent);
-            const long long int emptyColumn = fr.data.front().first.virginPos(fr.data.front().first.length());
-            const long long int startLine = fr.data.front().second.lineNumber;
-            const long long int endPos = fr.data.back().first.virginPos(fr.data.back().first.length() - 1);
-            const long long int endLine = fr.data.back().second.lineNumber;
+            const long long int startPos = fr.m_data.front().first.virginPos(indent);
+            const long long int emptyColumn = fr.m_data.front().first.virginPos(fr.m_data.front().first.length());
+            const long long int startLine = fr.m_data.front().second.m_lineNumber;
+            const long long int endPos = fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1);
+            const long long int endLine = fr.m_data.back().second.m_lineNumber;
 
-            fr.data.erase(fr.data.cbegin());
+            fr.m_data.erase(fr.m_data.cbegin());
 
             {
-                const auto it = std::prev(fr.data.cend());
+                const auto it = std::prev(fr.m_data.cend());
 
-                if (it->second.lineNumber > -1) {
+                if (it->second.m_lineNumber > -1) {
                     endDelim.setStartColumn(it->first.virginPos(skipSpaces<Trait>(0, it->first.asString())));
-                    endDelim.setStartLine(it->second.lineNumber);
+                    endDelim.setStartLine(it->second.m_lineNumber);
                     endDelim.setEndLine(endDelim.startLine());
                     endDelim.setEndColumn(it->first.virginPos(it->first.length() - 1));
                 }
 
-                fr.data.erase(it);
+                fr.m_data.erase(it);
             }
 
             if (syntax.toLower() == Trait::latin1ToString("math")) {
                 typename Trait::String math;
                 bool first = true;
 
-                for (const auto &l : std::as_const(fr.data)) {
-                    if (!first)
+                for (const auto &l : std::as_const(fr.m_data)) {
+                    if (!first) {
                         math.push_back(Trait::latin1ToChar('\n'));
+                    }
 
                     math.push_back(l.first.virginString());
 
@@ -8488,11 +9574,11 @@ inline void Parser<Trait>::parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<T
 
                     std::shared_ptr<Math<Trait>> m(new Math<Trait>);
 
-                    if (!fr.data.empty()) {
-                        m->setStartColumn(fr.data.front().first.virginPos(0));
-                        m->setStartLine(fr.data.front().second.lineNumber);
-                        m->setEndColumn(fr.data.back().first.virginPos(fr.data.back().first.length() - 1));
-                        m->setEndLine(fr.data.back().second.lineNumber);
+                    if (!fr.m_data.empty()) {
+                        m->setStartColumn(fr.m_data.front().first.virginPos(0));
+                        m->setStartLine(fr.m_data.front().second.m_lineNumber);
+                        m->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+                        m->setEndLine(fr.m_data.back().second.m_lineNumber);
                     } else {
                         m->setStartColumn(emptyColumn);
                         m->setStartLine(startLine);
@@ -8510,42 +9596,49 @@ inline void Parser<Trait>::parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<T
 
                     parent->appendItem(p);
                 }
-            } else
-                parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, syntax, emptyColumn, startLine, true, startDelim, endDelim, syntaxPos);
+            } else {
+                parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, syntax, emptyColumn,
+                    startLine, true, startDelim, endDelim, syntaxPos);
+            }
         }
     }
 }
 
 template<class Trait>
-inline void Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
-                                                     std::shared_ptr<Block<Trait>> parent,
-                                                     bool collectRefLinks,
-                                                     int indent,
-                                                     const typename Trait::String &syntax,
-                                                     long long int emptyColumn,
-                                                     long long int startLine,
-                                                     bool fensedCode,
-                                                     const WithPosition &startDelim,
-                                                     const WithPosition &endDelim,
-                                                     const WithPosition &syntaxPos)
+inline void
+Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
+                                         std::shared_ptr<Block<Trait>> parent,
+                                         bool collectRefLinks,
+                                         int indent,
+                                         const typename Trait::String &syntax,
+                                         long long int emptyColumn,
+                                         long long int startLine,
+                                         bool fensedCode,
+                                         const WithPosition &startDelim,
+                                         const WithPosition &endDelim,
+                                         const WithPosition &syntaxPos)
 {
     if (!collectRefLinks) {
         typename Trait::String code;
         long long int startPos = 0;
         bool first = true;
 
-        for (const auto &l : std::as_const(fr.data)) {
+        for (const auto &l : std::as_const(fr.m_data)) {
             const auto ns = skipSpaces<Trait>(0, l.first.asString());
-            if (first)
+            if (first) {
                 startPos = ns;
+            }
             first = false;
 
-            code.push_back((indent > 0 ? l.first.virginString(ns < indent ? ns : indent) + typename Trait::String(Trait::latin1ToChar('\n'))
-                                       : typename Trait::String(l.first.virginString()) + typename Trait::String(Trait::latin1ToChar('\n'))));
+            code.push_back((indent > 0 ? l.first.virginString(ns < indent ? ns : indent) +
+                    typename Trait::String(Trait::latin1ToChar('\n')) :
+                typename Trait::String(l.first.virginString()) +
+                    typename Trait::String(Trait::latin1ToChar('\n'))));
         }
 
-        if (!code.isEmpty())
+        if (!code.isEmpty()) {
             code.remove(code.length() - 1, 1);
+        }
 
         std::shared_ptr<Code<Trait>> codeItem(new Code<Trait>(code, fensedCode, false));
         codeItem->setSyntax(syntax);
@@ -8553,11 +9646,11 @@ inline void Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
         codeItem->setEndDelim(endDelim);
         codeItem->setSyntaxPos(syntaxPos);
 
-        if (!fr.data.empty()) {
-            codeItem->setStartColumn(fr.data.front().first.virginPos(startPos));
-            codeItem->setStartLine(fr.data.front().second.lineNumber);
-            codeItem->setEndColumn(fr.data.back().first.virginPos(fr.data.back().first.length() - 1));
-            codeItem->setEndLine(fr.data.back().second.lineNumber);
+        if (!fr.m_data.empty()) {
+            codeItem->setStartColumn(fr.m_data.front().first.virginPos(startPos));
+            codeItem->setStartLine(fr.m_data.front().second.m_lineNumber);
+            codeItem->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+            codeItem->setEndLine(fr.m_data.back().second.m_lineNumber);
         } else {
             codeItem->setStartColumn(emptyColumn);
             codeItem->setStartLine(startLine);
@@ -8565,26 +9658,29 @@ inline void Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
             codeItem->setEndLine(startLine);
         }
 
-        if (fensedCode)
+        if (fensedCode) {
             parent->appendItem(codeItem);
-        else if (!parent->items().empty() && parent->items().back()->type() == ItemType::Code) {
+        } else if (!parent->items().empty() && parent->items().back()->type() == ItemType::Code) {
             auto c = std::static_pointer_cast<Code<Trait>>(parent->items().back());
 
             if (!c->isFensedCode()) {
                 auto line = c->endLine();
                 auto text = c->text();
 
-                for (; line < codeItem->startLine(); ++line)
+                for (; line < codeItem->startLine(); ++line) {
                     text.push_back(Trait::latin1ToString("\n"));
+                }
 
                 text.push_back(codeItem->text());
                 c->setText(text);
                 c->setEndColumn(codeItem->endColumn());
                 c->setEndLine(codeItem->endLine());
-            } else
+            } else {
                 parent->appendItem(codeItem);
-        } else
+            }
+        } else {
             parent->appendItem(codeItem);
+        }
     }
 }
 
