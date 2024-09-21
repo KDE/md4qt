@@ -5,7 +5,7 @@ cmake_minimum_required( VERSION 3.19 )
 
 project( md4qt )
 
-set( MD4QT_VERSION "3.0.1" )
+set( MD4QT_VERSION "4.0.0" )
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 
