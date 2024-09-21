@@ -9,7 +9,6 @@
 #define MD4QT_ENTITIES_MAP_H_INCLUDED
 
 #include <map>
-#include <string>
 
 namespace MD
 {

@@ -37,6 +37,7 @@
 #include <memory>
 #include <set>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 namespace MD
@@ -183,7 +184,7 @@ struct RawHtmlBlock {
     std::shared_ptr<Block<Trait>> m_topParent = {};
     using SequenceOfBlock = std::vector<std::pair<std::shared_ptr<Block<Trait>>, long long int>>;
     SequenceOfBlock m_blocks = {};
-    std::map<std::shared_ptr<Block<Trait>>, SequenceOfBlock> m_toAdjustLastPos = {};
+    std::unordered_map<std::shared_ptr<Block<Trait>>, SequenceOfBlock> m_toAdjustLastPos = {};
     int m_htmlBlockType = -1;
     bool m_continueHtml = false;
     bool m_onLine = false;
@@ -2532,6 +2533,8 @@ Parser<Trait>::finishHtml(ParserContext &ctx,
     if (!dontProcessLastFreeHtml) {
         resetHtmlTag(ctx.m_html);
     }
+
+    ctx.m_html.m_toAdjustLastPos.clear();
 }
 
 template<class Trait>
@@ -2948,13 +2951,15 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
                 ctx.m_html.m_continueHtml = (!ctx.m_splitted[i].m_emptyLineAfter);
             }
 
-            if (ctx.m_html.m_html.get() && !ctx.m_html.m_continueHtml) {
+            if (ctx.m_html.m_html && !ctx.m_html.m_continueHtml) {
                 finishHtml(ctx, parent, doc, collectRefLinks, top, dontProcessLastFreeHtml);
+            } else if (!ctx.m_html.m_html) {
+                ctx.m_html.m_toAdjustLastPos.clear();
             }
         }
     }
 
-    if (ctx.m_html.m_html.get()) {
+    if (ctx.m_html.m_html) {
         finishHtml(ctx, parent, doc, collectRefLinks, top, dontProcessLastFreeHtml);
     }
 
@@ -9223,8 +9228,9 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 
     html.m_blocks.push_back({item, item->startColumn() + indent});
 
-    if (!collectRefLinks)
+    if (!collectRefLinks) {
         html.m_toAdjustLastPos.insert({item, html.m_blocks});
+    }
 
     const auto firstNonSpacePos = calculateIndent<Trait>(
         fr.m_data.front().first.asString(), indent).second;

@@ -20,7 +20,7 @@
 #include <cmark-gfm.h>
 #include <registry.h>
 
-int main(int argc, char **argv)
+int main()
 {
     // md4qt
     {

@@ -52,7 +52,6 @@ int main()
             out << "#ifndef MD4QT_ENTITIES_MAP_H_INCLUDED\n";
             out << "#define MD4QT_ENTITIES_MAP_H_INCLUDED\n\n";
             out << "#include <map>\n";
-            out << "#include <string>\n\n";
             out << "namespace MD\n";
             out << "{\n\n";
             out << "template<class Trait>\n";
