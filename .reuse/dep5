@@ -15,10 +15,6 @@ Files: tests/md_benchmark/3rdparty/cmark-gfm/*
 Copyright: 2014 John MacFarlane
 License: BSD-2-Clause
 
-Files: tests/md_benchmark/3rdparty/md4c/*
-Copyright: 2016-2020 Martin Mitáš
-License: MIT
-
 Files: 3rdparty/doctest/*
 Copyright: 2016-2021 Viktor Kirilov
 License: MIT
@@ -39,10 +35,10 @@ Files: .gitignore .kde-ci.yml conanfile.txt
 Copyright: 2022-2024 Igor Mironchik <igor.mironchik@gmail.com>
 License: MIT
 
-Files: .kde-ci.yml
-Copyright: None
-License: CC0-1.0
-
 Files: tests/utils/entity/entities.json
 Copyright: WHATWG (Apple, Google, Mozilla, Microsoft)
 License: CC-BY-4.0
+
+Files: tests/utils/entity/main.cpp
+Copyright: 2022-2024 Igor Mironchik <igor.mironchik@gmail.com>
+License: MIT
