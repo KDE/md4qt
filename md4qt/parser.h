@@ -460,11 +460,11 @@ template<class Trait>
 static const typename Trait::String s_canBeEscaped =
     Trait::latin1ToString("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
 
-template<class Trait>
-inline typename Trait::InternalString
-removeBackslashes(const typename Trait::InternalString &s)
+template<class String, class Trait>
+inline String
+removeBackslashes(const String &s)
 {
-    typename Trait::InternalString r = s;
+    String r = s;
     bool backslash = false;
     long long int extra = 0;
 
@@ -538,7 +538,8 @@ isStartOfCode(const typename Trait::String &str,
             long long int endSyntaxPos = p;
 
             if (p < str.size()) {
-                *syntax = removeBackslashes<Trait>(readEscapedSequence<Trait>(p, str, &endSyntaxPos)).asString();
+                *syntax = removeBackslashes<typename Trait::String, Trait>(
+					readEscapedSequence<Trait>(p, str, &endSyntaxPos));
 
                 if (syntaxPos) {
                     syntaxPos->setStartColumn(p);
@@ -802,7 +803,7 @@ removeBackslashes(const typename MdBlock<Trait>::Data &d)
     auto tmp = d;
 
     for (auto &line : tmp) {
-        line.first = removeBackslashes<Trait>(line.first);
+        line.first = removeBackslashes<typename Trait::InternalString, Trait>(line.first);
     }
 
     return tmp;
@@ -1265,7 +1266,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 po.m_rawTextData[idx].m_str = tmp;
                                 ++idx;
                                 auto text = replaceEntity<Trait>(tmp.simplified());
-                                text = removeBackslashes<Trait>(text).asString();
+                                text = removeBackslashes<typename Trait::String, Trait>(text);
                                 t->setText(text);
                                 t->setSpaceAfter(true);
                                 t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
@@ -1316,7 +1317,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 t->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                                 t->setEndColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + s.m_str.length() - 1));
                                 auto text = replaceEntity<Trait>(s.m_str);
-                                text = removeBackslashes<Trait>(text).asString();
+                                text = removeBackslashes<typename Trait::String, Trait>(text);
                                 t->setText(text);
                                 t->setSpaceAfter(s.m_spaceAfter);
                                 t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
@@ -4349,8 +4350,7 @@ makeTextObject(const typename Trait::String &text,
                long long int endPos,
                long long int endLine)
 {
-    auto s = replaceEntity<Trait>(text);
-    s = removeBackslashes<Trait>(s).asString();
+    auto s = removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text));
 
     if (!s.isEmpty()) {
         spaceBefore = spaceBefore || s[0].isSpace();
@@ -6180,7 +6180,7 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
     MD_UNUSED(doNotCreateTextOnFail)
 
     typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ?
-        url : removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
+        url : removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(url)));
 
     if (!u.isEmpty()) {
         if (!u.startsWith(Trait::latin1ToString("#"))) {
@@ -6376,7 +6376,7 @@ Parser<Trait>::makeImage(const typename Trait::String &url,
     std::shared_ptr<Image<Trait>> img(new Image<Trait>);
 
     typename Trait::String u = (url.startsWith(Trait::latin1ToString("#")) ? url :
-        removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString());
+        removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(url)));
 
     if (Trait::fileExists(u)) {
         img->setUrl(u);
@@ -6972,7 +6972,8 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
                             link->setTextPos(labelPos);
                             link->setUrlPos(urlPos);
 
-                            url = removeBackslashes<Trait>(replaceEntity<Trait>(url)).asString();
+                            url = removeBackslashes<typename Trait::String, Trait>(
+								replaceEntity<Trait>(url));
 
                             if (!url.isEmpty()) {
                                 if (Trait::fileExists(url)) {
@@ -8236,7 +8237,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                         }
                     } else {
                         auto s = replaceEntity<Trait>(tmp.asString().simplified());
-                        s = removeBackslashes<Trait>(s).asString();
+                        s = removeBackslashes<typename Trait::String, Trait>(s);
                         t->setText(s);
                         t->setEndColumn(label.second.startColumn() - 1);
                         t->setSpaceAfter(true);
