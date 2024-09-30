@@ -8422,9 +8422,11 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                 case Delimiter::Strikethrough:
                 case Delimiter::Emphasis1:
                 case Delimiter::Emphasis2: {
-                    it = checkForStyle(delims.cbegin(), it, last, po);
-                    p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
-                    p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
+                    if (!collectRefLinks) {
+                        it = checkForStyle(delims.cbegin(), it, last, po);
+                        p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
+                        p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
+                    }
                 } break;
 
                 case Delimiter::Math: {
