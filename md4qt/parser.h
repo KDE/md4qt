@@ -1070,16 +1070,26 @@ template<class Trait>
 inline bool
 isEmail(const typename Trait::String &url)
 {
-    static const auto s_allowed = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789");
-    static const auto s_additional = Trait::latin1ToString(".!#$%&'*+/=?^_`{|}~-");
+    auto isAllowed = [](const typename Trait::Char &ch) -> bool {
+        const auto unicode = ch.unicode();
+        return ((unicode >= 48 && unicode <= 57) || (unicode >= 97 && unicode <= 122) ||
+                (unicode >= 65 && unicode <= 90));
+    };
+
+    auto isAdditional = [](const typename Trait::Char &ch) -> bool {
+        const auto unicode = ch.unicode();
+        return (unicode == 33 || (unicode >= 35 && unicode <= 39) ||
+                unicode == 42 || unicode == 43 || (unicode >= 45 && unicode <= 47) ||
+                unicode == 61 || unicode == 63 || (unicode >= 94 && unicode <= 96) ||
+                (unicode >= 123 && unicode <= 126));
+    };
+
     static const auto s_delim = Trait::latin1ToChar('-');
     static const auto s_dog = Trait::latin1ToChar('@');
     static const auto s_dot = Trait::latin1ToChar('.');
 
-    const auto u = url.toLower();
-
-    long long int i = (u.startsWith(Trait::latin1ToString("mailto:")) ? 7 : 0);
-    const auto dogPos = u.indexOf(s_dog, i);
+    long long int i = (url.startsWith(Trait::latin1ToString("mailto:")) ? 7 : 0);
+    const auto dogPos = url.indexOf(s_dog, i);
 
     if (dogPos != -1) {
         if (i == dogPos) {
@@ -1087,7 +1097,7 @@ isEmail(const typename Trait::String &url)
         }
 
         for (; i < dogPos; ++i) {
-            if (s_allowed.indexOf(u[i]) == -1 && s_additional.indexOf(u[i]) == -1) {
+            if (!isAllowed(url[i]) && !isAdditional(url[i])) {
                 return false;
             }
         }
@@ -1097,21 +1107,21 @@ isEmail(const typename Trait::String &url)
 
             if (dotPos - start > maxlen ||
                 start + 1 > dotPos ||
-                start >= u.length() ||
-                dotPos > u.length()) {
+                start >= url.length() ||
+                dotPos > url.length()) {
                 return false;
             }
 
-            if (u[start] == s_delim) {
+            if (url[start] == s_delim) {
                 return false;
             }
 
-            if (u[dotPos - 1] == s_delim) {
+            if (url[dotPos - 1] == s_delim) {
                 return false;
             }
 
             for (; start < dotPos; ++start) {
-                if (s_allowed.indexOf(u[start]) == -1 && u[start] != s_delim) {
+                if (!isAllowed(url[start]) && url[start] != s_delim) {
                     return false;
                 }
             }
@@ -1119,7 +1129,7 @@ isEmail(const typename Trait::String &url)
             return true;
         };
 
-        long long int dotPos = u.indexOf(s_dot, dogPos + 1);
+        long long int dotPos = url.indexOf(s_dot, dogPos + 1);
 
         if (dotPos != -1) {
             i = dogPos + 1;
@@ -1130,10 +1140,10 @@ isEmail(const typename Trait::String &url)
                 }
 
                 i = dotPos + 1;
-                dotPos = u.indexOf(s_dot, i);
+                dotPos = url.indexOf(s_dot, i);
             }
 
-            if (!checkToDot(i, u.length())) {
+            if (!checkToDot(i, url.length())) {
                 return false;
             }
 
