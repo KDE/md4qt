@@ -7073,14 +7073,11 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
                                                      start->m_pos,
                                                      start->m_line,
                                                      start->m_pos + start->m_len,
-                                                     it,
+                                                     lit,
                                                      {},
                                                      false,
                                                      textPos,
                                                      {})) {
-                        po.m_line = lit->m_line;
-                        po.m_pos = lit->m_pos + lit->m_len;
-
                         return lit;
                     }
                 } else if (createShortcutLink(text, po, start->m_line, start->m_pos, start->m_line,

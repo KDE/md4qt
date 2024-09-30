@@ -770,6 +770,10 @@ TEST_CASE("552")
         REQUIRE(l->img()->isEmpty());
         REQUIRE(l->opts() == MD::TextWithoutFormat);
         REQUIRE(l->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(l->startColumn() == 0);
+        REQUIRE(l->startLine() == 0);
+        REQUIRE(l->endColumn() == 6);
+        REQUIRE(l->endLine() == 0);
         const auto lit = doc->labeledLinks().find(l->url());
         REQUIRE(lit != doc->labeledLinks().cend());
         REQUIRE(lit->second->url() == TRAIT::latin1ToString("/url"));
