@@ -77,22 +77,21 @@ int main()
 
 # Benchmark
 
-Approximate benchmark with [md4c](https://github.com/mity/md4c) and
-[cmark-gfm](https://github.com/github/cmark-gfm) says, that Qt6 version of `md4qt` is slower ~14 times.
+Approximate benchmark with [cmark-gfm](https://github.com/github/cmark-gfm) says,
+that Qt6 version of `md4qt` is slower ~14 times.
 But you will get complete C++ tree structure of the Markdown document with all
 major extensions and sugar and cherry on the cake.
 
-| [cmark-gfm](https://github.com/github/cmark-gfm) | [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | `md4qt` with `Qt6` |
-| --- | --- | --- |
-| 0.25 ms | 2.8 ms | 3.6 ms |
+| Markdown library | Result |
+| --- | --- |
+| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.25 ms |
+| [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.8 ms |
+| `md4qt` with `Qt6` | 3.6 ms |
+| `md4qt` with `Qt6` without `GitHub` autolinks extension | 3.12 ms |
 
 > *This measurement done with test file in [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it)*
 >
 > *`markdown-it (Rust)` measurement done with `markdown_it::plugins::extra`*
->
-> **Keep in mind that `markdown-it (Rust)` doesn't support all GFM extensions, so it's not honest
-> to compare. `md4qt` supports GitHub's autolinks extension, that `markdown-it (Rust)` doesn't, and
-> this requires ~500 microseconds, for example...**
 
 # Playground
 

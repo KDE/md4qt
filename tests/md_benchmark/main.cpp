@@ -40,6 +40,16 @@ private Q_SLOTS:
         }
     }
 
+    void md4qt_with_qt6_without_autolinks()
+    {
+        QBENCHMARK {
+            MD::Parser<MD::QStringTrait> parser;
+            parser.removeTextPlugin(MD::GitHubAutoLinkPluginID);
+
+            parser.parse(QStringLiteral("tests/manual/complex.md"), false);
+        }
+    }
+
     void cmark_gfm()
     {
         QBENCHMARK {
