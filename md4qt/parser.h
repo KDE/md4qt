@@ -917,14 +917,11 @@ struct TextParsingOpts {
     concatenateAuxText(long long int start, long long int end)
     {
         if (start < end && (end - start > 1)) {
-            TextData d = m_rawTextData[start];
-
             for (auto i = start + 1; i < end; ++i) {
-                d.m_str += m_rawTextData[i].m_str;
+                m_rawTextData[start].m_str += m_rawTextData[i].m_str;
             }
 
-            m_rawTextData.erase(m_rawTextData.cbegin() + start, m_rawTextData.cbegin() + end);
-            m_rawTextData.insert(m_rawTextData.cbegin() + start, d);
+            m_rawTextData.erase(m_rawTextData.cbegin() + start + 1, m_rawTextData.cbegin() + end);
         }
     }
 
