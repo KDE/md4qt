@@ -10,75 +10,58 @@
 #include <md4qt/parser.h>
 
 #include <QFile>
-
-#include <chrono>
-#include <iostream>
-#include <memory>
-#include <vector>
+#include <QtTest>
+#include <QObject>
 
 #include <cmark-gfm-core-extensions.h>
 #include <cmark-gfm.h>
 #include <registry.h>
 
-int main()
+class MdBenchmark : public QObject
 {
-    // md4qt
+	Q_OBJECT
+
+private Q_SLOTS:
+    void md4qt_with_icu()
     {
-        const auto start = std::chrono::high_resolution_clock::now();
+        QBENCHMARK {
+            MD::Parser<MD::UnicodeStringTrait> parser;
 
-        MD::Parser<MD::UnicodeStringTrait> parser;
-
-        const auto doc = parser.parse(MD::UnicodeString("tests/manual/complex.md"), false);
-
-        const auto end = std::chrono::high_resolution_clock::now();
-
-        const auto d = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
-        std::cout << "md4qt with ICU parsing: " << d.count() << " us" << std::endl;
+            parser.parse(MD::UnicodeString("tests/manual/complex.md"), false);
+        }
     }
 
-    // md4qt
+    void md4qt_with_qt6()
     {
-        const auto start = std::chrono::high_resolution_clock::now();
+        QBENCHMARK {
+            MD::Parser<MD::QStringTrait> parser;
 
-        MD::Parser<MD::QStringTrait> parser;
-
-        const auto doc = parser.parse(QStringLiteral("tests/manual/complex.md"), false);
-
-        const auto end = std::chrono::high_resolution_clock::now();
-
-        const auto d = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
-        std::cout << "md4qt with Qt6 parsing: " << d.count() << " us" << std::endl;
+            parser.parse(QStringLiteral("tests/manual/complex.md"), false);
+        }
     }
 
-    // cmark-gfm
+    void cmark_gfm()
     {
-        const auto start = std::chrono::high_resolution_clock::now();
+        QBENCHMARK {
+            QFile file(QStringLiteral("tests/manual/complex.md"));
 
-        QFile file(QStringLiteral("tests/manual/complex.md"));
+            if (file.open(QIODevice::ReadOnly)) {
+                const auto md = file.readAll();
 
-        if (file.open(QIODevice::ReadOnly)) {
-            const auto md = file.readAll();
+                file.close();
 
-            file.close();
+                cmark_gfm_core_extensions_ensure_registered();
 
-            cmark_gfm_core_extensions_ensure_registered();
+                auto doc = cmark_parse_document(md.constData(), md.size(), CMARK_OPT_FOOTNOTES);
 
-            auto doc = cmark_parse_document(md.constData(), md.size(), CMARK_OPT_FOOTNOTES);
+                cmark_node_free(doc);
 
-            cmark_node_free(doc);
-
-            cmark_release_plugins();
-        } else
-            std::cout << "failed to open complex.md" << std::endl;
-
-        const auto end = std::chrono::high_resolution_clock::now();
-
-        const auto d = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
-        std::cout << "cmark-gfm parsing: " << d.count() << " us" << std::endl;
+                cmark_release_plugins();
+            }
+        }
     }
+};
 
-    return 0;
-}
+QTEST_GUILESS_MAIN(MdBenchmark)
+
+#include "main.moc"
