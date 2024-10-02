@@ -84,10 +84,10 @@ major extensions and sugar and cherry on the cake.
 
 | Markdown library | Result |
 | --- | --- |
-| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.25 ms |
-| [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.8 ms |
-| `md4qt` with `Qt6` | 3.6 ms |
-| `md4qt` with `Qt6` without `GitHub` autolinks extension | 3.12 ms |
+| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.23 ms |
+| [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.55 ms |
+| `md4qt` with `Qt6` | 3.4 ms |
+| `md4qt` with `Qt6` without `GitHub` autolinks extension | 2.9 ms |
 
 > *This measurement done with test file in [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it)*
 >
