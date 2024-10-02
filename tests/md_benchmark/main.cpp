@@ -8,6 +8,7 @@
 #define MD4QT_ICU_STL_SUPPORT
 #include <md4qt/doc.h>
 #include <md4qt/parser.h>
+#include <md4qt/html.h>
 
 #include <QFile>
 #include <QtTest>
@@ -37,6 +38,17 @@ private Q_SLOTS:
             MD::Parser<MD::QStringTrait> parser;
 
             parser.parse(QStringLiteral("tests/manual/complex.md"), false);
+        }
+    }
+
+    void md4qt_to_html()
+    {
+        MD::Parser<MD::QStringTrait> parser;
+
+        const auto doc = parser.parse(QStringLiteral("tests/manual/complex.md"), false);
+
+        QBENCHMARK {
+            MD::toHtml( doc );
         }
     }
 
