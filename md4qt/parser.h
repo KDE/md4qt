@@ -4079,7 +4079,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
             bool space = true;
             bool word = false;
 
-            for (long long int i = 0; i < str.size(); ++i) {
+            for (long long int i = p; i < str.size(); ++i) {
                 bool now = false;
 
                 if (str[i] == Trait::latin1ToChar('\\') && !backslash) {
