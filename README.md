@@ -97,6 +97,8 @@ major extensions and sugar and cherry on the cake.
 
 You can play in action with `md4qt` in [Markdown Tools](https://github.com/igormironchik/markdown-tools). There you can find `Markdown` editor/viewer/converter to `PDF`.
 
+And [KleverNotes](https://invent.kde.org/office/klevernotes) from `KDE` uses `md4qt` too.
+
 # Q/A
 
 Why another AST Markdown parser?
