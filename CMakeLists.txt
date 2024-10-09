@@ -29,9 +29,9 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
 if( NOT CMAKE_BUILD_TYPE )
-	set( CMAKE_BUILD_TYPE "Release"
-		CACHE STRING "Choose the type of build."
-		FORCE )
+    set( CMAKE_BUILD_TYPE "Release"
+         CACHE STRING "Choose the type of build."
+         FORCE )
 endif( NOT CMAKE_BUILD_TYPE )
 
 set( CMAKE_CXX_STANDARD 17 )
@@ -40,73 +40,73 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
 if( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
 
-	set( CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE )
+    set( CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE )
 
-	if( BUILD_MD4QT_QT_TESTS OR BUILD_MD4QT_STL_TESTS )
-		enable_testing()
+    if( BUILD_MD4QT_QT_TESTS OR BUILD_MD4QT_STL_TESTS )
+        enable_testing()
 
-		add_subdirectory( tests )
-	endif()
+        add_subdirectory( tests )
+    endif()
 
-	if( BUILD_MD4QT_BENCHMARK )
-		add_subdirectory( tests/md_benchmark )
-	endif( BUILD_MD4QT_BENCHMARK )
+    if( BUILD_MD4QT_BENCHMARK )
+        add_subdirectory( tests/md_benchmark )
+    endif( BUILD_MD4QT_BENCHMARK )
 
-	file( GLOB_RECURSE SRC md4qt/* )
+    file( GLOB_RECURSE SRC md4qt/* )
 
-	add_library( md4qt INTERFACE ${SRC} )
-	add_library( md4qt::md4qt ALIAS md4qt )
+    add_library( md4qt INTERFACE ${SRC} )
+    add_library( md4qt::md4qt ALIAS md4qt )
 
-	target_include_directories( md4qt INTERFACE
+    target_include_directories( md4qt INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
-	install( DIRECTORY md4qt
-		DESTINATION include
-	)
+    install( DIRECTORY md4qt
+             DESTINATION ${KDE_INSTALL_FULL_INCLUDEDIR}
+    )
 
-	install( TARGETS md4qt
-		EXPORT md4qt-targets
-		RUNTIME DESTINATION bin
-		ARCHIVE DESTINATION lib
-		LIBRARY DESTINATION lib
-		INCLUDES DESTINATION include
-	)
+    install( TARGETS md4qt
+             EXPORT md4qt-targets
+             RUNTIME DESTINATION ${KDE_INSTALL_FULL_BINDIR}
+             ARCHIVE DESTINATION ${KDE_INSTALL_FULL_LIBDIR}
+             LIBRARY DESTINATION ${KDE_INSTALL_FULL_LIBDIR}
+             INCLUDES DESTINATION ${KDE_INSTALL_FULL_INCLUDEDIR}
+    )
 
-	install( EXPORT md4qt-targets
-		DESTINATION lib/cmake/md4qt
-		NAMESPACE md4qt::
-	)
+    install( EXPORT md4qt-targets
+             DESTINATION ${KDE_INSTALL_FULL_CMAKEPACKAGEDIR}
+             NAMESPACE md4qt::
+    )
 
-	include( CMakePackageConfigHelpers )
+    include( CMakePackageConfigHelpers )
 
-	write_basic_package_version_file(
-		"${CMAKE_CURRENT_BINARY_DIR}/md4qt-config-version.cmake"
-		VERSION ${MD4QT_VERSION}
-		COMPATIBILITY AnyNewerVersion )
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/md4qt-config-version.cmake"
+        VERSION ${MD4QT_VERSION}
+        COMPATIBILITY AnyNewerVersion )
 
-	configure_package_config_file( md4qt-config.cmake.in
-		"${CMAKE_CURRENT_BINARY_DIR}/md4qt-config.cmake"
-		INSTALL_DESTINATION lib/cmake/md4qt )
+    configure_package_config_file( md4qt-config.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/md4qt-config.cmake"
+        INSTALL_DESTINATION ${KDE_INSTALL_FULL_CMAKEPACKAGEDIR} )
 
-	install( FILES ${PROJECT_BINARY_DIR}/md4qt-config.cmake
-			${PROJECT_BINARY_DIR}/md4qt-config-version.cmake
-		DESTINATION lib/cmake/md4qt )
+    install( FILES ${PROJECT_BINARY_DIR}/md4qt-config.cmake
+        ${PROJECT_BINARY_DIR}/md4qt-config-version.cmake
+        DESTINATION ${KDE_INSTALL_FULL_CMAKEPACKAGEDIR} )
 
-	if( BUILD_MD2HTML_APP )
-		include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
+    if( BUILD_MD2HTML_APP )
+        include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
-		find_package( Qt6Core REQUIRED )
+        find_package( Qt6Core REQUIRED )
 
-		add_executable( md2html md2html/main.cpp )
+        add_executable( md2html md2html/main.cpp )
 
-		target_link_libraries( md2html Qt6::Core )
-	endif()
+        target_link_libraries( md2html Qt6::Core )
+    endif()
 
 else()
 
-	set( md4qt_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
-	set( md4qt_VERSION_STRING ${MD4QT_VERSION} PARENT_SCOPE )
+    set( md4qt_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
+    set( md4qt_VERSION_STRING ${MD4QT_VERSION} PARENT_SCOPE )
 
 endif( ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} )
