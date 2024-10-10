@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-<img src="https://kde.org/stuff/clipart/logo/kde-logo-blue-transparent-source.svg" style="width:20%;" align="right">
+<img src="https://kde.org/stuff/clipart/logo/kde-logo-blue-transparent-source.svg" width="20%" align="right">
 
 `md4qt` is a header-only C++ library for parsing Markdown.
 
