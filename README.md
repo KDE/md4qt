@@ -56,20 +56,19 @@ int main()
     MD::Parser< MD::QStringTrait > p;
 
     auto doc = p.parse( QStringLiteral( "your_markdown.md" ) );
-	
-    for( auto it = doc->items().cbegin(), last = doc->items().cend(); it != last; ++it )
-    {
-        switch( (*it)->type() )
-        {
-            case MD::ItemType::Anchor :
-            {
-                auto a = static_cast< MD::Anchor< MD::QStringTrait >* > ( it->get() );
-                qDebug() << a->label();
-            }
-                break;
 
-            default :
-                break;
+    for (auto it = doc->items().cbegin(), last = doc->items().cend(); it != last; ++it) {
+        switch ((*it)->type())
+        {
+        case MD::ItemType::Anchor :
+        {
+            auto a = static_cast< MD::Anchor< MD::QStringTrait >* > ( it->get() );
+            qDebug() << a->label();
+        }
+            break;
+
+        default :
+            break;
         }
     }
 
@@ -127,14 +126,15 @@ document contains key with URL in the link, and if so, use URL from
 labeled links, look:
 
    ```cpp
-   MD::Link< MD::QStringTrait > * item = ...;
+   MD::Link<MD::QStringTrait> *item = ...;
 
    QString url = item->url();
 
-   const auto it = doc->labeledLinks().find( url );
+   const auto it = doc->labeledLinks().find(url);
    
-   if( it != doc->labeledLinks().cend() )
+   if (it != doc->labeledLinks().cend()) {
        url = it->second->url();
+   }
    ```
 
 What is the second argument of `MD::Parser::parse()`?
@@ -222,11 +222,11 @@ How can I convert `MD::Document` into `HTML`?
 
    int main()
    {
-       MD::Parser< MD::QStringTrait > p;
+       MD::Parser<MD::QStringTrait> p;
 
-       auto doc = p.parse( QStringLiteral( "your_markdown.md" ) );
+       auto doc = p.parse(QStringLiteral("your_markdown.md"));
 
-       const auto html = MD::toHtml( doc );
+       const auto html = MD::toHtml(doc);
 
        return 0;
    }
@@ -248,8 +248,8 @@ virtual methods to handle that or another element in the document, like:
 
   ```cpp
   virtual void onHeading(
-     //! Heading.
-     Heading< Trait > * h ) = 0;
+      //! Heading.
+      Heading< Trait > *h) = 0;
   ```
 
 ## Why don't you have an implementation for pure `STL` with `std::string`?
@@ -267,14 +267,14 @@ text plugins.
   ```cpp
   //! Add text plugin.
   void addTextPlugin(
-    //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
-    int id,
-    //! Function of a plugin, that will be invoked to processs raw text.
-    TextPluginFunc< Trait > plugin,
-    //! Should this plugin be used in parsing of internals of links?
-    bool processInLinks,
-    //! User data that will be passed to plugin function.
-    const typename Trait::StringList & userData );
+      //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
+      int id,
+      //! Function of a plugin, that will be invoked to processs raw text.
+      TextPluginFunc<Trait> plugin,
+      //! Should this plugin be used in parsing of internals of links?
+      bool processInLinks,
+      //! User data that will be passed to plugin function.
+      const typename Trait::StringList &userData);
   ```
 
 ### What is a `ID` of a plugin?
@@ -283,9 +283,9 @@ text plugins.
 
   ```cpp
   enum TextPlugin : int {
-    UnknownPluginID = 0,
-    GitHubAutoLinkPluginID = 1,
-    UserDefinedPluginID = 255
+      UnknownPluginID = 0,
+      GitHubAutoLinkPluginID = 1,
+      UserDefinedPluginID = 255
   }; // enum TextPlugin
   ```
 
@@ -298,9 +298,9 @@ text plugins.
 * Text plugin is a usual function with a signature
 
   ```cpp
-  template< class Trait >
-  using TextPluginFunc = std::function< void ( std::shared_ptr< Paragraph< Trait > >,
-    TextParsingOpts< Trait > &, const typename Trait::StringList & ) >;
+  template<class Trait>
+  using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
+      TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
   ```
 
   You will get already parsed `Paragraph` with all items in it. And you are
@@ -332,11 +332,11 @@ text plugins.
 
   ```cpp
   struct TextData {
-    typename Trait::String str;
-    long long int pos = -1;
-    long long int line = -1;
-    bool spaceBefore = false;
-    bool spaceAfter = false;
+      typename Trait::String m_str;
+      long long int m_pos = -1;
+      long long int m_line = -1;
+      bool m_spaceBefore = false;
+      bool m_spaceAfter = false;
   };
   ```
 
@@ -346,7 +346,7 @@ text plugins.
   code.
 
   ```cpp
-  setEndColumn( po.fr.data.at( s.line ).first.virginPos( s.pos ) );
+  setEndColumn(po.fr.data.at(s.line).first.virginPos(s.pos));
   ```
 
   where `s` is an object of `TextData` type.
@@ -369,22 +369,20 @@ that can be handy for plugin implementation.
   plugin function is quite simple, look.
 
   ```cpp
-  template< class Trait >
+  template<class Trait>
   inline void
-  githubAutolinkPlugin( std::shared_ptr< Paragraph< Trait > > p,
-    TextParsingOpts< Trait > & po )
+  githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
+    TextParsingOpts< Trait > &po)
   {
-    if( !po.collectRefLinks )
-    {
-      long long int i = 0;
+      if (!po.collectRefLinks) {
+          long long int i = 0;
 
-      while( i >= 0 && i < (long long int) po.rawTextData.size() )
-      {
-        i = processGitHubAutolinkExtension( p, po, i );
+          while (i >= 0 && i < (long long int) po.rawTextData.size()) {
+              i = processGitHubAutolinkExtension(p, po, i);
 
-        ++i;
+              ++i;
+          }
       }
-    }
   }
   ```
 
@@ -413,19 +411,19 @@ that can be handy for plugin implementation.
 virgin positions.
 
   ```cpp
-  template< class Trait >
+  template<class Trait>
   inline typename Trait::String
-  virginSubstr( const MdBlock< Trait > & fr, const WithPosition & virginPos );
+  virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos);
   ```
 
   And a function to get local position from virgin one.
 
   ```cpp
-  template< class Trait >
-  inline std::pair< long long int, long long int >
-  localPosFromVirgin( const MdBlock< Trait > & fr,
-    long long int virginColumn,
-    long long int virginLine )
+  template<class Trait>
+  inline std::pair<long long int, long long int>
+  localPosFromVirgin(const MdBlock<Trait> &fr,
+      long long int virginColumn,
+      long long int virginLine)
   ```
 
 ## Is it possible to find `Markdown` item by its position?
@@ -440,18 +438,18 @@ nested first children by given position with `findFirstInCache()` method.
 
    ```cpp
    //! Calls function for each item in the document with the given type.
-   template< class Trait >
+   template<class Trait>
    inline void
    forEach(
-     //! Vector of item's types to be processed.
-     const typename Trait::template Vector< ItemType > & types,
-     //! Document.
-     std::shared_ptr< Document< Trait > > doc,
-     //! Functor object.
-     ItemFunctor< Trait > func,
-     //! Maximun nesting level.
-     //! 0 means infinity, 1 - only top level items...
-     unsigned int maxNestingLevel = 0 );
+       //! Vector of item's types to be processed.
+       const typename Trait::template Vector<ItemType> &types,
+       //! Document.
+       std::shared_ptr<Document<Trait>> doc,
+       //! Functor object.
+       ItemFunctor<Trait> func,
+       //! Maximun nesting level.
+       //! 0 means infinity, 1 - only top level items...
+       unsigned int maxNestingLevel = 0);
    ```
 
 ## How can I add and process a custom (user-defined) item in `MD::Document`?
