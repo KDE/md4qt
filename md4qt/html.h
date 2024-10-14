@@ -207,7 +207,7 @@ protected:
         bool wrap) override
     {
         if (wrap && !m_justCollectFootnoteRefs) {
-            m_html.push_back(Trait::latin1ToString("<p>"));
+            m_html.push_back(Trait::latin1ToString("<p dir=\"auto\">"));
         }
 
         Visitor<Trait>::onParagraph(p, wrap);
@@ -374,7 +374,7 @@ protected:
                 if (!m_justCollectFootnoteRefs) {
                     m_html.push_back(Trait::latin1ToString("<th"));
                     m_html.push_back(tableAlignmentToHtml<Trait>(t->columnAlignment(columns)));
-                    m_html.push_back(Trait::latin1ToString(">\n"));
+                    m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
                 }
 
                 this->onTableCell(th->get());
@@ -401,7 +401,7 @@ protected:
                     if (!m_justCollectFootnoteRefs) {
                         m_html.push_back(Trait::latin1ToString("\n<td"));
                         m_html.push_back(tableAlignmentToHtml<Trait>(t->columnAlignment(i)));
-                        m_html.push_back(Trait::latin1ToString(">\n"));
+                        m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
                     }
 
                     this->onTableCell(c->get());
@@ -419,7 +419,7 @@ protected:
 
                 if (!m_justCollectFootnoteRefs) {
                     for (; i < columns; ++i) {
-                        m_html.push_back(Trait::latin1ToString("<td></td>"));
+                        m_html.push_back(Trait::latin1ToString("<td dir=\"auto\"></td>"));
                     }
 
                     m_html.push_back(Trait::latin1ToString("\n</tr>\n"));
@@ -623,7 +623,7 @@ protected:
                 m_html.push_back(Trait::latin1ToString("\""));
             }
 
-            m_html.push_back(Trait::latin1ToString(">\n"));
+            m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
         }
 
         Visitor<Trait>::onListItem(i, first);
@@ -643,7 +643,7 @@ protected:
             m_html.push_back(Trait::latin1ToString("<"));
             m_html.push_back(ht);
             m_html.push_back(headingIdToHtml(h));
-            m_html.push_back(Trait::latin1ToString(">"));
+            m_html.push_back(Trait::latin1ToString(" dir=\"auto\">"));
         }
 
         if (h->text().get()) {
@@ -682,7 +682,7 @@ protected:
         for (const auto &id : m_fns) {
             m_html.push_back(Trait::latin1ToString("<li id=\""));
             m_html.push_back(id.m_id);
-            m_html.push_back(Trait::latin1ToString("\">"));
+            m_html.push_back(Trait::latin1ToString("\" dir=\"auto\">"));
             ++i;
 
             const auto fit = this->m_doc->footnotesMap().find(id.m_id);

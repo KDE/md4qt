@@ -42,7 +42,7 @@ TEST_CASE("001")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/001.md")), false, {}, false);
     REQUIRE(html
-            == TRAIT::latin1ToString("<p><em><em><a href=\"www.google.com\"> google </a>"
+            == TRAIT::latin1ToString("<p dir=\"auto\"><em><em><a href=\"www.google.com\"> google </a>"
                                      "</em> text </em></p>"));
 }
 
@@ -54,7 +54,7 @@ TEST_CASE("002")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/002.md")), false, {}, false);
-    REQUIRE(html == TRAIT::latin1ToString("<p><em><em> text text </em></em></p>"));
+    REQUIRE(html == TRAIT::latin1ToString("<p dir=\"auto\"><em><em> text text </em></em></p>"));
 }
 
 /*
@@ -65,7 +65,7 @@ TEST_CASE("003")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/003.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("\n<h1 id=\"heading/") + fullPath(3) + TRAIT::latin1ToString("\"> heading </h1>\n");
+    const auto required = TRAIT::latin1ToString("\n<h1 id=\"heading/") + fullPath(3) + TRAIT::latin1ToString("\" dir=\"auto\"> heading </h1>\n");
     REQUIRE(html == required);
 }
 
@@ -81,13 +81,13 @@ TEST_CASE("004")
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/004.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
         "\n<table><thead><tr>\n"
-        "<th align=\"left\">\n heading1 \n</th>\n"
-        "<th align=\"center\">\n heading2 \n</th>\n"
-        "<th align=\"right\">\n heading3 \n</th>\n"
+        "<th align=\"left\" dir=\"auto\">\n heading1 \n</th>\n"
+        "<th align=\"center\" dir=\"auto\">\n heading2 \n</th>\n"
+        "<th align=\"right\" dir=\"auto\">\n heading3 \n</th>\n"
         "</tr></thead><tbody>\n<tr>\n\n"
-        "<td align=\"left\">\n data1 \n</td>\n\n"
-        "<td align=\"center\">\n data2 \n</td>\n\n"
-        "<td align=\"right\">\n data3 \n</td>\n\n</tr>\n</tbody></table>\n");
+        "<td align=\"left\" dir=\"auto\">\n data1 \n</td>\n\n"
+        "<td align=\"center\" dir=\"auto\">\n data2 \n</td>\n\n"
+        "<td align=\"right\" dir=\"auto\">\n data3 \n</td>\n\n</tr>\n</tbody></table>\n");
     REQUIRE(html == required);
 }
 
@@ -99,7 +99,7 @@ TEST_CASE("005")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/005.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("<p><strong> bold </strong><del> strike </del></p>");
+    const auto required = TRAIT::latin1ToString("<p dir=\"auto\"><strong> bold </strong><del> strike </del></p>");
     REQUIRE(html == required);
 }
 
@@ -111,7 +111,7 @@ TEST_CASE("006")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/006.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("<p>$ a \\ne 0 $</p>");
+    const auto required = TRAIT::latin1ToString("<p dir=\"auto\">$ a \\ne 0 $</p>");
     REQUIRE(html == required);
 }
 
@@ -137,7 +137,7 @@ TEST_CASE("008")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/008.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("<p><code>code</code></p>");
+    const auto required = TRAIT::latin1ToString("<p dir=\"auto\"><code>code</code></p>");
     REQUIRE(html == required);
 }
 
@@ -149,7 +149,7 @@ TEST_CASE("009")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/009.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("\n<blockquote><p> blockquote </p></blockquote>\n");
+    const auto required = TRAIT::latin1ToString("\n<blockquote><p dir=\"auto\"> blockquote </p></blockquote>\n");
     REQUIRE(html == required);
 }
 
@@ -167,8 +167,8 @@ TEST_CASE("010")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/010.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-        "\n<ul>\n<li>\n list </li>\n</ul>\n"
-        "<!-- -->\n<ol>\n<li value=\"1\">\n list </li>\n</ol>\n");
+        "\n<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n"
+        "<!-- -->\n<ol>\n<li value=\"1\" dir=\"auto\">\n list </li>\n</ol>\n");
     REQUIRE(html == required);
 }
 
@@ -184,11 +184,11 @@ TEST_CASE("011")
     const auto required = TRAIT::latin1ToString(
         "\n<ul class=\"contains-task-list\">\n"
         "<li class=\"task-list-item\"><input type=\"checkbox\" id=\"\" "
-        "disabled=\"\" class=\"task-list-item-checkbox\">\n"
+        "disabled=\"\" class=\"task-list-item-checkbox\" dir=\"auto\">\n"
         " task </li>\n</ul>\n\n"
         "<ol class=\"contains-task-list\">\n"
         "<li class=\"task-list-item\"><input type=\"checkbox\" id=\"\" "
-        "disabled=\"\" class=\"task-list-item-checkbox\" checked=\"\" value=\"1\">\n"
+        "disabled=\"\" class=\"task-list-item-checkbox\" checked=\"\" value=\"1\" dir=\"auto\">\n"
         " list </li>\n</ol>\n");
     REQUIRE(html == required);
 }
@@ -204,11 +204,11 @@ TEST_CASE("012")
     const auto path = fullPath(12);
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/012.md")), false, TRAIT::latin1ToString("qrc://ref.png"), false);
-    const auto required = TRAIT::latin1ToString("<p> text<sup><a href=\"##^1/") + path + TRAIT::latin1ToString("\" id=\"ref-#^1/") + path
+    const auto required = TRAIT::latin1ToString("<p dir=\"auto\"> text<sup><a href=\"##^1/") + path + TRAIT::latin1ToString("\" id=\"ref-#^1/") + path
         + TRAIT::latin1ToString(
                               "-1\">1</a></sup></p>"
                               "<section class=\"footnotes\"><ol><li id=\"#^1/")
-        + path + TRAIT::latin1ToString("\"><p> footnote <a href=\"#ref-#^1/") + path
+        + path + TRAIT::latin1ToString("\" dir=\"auto\"><p dir=\"auto\"> footnote <a href=\"#ref-#^1/") + path
         + TRAIT::latin1ToString("-1\"><img src=\"qrc://ref.png\" /></a></p></li></ol></section>\n");
     REQUIRE(html == required);
 }
@@ -227,7 +227,7 @@ TEST_CASE("013")
                               "<div id=\"")
         + path
         + TRAIT::latin1ToString(
-                              "\"></div>\n<p>"
+                              "\"></div>\n<p dir=\"auto\">"
                               "<img src=\"https://www.google.com\" alt=\"\" style=\"max-width:100%;\" /></p></article>\n");
     REQUIRE(html == required);
 }
@@ -244,7 +244,7 @@ TEST_CASE("014")
 {
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/014.md")), false, {}, false);
-    const auto required = TRAIT::latin1ToString("<p> text <br />\n text \n text </p><hr />");
+    const auto required = TRAIT::latin1ToString("<p dir=\"auto\"> text <br />\n text \n text </p><hr />");
     REQUIRE(html == required);
 }
 
@@ -261,9 +261,9 @@ TEST_CASE("015")
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/015.md")), true, {}, false);
     const auto required = TRAIT::latin1ToString(
         "<!DOCTYPE html>\n<html><head></head><body>\n\n"
-        "<table><thead><tr>\n<th align=\"left\">\n h1 \n</th>\n"
-        "<th align=\"left\">\n h2 \n</th>\n</tr></thead><tbody>\n"
-        "<tr>\n\n<td align=\"left\">\n d1 \n</td>\n<td></td>\n</tr>\n"
+        "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n h1 \n</th>\n"
+        "<th align=\"left\" dir=\"auto\">\n h2 \n</th>\n</tr></thead><tbody>\n"
+        "<tr>\n\n<td align=\"left\" dir=\"auto\">\n d1 \n</td>\n<td dir=\"auto\"></td>\n</tr>\n"
         "</tbody></table>\n</body></html>\n");
     REQUIRE(html == required);
 }
@@ -298,15 +298,15 @@ TEST_CASE("016")
                               "<h1 id=\"heading/")
         + path
         + TRAIT::latin1ToString(
-                              "\"> heading </h1>\n\n"
+                              "\" dir=\"auto\"> heading </h1>\n\n"
                               "<pre><code>code</code></pre>\n\n"
-                              "<ul>\n<li>\n list </li>\n</ul>\n\n"
-                              "<table><thead><tr>\n<th align=\"left\">\n h \n</th>\n</tr></thead>"
-                              "<tbody>\n<tr>\n\n<td align=\"left\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
+                              "<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n\n"
+                              "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n h \n</th>\n</tr></thead>"
+                              "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
                               "<hr />"
                               "<table></table>"
-                              "<p> text <a></a></p>\n"
-                              "<blockquote><p> nested quote </p></blockquote>\n"
+                              "<p dir=\"auto\"> text <a></a></p>\n"
+                              "<blockquote><p dir=\"auto\"> nested quote </p></blockquote>\n"
                               "</blockquote>\n");
     REQUIRE(html == required);
 }
@@ -336,15 +336,15 @@ TEST_CASE("017")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/017.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-                              "\n<ul>\n<li>\n<p> list </p>\n"
+                              "\n<ul>\n<li dir=\"auto\">\n<p dir=\"auto\"> list </p>\n"
                               "<h1 id=\"heading/")
         + path
         + TRAIT::latin1ToString(
-                              "\"> Heading </h1>\n\n"
+                              "\" dir=\"auto\"> Heading </h1>\n\n"
                               "<pre><code>code</code></pre>\n\n"
-                              "<blockquote><p> quote </p></blockquote>\n\n"
-                              "<table><thead><tr>\n<th align=\"left\">\n t \n</th>\n</tr></thead>"
-                              "<tbody>\n<tr>\n\n<td align=\"left\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
+                              "<blockquote><p dir=\"auto\"> quote </p></blockquote>\n\n"
+                              "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n t \n</th>\n</tr></thead>"
+                              "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
                               "<div></div><hr /></li>\n</ul>\n");
     REQUIRE(html == required);
 }
@@ -378,8 +378,8 @@ TEST_CASE("018")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/018.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-                              "\n<table><thead><tr>\n<th align=\"left\">\n head \n</th>\n</tr></thead>"
-                              "<tbody>\n<tr>\n\n<td align=\"left\">\n"
+                              "\n<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n head \n</th>\n</tr></thead>"
+                              "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n"
                               "<code>code</code>"
                               "<a href=\"https://www.google.com\"> google </a>"
                               "<sup><a href=\"##^1/")
@@ -391,16 +391,16 @@ TEST_CASE("018")
                               "<section class=\"footnotes\"><ol><li id=\"#^1/")
         + path
         + TRAIT::latin1ToString(
-                              "\">\n"
+                              "\" dir=\"auto\">\n"
                               "<h1 id=\"heading/")
         + path
         + TRAIT::latin1ToString(
-                              "\"> heading </h1>\n\n"
+                              "\" dir=\"auto\"> heading </h1>\n\n"
                               "<pre><code>code</code></pre>\n\n"
-                              "<blockquote><p> quote </p></blockquote>\n\n"
-                              "<ul>\n<li>\n list </li>\n</ul>\n\n"
-                              "<table><thead><tr>\n<th align=\"left\">\n t \n</th>\n</tr></thead>"
-                              "<tbody>\n<tr>\n\n<td align=\"left\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
+                              "<blockquote><p dir=\"auto\"> quote </p></blockquote>\n\n"
+                              "<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n\n"
+                              "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n t \n</th>\n</tr></thead>"
+                              "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
                               "<div></div><hr /></li></ol></section>\n");
     REQUIRE(html == required);
 }
@@ -420,13 +420,13 @@ TEST_CASE("019")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/019.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-        "\n<ul>\n<li>\n Create a list by starting a line with "
+        "\n<ul>\n<li dir=\"auto\">\n Create a list by starting a line with "
         "<code>+</code>, <code>-</code>, or <code>*</code></li>\n"
-        "<li>\n Sub-lists are made by indenting 2 spaces: \n"
-        "<ul>\n<li>\n Marker character change forces new list start: \n"
-        "<ul>\n<li>\n Ac tristique libero volutpat at </li>\n</ul>\n\n"
-        "<ul>\n<li>\n Facilisis in pretium nisl aliquet </li>\n</ul>\n\n"
-        "<ul>\n<li>\n Nulla volutpat aliquam velit </li>\n</ul>\n"
-        "</li>\n</ul>\n</li>\n<li>\n Very easy! </li>\n</ul>\n");
+        "<li dir=\"auto\">\n Sub-lists are made by indenting 2 spaces: \n"
+        "<ul>\n<li dir=\"auto\">\n Marker character change forces new list start: \n"
+        "<ul>\n<li dir=\"auto\">\n Ac tristique libero volutpat at </li>\n</ul>\n\n"
+        "<ul>\n<li dir=\"auto\">\n Facilisis in pretium nisl aliquet </li>\n</ul>\n\n"
+        "<ul>\n<li dir=\"auto\">\n Nulla volutpat aliquam velit </li>\n</ul>\n"
+        "</li>\n</ul>\n</li>\n<li dir=\"auto\">\n Very easy! </li>\n</ul>\n");
     REQUIRE(html == required);
 }
