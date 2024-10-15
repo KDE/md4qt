@@ -167,8 +167,8 @@ TEST_CASE("010")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/010.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-        "\n<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n"
-        "<!-- -->\n<ol>\n<li value=\"1\" dir=\"auto\">\n list </li>\n</ol>\n");
+        "\n<ul dir=\"auto\">\n<li>\n list </li>\n</ul>\n"
+        "<!-- -->\n<ol dir=\"auto\">\n<li value=\"1\">\n list </li>\n</ol>\n");
     REQUIRE(html == required);
 }
 
@@ -182,13 +182,13 @@ TEST_CASE("011")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/011.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-        "\n<ul class=\"contains-task-list\">\n"
+        "\n<ul class=\"contains-task-list\" dir=\"auto\">\n"
         "<li class=\"task-list-item\"><input type=\"checkbox\" id=\"\" "
-        "disabled=\"\" class=\"task-list-item-checkbox\" dir=\"auto\">\n"
+        "disabled=\"\" class=\"task-list-item-checkbox\">\n"
         " task </li>\n</ul>\n\n"
-        "<ol class=\"contains-task-list\">\n"
+        "<ol class=\"contains-task-list\" dir=\"auto\">\n"
         "<li class=\"task-list-item\"><input type=\"checkbox\" id=\"\" "
-        "disabled=\"\" class=\"task-list-item-checkbox\" checked=\"\" value=\"1\" dir=\"auto\">\n"
+        "disabled=\"\" class=\"task-list-item-checkbox\" checked=\"\" value=\"1\">\n"
         " list </li>\n</ol>\n");
     REQUIRE(html == required);
 }
@@ -207,8 +207,8 @@ TEST_CASE("012")
     const auto required = TRAIT::latin1ToString("<p dir=\"auto\"> text<sup><a href=\"##^1/") + path + TRAIT::latin1ToString("\" id=\"ref-#^1/") + path
         + TRAIT::latin1ToString(
                               "-1\">1</a></sup></p>"
-                              "<section class=\"footnotes\"><ol><li id=\"#^1/")
-        + path + TRAIT::latin1ToString("\" dir=\"auto\"><p dir=\"auto\"> footnote <a href=\"#ref-#^1/") + path
+                              "<section class=\"footnotes\"><ol dir=\"auto\"><li id=\"#^1/")
+        + path + TRAIT::latin1ToString("\"><p dir=\"auto\"> footnote <a href=\"#ref-#^1/") + path
         + TRAIT::latin1ToString("-1\"><img src=\"qrc://ref.png\" /></a></p></li></ol></section>\n");
     REQUIRE(html == required);
 }
@@ -300,7 +300,7 @@ TEST_CASE("016")
         + TRAIT::latin1ToString(
                               "\" dir=\"auto\"> heading </h1>\n\n"
                               "<pre><code>code</code></pre>\n\n"
-                              "<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n\n"
+                              "<ul dir=\"auto\">\n<li>\n list </li>\n</ul>\n\n"
                               "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n h \n</th>\n</tr></thead>"
                               "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
                               "<hr />"
@@ -336,7 +336,7 @@ TEST_CASE("017")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/017.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-                              "\n<ul>\n<li dir=\"auto\">\n<p dir=\"auto\"> list </p>\n"
+                              "\n<ul dir=\"auto\">\n<li>\n<p dir=\"auto\"> list </p>\n"
                               "<h1 id=\"heading/")
         + path
         + TRAIT::latin1ToString(
@@ -388,17 +388,17 @@ TEST_CASE("018")
                               "-1\">1</a></sup>"
                               "<img src=\"https://www.google.com\" alt=\"\" style=\"max-width:100%;\" />"
                               "$ a /ne 0 $\n</td>\n\n</tr>\n</tbody></table>\n"
-                              "<section class=\"footnotes\"><ol><li id=\"#^1/")
+                              "<section class=\"footnotes\"><ol dir=\"auto\"><li id=\"#^1/")
         + path
         + TRAIT::latin1ToString(
-                              "\" dir=\"auto\">\n"
+                              "\">\n"
                               "<h1 id=\"heading/")
         + path
         + TRAIT::latin1ToString(
                               "\" dir=\"auto\"> heading </h1>\n\n"
                               "<pre><code>code</code></pre>\n\n"
                               "<blockquote><p dir=\"auto\"> quote </p></blockquote>\n\n"
-                              "<ul>\n<li dir=\"auto\">\n list </li>\n</ul>\n\n"
+                              "<ul dir=\"auto\">\n<li>\n list </li>\n</ul>\n\n"
                               "<table><thead><tr>\n<th align=\"left\" dir=\"auto\">\n t \n</th>\n</tr></thead>"
                               "<tbody>\n<tr>\n\n<td align=\"left\" dir=\"auto\">\n d \n</td>\n\n</tr>\n</tbody></table>\n"
                               "<div></div><hr /></li></ol></section>\n");
@@ -420,13 +420,13 @@ TEST_CASE("019")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/019.md")), false, {}, false);
     const auto required = TRAIT::latin1ToString(
-        "\n<ul>\n<li dir=\"auto\">\n Create a list by starting a line with "
+        "\n<ul dir=\"auto\">\n<li>\n Create a list by starting a line with "
         "<code>+</code>, <code>-</code>, or <code>*</code></li>\n"
-        "<li dir=\"auto\">\n Sub-lists are made by indenting 2 spaces: \n"
-        "<ul>\n<li dir=\"auto\">\n Marker character change forces new list start: \n"
-        "<ul>\n<li dir=\"auto\">\n Ac tristique libero volutpat at </li>\n</ul>\n\n"
-        "<ul>\n<li dir=\"auto\">\n Facilisis in pretium nisl aliquet </li>\n</ul>\n\n"
-        "<ul>\n<li dir=\"auto\">\n Nulla volutpat aliquam velit </li>\n</ul>\n"
-        "</li>\n</ul>\n</li>\n<li dir=\"auto\">\n Very easy! </li>\n</ul>\n");
+        "<li>\n Sub-lists are made by indenting 2 spaces: \n"
+        "<ul dir=\"auto\">\n<li>\n Marker character change forces new list start: \n"
+        "<ul dir=\"auto\">\n<li>\n Ac tristique libero volutpat at </li>\n</ul>\n\n"
+        "<ul dir=\"auto\">\n<li>\n Facilisis in pretium nisl aliquet </li>\n</ul>\n\n"
+        "<ul dir=\"auto\">\n<li>\n Nulla volutpat aliquam velit </li>\n</ul>\n"
+        "</li>\n</ul>\n</li>\n<li>\n Very easy! </li>\n</ul>\n");
     REQUIRE(html == required);
 }

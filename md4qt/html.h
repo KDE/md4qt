@@ -323,7 +323,7 @@ protected:
                                 m_html.push_back(Trait::latin1ToString(" class=\"contains-task-list\""));
                             }
 
-                            m_html.push_back(Trait::latin1ToString(">\n"));
+                            m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
                         }
                     } else {
                         if (!m_justCollectFootnoteRefs) {
@@ -333,7 +333,7 @@ protected:
                                 m_html.push_back(Trait::latin1ToString(" class=\"contains-task-list\""));
                             }
 
-                            m_html.push_back(Trait::latin1ToString(">\n"));
+                            m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
                         }
                     }
                 }
@@ -623,7 +623,7 @@ protected:
                 m_html.push_back(Trait::latin1ToString("\""));
             }
 
-            m_html.push_back(Trait::latin1ToString(" dir=\"auto\">\n"));
+            m_html.push_back(Trait::latin1ToString(">\n"));
         }
 
         Visitor<Trait>::onListItem(i, first);
@@ -660,7 +660,7 @@ protected:
     virtual void onFootnotes(const typename Trait::String &hrefForRefBackImage)
     {
         if (!m_fns.empty()) {
-            m_html.push_back(Trait::latin1ToString("<section class=\"footnotes\"><ol>"));
+            m_html.push_back(Trait::latin1ToString("<section class=\"footnotes\"><ol dir=\"auto\">"));
         }
 
         int i = 1;
@@ -682,7 +682,7 @@ protected:
         for (const auto &id : m_fns) {
             m_html.push_back(Trait::latin1ToString("<li id=\""));
             m_html.push_back(id.m_id);
-            m_html.push_back(Trait::latin1ToString("\" dir=\"auto\">"));
+            m_html.push_back(Trait::latin1ToString("\">"));
             ++i;
 
             const auto fit = this->m_doc->footnotesMap().find(id.m_id);
