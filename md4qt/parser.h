@@ -4727,8 +4727,9 @@ readHtmlAttr(long long int &l,
 
     skipSpacesInHtml<Trait>(l, p, fr);
 
-    if (l >= (long long int)fr.size())
+    if (l >= (long long int)fr.size()) {
         return {false, false};
+    }
 
     // =
     if (p < fr[l].first.length()) {
