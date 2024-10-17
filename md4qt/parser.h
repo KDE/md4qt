@@ -102,7 +102,7 @@ startSequence(const typename Trait::String &line)
         return {};
     }
 
-    const auto sch = (pos < line.length() ? line[pos] : typename Trait::Char());
+    const auto sch = line[pos];
     const auto start = pos;
 
     ++pos;
