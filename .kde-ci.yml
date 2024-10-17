@@ -6,3 +6,9 @@ Dependencies:
 Options:
   test-before-installing: True
   require-passing-tests-on: [ 'Linux', 'FreeBSD', 'Windows' ]
+  run-cppcheck: True
+  cppcheck-arguments: '--enable=warning,style,performance'
+  cppcheck-ignore-files:
+    - 3rdparty/
+  run-gcovr: True
+  gcovr-arguments: '--exclude 3rdparty/*'
