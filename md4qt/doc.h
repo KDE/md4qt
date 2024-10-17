@@ -635,7 +635,6 @@ public:
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto p = std::make_shared<Paragraph<Trait>>();
-        p->setDirty(m_dirty);
         p->applyBlock(*this, doc);
 
         return p;
@@ -646,26 +645,7 @@ public:
         return ItemType::Paragraph;
     }
 
-protected:
-    template<class T>
-    friend class Parser;
-
-    template<class T>
-    friend struct UnprotectedDocsMethods;
-
-    bool isDirty() const
-    {
-        return m_dirty;
-    }
-
-    void setDirty(bool on = true)
-    {
-        m_dirty = on;
-    }
-
 private:
-    bool m_dirty = false;
-
     MD_DISABLE_COPY(Paragraph)
 }; // class Paragraph
 
