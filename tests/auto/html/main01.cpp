@@ -430,3 +430,18 @@ TEST_CASE("019")
         "</li>\n</ul>\n</li>\n<li>\n Very easy! </li>\n</ul>\n");
     REQUIRE(html == required);
 }
+
+/*
+What is a [Google]?
+
+[Google]: https://www.google.com
+
+*/
+TEST_CASE("020")
+{
+    MD::Parser<TRAIT> p;
+    auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/020.md")), false, {}, false);
+    const auto required = TRAIT::latin1ToString(
+                "<p dir=\"auto\"> What is a <a href=\"https://www.google.com\"> Google </a>? </p>");
+    REQUIRE(html == required);
+}

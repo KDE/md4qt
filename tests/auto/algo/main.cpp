@@ -227,6 +227,14 @@ TEST_CASE("029")
     REQUIRE(g_count == 1);
     g_count = 0;
 
+    MD::forEach<TRAIT>({MD::ItemType::ListItem}, doc, onItem);
+    REQUIRE(g_count == 6);
+    g_count = 0;
+
+    MD::forEach<TRAIT>({MD::ItemType::ListItem}, doc, onItem, 2);
+    REQUIRE(g_count == 3);
+    g_count = 0;
+
     MD::forEach<TRAIT>({MD::ItemType::Paragraph}, doc, onItem);
     REQUIRE(g_count == 13);
     g_count = 0;

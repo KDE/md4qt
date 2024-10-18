@@ -102,7 +102,7 @@ startSequence(const typename Trait::String &line)
         return {};
     }
 
-    const auto sch = (pos < line.length() ? line[pos] : typename Trait::Char());
+    const auto sch = line[pos];
     const auto start = pos;
 
     ++pos;
@@ -2510,31 +2510,13 @@ Parser<Trait>::finishHtml(ParserContext &ctx,
                 }
             }
         } else {
-            if (parent->items().back()->type() == ItemType::Paragraph) {
-                auto p = static_cast<Paragraph<Trait> *>(parent->items().back().get());
-
-                if (p->isDirty()) {
-                    p->appendItem(ctx.m_html.m_html);
-                    p->setEndColumn(ctx.m_html.m_html->endColumn());
-                    p->setEndLine(ctx.m_html.m_html->endLine());
-                } else {
-                    std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-                    p->appendItem(ctx.m_html.m_html);
-                    p->setStartColumn(ctx.m_html.m_html->startColumn());
-                    p->setStartLine(ctx.m_html.m_html->startLine());
-                    p->setEndColumn(ctx.m_html.m_html->endColumn());
-                    p->setEndLine(ctx.m_html.m_html->endLine());
-                    doc->appendItem(p);
-                }
-            } else {
-                std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-                p->appendItem(ctx.m_html.m_html);
-                p->setStartColumn(ctx.m_html.m_html->startColumn());
-                p->setStartLine(ctx.m_html.m_html->startLine());
-                p->setEndColumn(ctx.m_html.m_html->endColumn());
-                p->setEndLine(ctx.m_html.m_html->endLine());
-                doc->appendItem(p);
-            }
+            std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
+            p->appendItem(ctx.m_html.m_html);
+            p->setStartColumn(ctx.m_html.m_html->startColumn());
+            p->setStartLine(ctx.m_html.m_html->startLine());
+            p->setEndColumn(ctx.m_html.m_html->endColumn());
+            p->setEndLine(ctx.m_html.m_html->endLine());
+            doc->appendItem(p);
         }
     }
 
@@ -4043,18 +4025,6 @@ struct UnprotectedDocsMethods {
     {
         html->setFreeTag(on);
     }
-
-    static bool
-    isDirty(std::shared_ptr<Paragraph<Trait>> p)
-    {
-        return p->isDirty();
-    }
-
-    static void
-    setDirty(std::shared_ptr<Paragraph<Trait>> p, bool on)
-    {
-        p->setDirty(on);
-    }
 };
 
 template<class Trait>
@@ -4757,8 +4727,9 @@ readHtmlAttr(long long int &l,
 
     skipSpacesInHtml<Trait>(l, p, fr);
 
-    if (l >= (long long int)fr.size())
+    if (l >= (long long int)fr.size()) {
         return {false, false};
+    }
 
     // =
     if (p < fr[l].first.length()) {
@@ -8083,33 +8054,6 @@ makeParagraph(typename Block<Trait>::Items::const_iterator first,
 }
 
 template<class Trait>
-inline void
-concatenateParagraphsIfNeededOrAppend(std::shared_ptr<Block<Trait>> parent,
-                                      std::shared_ptr<Paragraph<Trait>> p)
-{
-    if (!parent->items().empty() && parent->items().back()->type() == ItemType::Paragraph &&
-        !p->items().empty() && p->items().front()->type() == ItemType::RawHtml) {
-        auto pp = std::static_pointer_cast<Paragraph<Trait>>(parent->items().back());
-        auto h = std::static_pointer_cast<RawHtml<Trait>>(p->items().front());
-
-        if (UnprotectedDocsMethods<Trait>::isDirty(pp) && !UnprotectedDocsMethods<Trait>::isFreeTag(h)) {
-            for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it) {
-                pp->appendItem(*it);
-            }
-
-            UnprotectedDocsMethods<Trait>::setDirty(pp, UnprotectedDocsMethods<Trait>::isDirty(p));
-
-            pp->setEndColumn(p->endColumn());
-            pp->setEndLine(p->endLine());
-
-            return;
-        }
-    }
-
-    parent->appendItem(p);
-}
-
-template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
                            std::shared_ptr<Paragraph<Trait>> p,
@@ -8132,12 +8076,10 @@ splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
 
             if (!collectRefLinks) {
                 if (!p->isEmpty()) {
-                    concatenateParagraphsIfNeededOrAppend(parent,
-                        optimizeParagraph<Trait>(p,
-                                                 po,
-                                                 fullyOptimizeParagraphs ?
-                                                    OptimizeParagraphType::FullWithoutRawData :
-                                                    OptimizeParagraphType::SemiWithoutRawData));
+                    parent->appendItem(optimizeParagraph<Trait>(p, po,
+                                                                fullyOptimizeParagraphs ?
+                                                                    OptimizeParagraphType::FullWithoutRawData :
+                                                                    OptimizeParagraphType::SemiWithoutRawData));
                 }
 
                 parent->appendItem(*it);
@@ -8466,7 +8408,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                             if (!collectRefLinks) {
                                 if (!h2 || (p->items().size() == 1 &&
                                     p->items().front()->type() == ItemType::LineBreak)) {
-                                    concatenateParagraphsIfNeededOrAppend(parent, p);
+                                    parent->appendItem(p);
 
                                     h2 = false;
                                 } else {
@@ -8650,13 +8592,8 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
 
         p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
 
-        if (html.m_html.get() && !html.m_onLine) {
-            UnprotectedDocsMethods<Trait>::setDirty(p, true);
-        }
-
         if (!p->isEmpty() && !collectRefLinks) {
-            concatenateParagraphsIfNeededOrAppend(parent,
-                optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()));
+            parent->appendItem(optimizeParagraph<Trait>(p, po, defaultParagraphOptimization()));
         }
 
         po.m_rawTextData.clear();
