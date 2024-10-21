@@ -703,7 +703,7 @@ TEST_CASE("012")
     REQUIRE(t1->endColumn() == 11);
     REQUIRE(t1->endLine() == 0);
 
-    REQUIRE(t1->text() == TRAIT::latin1ToString("Code in the"));
+    REQUIRE(t1->text() == TRAIT::latin1ToString("Code in the "));
 
     REQUIRE(dp->items().at(1)->type() == MD::ItemType::Code);
 
@@ -2142,7 +2142,7 @@ TEST_CASE("029")
             auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
 
             REQUIRE(t->opts() == MD::TextOption::TextWithoutFormat);
-            REQUIRE(t->text() == TRAIT::latin1ToString("Paragraph in list"));
+            REQUIRE(t->text() == TRAIT::latin1ToString("  Paragraph in list"));
             REQUIRE(t->startColumn() == 2);
             REQUIRE(t->startLine() == 2 + 8 * i);
             REQUIRE(t->endColumn() == 20);
@@ -2210,7 +2210,7 @@ TEST_CASE("029")
                 auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
 
                 REQUIRE(t->opts() == MD::TextOption::TextWithoutFormat);
-                REQUIRE(t->text() == TRAIT::latin1ToString("Paragraph in list"));
+                REQUIRE(t->text() == TRAIT::latin1ToString("  Paragraph in list"));
                 REQUIRE(t->startColumn() == 6);
                 REQUIRE(t->startLine() == 6 + 8 * i);
                 REQUIRE(t->endColumn() == 24);
@@ -2288,7 +2288,7 @@ TEST_CASE("030")
         REQUIRE(t1->endColumn() == 4);
         REQUIRE(t1->endLine() == 0);
 
-        REQUIRE(t1->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t1->text() == TRAIT::latin1ToString("Text "));
 
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Image);
 
@@ -2311,7 +2311,7 @@ TEST_CASE("030")
         REQUIRE(t2->endColumn() == 31);
         REQUIRE(t2->endLine() == 0);
 
-        REQUIRE(t2->text() == TRAIT::latin1ToString("continue"));
+        REQUIRE(t2->text() == TRAIT::latin1ToString(" continue "));
 
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Image);
 
@@ -2323,7 +2323,7 @@ TEST_CASE("030")
         REQUIRE(i2->textPos() == MD::WithPosition{34, 0, 42, 0});
         REQUIRE(i2->urlPos() == MD::WithPosition{45, 0, 49, 0});
 
-        REQUIRE(i2->text() == TRAIT::latin1ToString("Image 2"));
+        REQUIRE(i2->text() == TRAIT::latin1ToString(" Image 2 "));
         REQUIRE(i2->url() == wd + TRAIT::latin1ToString("b.png"));
 
         REQUIRE(p->items().at(4)->type() == MD::ItemType::Text);
@@ -2334,7 +2334,7 @@ TEST_CASE("030")
         REQUIRE(t3->endColumn() == 55);
         REQUIRE(t3->endLine() == 0);
 
-        REQUIRE(t3->text() == TRAIT::latin1ToString("and"));
+        REQUIRE(t3->text() == TRAIT::latin1ToString(" and "));
 
         REQUIRE(p->items().at(5)->type() == MD::ItemType::Image);
 
@@ -2346,7 +2346,7 @@ TEST_CASE("030")
         REQUIRE(i3->textPos() == MD::WithPosition{58, 0, 65, 0});
         REQUIRE(i3->urlPos() == MD::WithPosition{69, 0, 95, 0});
 
-        REQUIRE(i3->text() == TRAIT::latin1ToString("Image 3"));
+        REQUIRE(i3->text() == TRAIT::latin1ToString(" Image 3"));
         REQUIRE(i3->url() == TRAIT::latin1ToString("http://www.where.com/c.jpeg"));
     };
 

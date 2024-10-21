@@ -39,8 +39,6 @@ TEST_CASE("249")
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(!t->isSpaceAfter());
         REQUIRE(t->text() == TRAIT::latin1ToString("text"));
         REQUIRE(t->openStyles().empty());
         REQUIRE(t->closeStyles().empty());

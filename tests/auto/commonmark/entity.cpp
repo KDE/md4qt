@@ -338,7 +338,6 @@ TEST_CASE("40")
     auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
     REQUIRE(t->opts() == MD::TextWithoutFormat);
     REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
-    REQUIRE(t->isSpaceBefore());
 }
 
 TEST_CASE("41")

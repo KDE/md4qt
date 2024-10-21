@@ -161,15 +161,7 @@ protected:
         if (!m_justCollectFootnoteRefs) {
             openStyle(t->openStyles());
 
-            if (t->isSpaceBefore()) {
-                m_html.push_back(Trait::latin1ToString(" "));
-            }
-
             m_html.push_back(prepareTextForHtml<Trait>(t->text()));
-
-            if (t->isSpaceAfter()) {
-                m_html.push_back(Trait::latin1ToString(" "));
-            }
 
             closeStyle(t->closeStyles());
         }

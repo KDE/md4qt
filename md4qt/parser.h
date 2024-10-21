@@ -670,7 +670,7 @@ template<class Trait>
 inline int
 isTableAlignment(const typename Trait::String &s)
 {
-    const auto columns = splitString<Trait>(s.simplified(), Trait::latin1ToChar('|'));
+    const auto columns = splitString<Trait>(s, Trait::latin1ToChar('|'));
 
     for (const auto &c : columns) {
         if (!isColumnAlignment<Trait>(c)) {
@@ -898,7 +898,6 @@ struct TextParsingOpts {
     RawHtmlBlock<Trait> &m_html;
     const TextPluginsMap<Trait> &m_textPlugins;
     std::shared_ptr<Text<Trait>> m_lastText = {};
-    bool m_isSpaceBefore = false;
     bool m_wasRefLink = false;
     bool m_checkLineOnNewType = false;
     bool m_firstInParagraph = true;
@@ -907,8 +906,6 @@ struct TextParsingOpts {
         typename Trait::String m_str;
         long long int m_pos = -1;
         long long int m_line = -1;
-        bool m_spaceBefore = false;
-        bool m_spaceAfter = false;
     };
 
     std::vector<TextData> m_rawTextData = {};
@@ -1257,7 +1254,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                             typename ItemWithOpts<Trait>::Styles openStyles, closeStyles;
                             const auto opts = std::static_pointer_cast<Text<Trait>>(p->items().at(ti))->opts();
 
-                            if (j == 0 || s.m_str.sliced(0, j).simplified().isEmpty()) {
+                            if (j == 0 || s.m_str.sliced(0, j).isEmpty()) {
                                 openStyles = std::static_pointer_cast<ItemWithOpts<Trait>>(p->items().at(ti))->openStyles();
                                 closeStyles = std::static_pointer_cast<ItemWithOpts<Trait>>(p->items().at(ti))->closeStyles();
                                 p->removeItemAt(ti);
@@ -1272,11 +1269,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 t->closeStyles() = {};
                                 po.m_rawTextData[idx].m_str = tmp;
                                 ++idx;
-                                auto text = replaceEntity<Trait>(tmp.simplified());
-                                text = removeBackslashes<typename Trait::String, Trait>(text);
-                                t->setText(text);
-                                t->setSpaceAfter(true);
-                                t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
+                                t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(tmp)));
                                 ++ti;
                             }
 
@@ -1304,15 +1297,10 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                             lnk->setOpts(opts);
                             p->insertItem(ti, lnk);
 
-                            s.m_pos += i + (s.m_str[i] == end ? 0 : 1);
-                            s.m_str.remove(0, i + (s.m_str[i] == end ? 0 : 1));
-                            s.m_spaceBefore = true;
+                            s.m_pos += i + (s.m_str[i] == end || s.m_str[i].isSpace() ? 0 : 1);
+                            s.m_str.remove(0, i + (s.m_str[i] == end || s.m_str[i].isSpace() ? 0 : 1));
                             j = 0;
                             i = 0;
-
-                            if (s.m_str.simplified().isEmpty()) {
-                                s.m_str.clear();
-                            }
 
                             if (!s.m_str.isEmpty()) {
                                 po.m_rawTextData.insert(po.m_rawTextData.cbegin() + idx, s);
@@ -1323,11 +1311,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 t->setStartLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                                 t->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                                 t->setEndColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + s.m_str.length() - 1));
-                                auto text = replaceEntity<Trait>(s.m_str);
-                                text = removeBackslashes<typename Trait::String, Trait>(text);
-                                t->setText(text);
-                                t->setSpaceAfter(s.m_spaceAfter);
-                                t->setSpaceBefore(s.m_pos > 0 ? po.m_fr.m_data[s.m_line].first[s.m_pos - 1].isSpace() : true);
+                                t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(s.m_str)));
                                 t->closeStyles() = closeStyles;
                                 p->insertItem(ti + 1, t);
                             } else {
@@ -1757,8 +1741,6 @@ private:
         long long int m_line = -1;
         long long int m_pos = -1;
         long long int m_len = 0;
-        bool m_spaceBefore = false;
-        bool m_spaceAfter = false;
         bool m_isWordBefore = false;
         bool m_backslashed = false;
         bool m_leftFlanking = false;
@@ -1931,7 +1913,7 @@ private:
         WithPosition labelPos;
         std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-        if (it != start && !toSingleLine(text).simplified().isEmpty()) {
+        if (it != start && !toSingleLine(text).isEmpty()) {
             if ((this->*functor)(text, po, start->m_line, start->m_pos, start->m_line,
                 start->m_pos + start->m_len, it, {}, false, labelPos, {})) {
                 return it;
@@ -3500,7 +3482,7 @@ stringToLabel(const typename Trait::String &s)
         if (c.isLetter() || c.isDigit() || c == Trait::latin1ToChar('-') ||
             c == Trait::latin1ToChar('_')) {
             res.push_back(c.toLower());
-        } else if (c.isSpace() && !res.isEmpty()) {
+        } else if (c.isSpace()) {
             res.push_back(Trait::latin1ToString("-"));
         }
     }
@@ -3518,27 +3500,21 @@ paragraphToLabel(Paragraph<Trait> *p)
         return l;
     }
 
-    long long int line = -1;
-
     for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it) {
-        typename Trait::String tmp;
-        const bool newLine = ((*it)->startLine() != line);
-        line = (*it)->endLine();
-
         switch ((*it)->type()) {
         case ItemType::Text: {
             auto t = static_cast<Text<Trait> *>(it->get());
-            const auto text = t->text().simplified();
-            tmp = stringToLabel<Trait>(text);
+            const auto text = t->text();
+            l.push_back(stringToLabel<Trait>(text));
         } break;
 
         case ItemType::Image: {
             auto i = static_cast<Image<Trait> *>(it->get());
 
             if (!i->p()->isEmpty()) {
-                tmp = paragraphToLabel(i->p().get());
-            } else if (!i->text().simplified().isEmpty()) {
-                tmp = stringToLabel<Trait>(i->text().simplified());
+                l.push_back(paragraphToLabel(i->p().get()));
+            } else if (!i->text().isEmpty()) {
+                l.push_back(stringToLabel<Trait>(i->text()));
             }
         } break;
 
@@ -3546,29 +3522,23 @@ paragraphToLabel(Paragraph<Trait> *p)
             auto link = static_cast<Link<Trait> *>(it->get());
 
             if (!link->p()->isEmpty()) {
-                tmp = paragraphToLabel(link->p().get());
-            } else if (!link->text().simplified().isEmpty()) {
-                tmp = stringToLabel<Trait>(link->text().simplified());
+                l.push_back(paragraphToLabel(link->p().get()));
+            } else if (!link->text().isEmpty()) {
+                l.push_back(stringToLabel<Trait>(link->text()));
             }
         } break;
 
         case ItemType::Code: {
             auto c = static_cast<Code<Trait> *>(it->get());
 
-            if (!c->text().simplified().isEmpty()) {
-                tmp = stringToLabel<Trait>(c->text().simplified());
+            if (!c->text().isEmpty()) {
+                l.push_back(stringToLabel<Trait>(c->text()));
             }
         } break;
 
         default:
             break;
         }
-
-        if (!l.isEmpty() && !tmp.isEmpty() && !newLine) {
-            l.push_back(Trait::latin1ToString("-"));
-        }
-
-        l.push_back(tmp);
     }
 
     return l;
@@ -3691,7 +3661,6 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
 
         typename MdBlock<Trait>::Data tmp;
         tmp.push_back(fr.m_data.front());
-        tmp.front().first = tmp.front().first.simplified();
         MdBlock<Trait> block = {tmp, 0};
 
         RawHtmlBlock<Trait> html;
@@ -3752,7 +3721,7 @@ splitTableRow(const typename Trait::InternalString &s)
             backslash = true;
             now = true;
         } else if (s[i] == Trait::latin1ToChar('|') && !backslash) {
-            res.push_back(prepareTableData<Trait>(s.sliced(start, i - start).simplified()));
+            res.push_back(prepareTableData<Trait>(s.sliced(start, i - start)));
             columns.push_back(s.virginPos(i));
             start = i + 1;
         }
@@ -3762,7 +3731,7 @@ splitTableRow(const typename Trait::InternalString &s)
         }
     }
 
-    res.push_back(prepareTableData<Trait>(s.sliced(start, s.length() - start).simplified()));
+    res.push_back(prepareTableData<Trait>(s.sliced(start, s.length() - start)));
 
     return {res, columns};
 }
@@ -3794,14 +3763,29 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                 return false;
             }
 
-            auto line = row.simplified();
+            auto line = row;
+            auto p = skipSpaces<Trait>(0, line.asString());
 
-            if (line.asString().startsWith(typename Trait::String(Trait::latin1ToChar(sep)))) {
-                line.remove(0, 1);
+            if (p == line.length()) {
+                return false;
             }
 
-            if (line.asString().endsWith(typename Trait::String(Trait::latin1ToChar(sep)))) {
-                line.remove(line.length() - 1, 1);
+            if (line[p] == Trait::latin1ToChar(sep)) {
+                line.remove(0, p + 1);
+            }
+
+            for (p = line.length() - 1; p >= 0; --p) {
+                if (!line[p].isSpace()) {
+                    break;
+                }
+            }
+
+            if (p < 0) {
+                return false;
+            }
+
+            if (line[p] == Trait::latin1ToChar(sep)) {
+                line.remove(p, line.length() - p);
             }
 
             auto columns = splitTableRow<Trait>(line);
@@ -3842,16 +3826,25 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                         collectRefLinks, false, html, false);
 
                     if (!p->isEmpty()) {
-                        if (p->items().at(0)->type() == ItemType::Paragraph) {
-                            const auto pp = std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0));
+                        for (auto it = p->items().cbegin(), last = p->items().cend(); it != last; ++it ) {
+                            switch ((*it)->type()) {
+                            case ItemType::Paragraph: {
+                                const auto pp = std::static_pointer_cast<Paragraph<Trait>>(*it);
 
-                            for (auto it = pp->items().cbegin(), last = pp->items().cend(); it != last; ++it) {
-                                c->appendItem((*it));
+                                for (auto it = pp->items().cbegin(), last = pp->items().cend(); it != last; ++it) {
+                                    c->appendItem((*it));
+                                }
                             }
-                        } else if (p->items().at(0)->type() == ItemType::RawHtml) {
-                            c->appendItem(p->items().at(0));
+                                break;
+
+                            default:
+                                c->appendItem((*it));
+                                break;
+                            }
                         }
-                    } else if (html.m_html.get()) {
+                    }
+
+                    if (html.m_html.get()) {
                         c->appendItem(html.m_html);
                     }
                 }
@@ -4046,7 +4039,6 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
             d.push_back({Delimiter::H2, line, 0, str.length(), false, false, false});
         } else {
             bool backslash = false;
-            bool space = true;
             bool word = false;
 
             for (long long int i = p; i < str.size(); ++i) {
@@ -4055,224 +4047,186 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                 if (str[i] == Trait::latin1ToChar('\\') && !backslash) {
                     backslash = true;
                     now = true;
-                } else if (str[i].isSpace() && !backslash) {
-                    space = true;
-                    now = true;
-                } else {
-                    // * or _
-                    if ((str[i] == Trait::latin1ToChar('_') || str[i] == Trait::latin1ToChar('*')) && !backslash) {
-                        typename Trait::String style;
+                }
+                // * or _
+                else if ((str[i] == Trait::latin1ToChar('_') || str[i] == Trait::latin1ToChar('*')) && !backslash) {
+                    typename Trait::String style;
 
-                        const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
-                        const bool uWhitespaceBefore = (i > 0 ? Trait::isUnicodeWhitespace(str[i - 1]) : true);
-                        const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
-                        const bool alNumBefore = (i > 0 ? str[i - 1].isLetterOrNumber() : false);
+                    const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
+                    const bool uWhitespaceBefore = (i > 0 ? Trait::isUnicodeWhitespace(str[i - 1]) : true);
+                    const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
+                    const bool alNumBefore = (i > 0 ? str[i - 1].isLetterOrNumber() : false);
 
-                        const auto ch = str[i];
+                    const auto ch = str[i];
 
-                        while (i < str.length() && str[i] == ch) {
-                            style.push_back(str[i]);
-                            ++i;
+                    while (i < str.length() && str[i] == ch) {
+                        style.push_back(str[i]);
+                        ++i;
+                    }
+
+                    typename Delimiter::DelimiterType dt = Delimiter::Unknown;
+
+                    if (ch == Trait::latin1ToChar('*')) {
+                        dt = Delimiter::Emphasis1;
+                    } else {
+                        dt = Delimiter::Emphasis2;
+                    }
+
+                    const bool punctAfter = (i < str.length() ? str[i].isPunct() || str[i].isSymbol() : true);
+                    const bool uWhitespaceAfter = (i < str.length() ? Trait::isUnicodeWhitespace(str[i]) : true);
+                    const bool alNumAfter = (i < str.length() ? str[i].isLetterOrNumber() : false);
+                    const bool leftFlanking = !uWhitespaceAfter && (!punctAfter || (punctAfter && uWhitespaceOrPunctBefore))
+                        && !(ch == Trait::latin1ToChar('_') && alNumBefore && alNumAfter);
+                    const bool rightFlanking = !uWhitespaceBefore && (!punctBefore || (punctBefore && (uWhitespaceAfter || punctAfter)))
+                        && !(ch == Trait::latin1ToChar('_') && alNumBefore && alNumAfter);
+
+                    if (leftFlanking || rightFlanking) {
+                        for (auto j = 0; j < style.length(); ++j) {
+                            d.push_back({dt, line, i - style.length() + j, 1,
+                                word, false, leftFlanking, rightFlanking});
                         }
 
-                        typename Delimiter::DelimiterType dt = Delimiter::Unknown;
+                        word = false;
+                    } else {
+                        word = true;
+                    }
 
-                        if (ch == Trait::latin1ToChar('*')) {
-                            dt = Delimiter::Emphasis1;
-                        } else {
-                            dt = Delimiter::Emphasis2;
-                        }
+                    --i;
+                }
+                // ~
+                else if (str[i] == Trait::latin1ToChar('~') && !backslash) {
+                    typename Trait::String style;
 
+                    const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
+                    const bool uWhitespaceBefore = (i > 0 ? Trait::isUnicodeWhitespace(str[i - 1]) : true);
+                    const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
+
+                    while (i < str.length() && str[i] == Trait::latin1ToChar('~')) {
+                        style.push_back(str[i]);
+                        ++i;
+                    }
+
+                    if (style.length() <= 2) {
                         const bool punctAfter = (i < str.length() ? str[i].isPunct() || str[i].isSymbol() : true);
                         const bool uWhitespaceAfter = (i < str.length() ? Trait::isUnicodeWhitespace(str[i]) : true);
-                        const bool alNumAfter = (i < str.length() ? str[i].isLetterOrNumber() : false);
-                        const bool leftFlanking = !uWhitespaceAfter && (!punctAfter || (punctAfter && uWhitespaceOrPunctBefore))
-                            && !(ch == Trait::latin1ToChar('_') && alNumBefore && alNumAfter);
-                        const bool rightFlanking = !uWhitespaceBefore && (!punctBefore || (punctBefore && (uWhitespaceAfter || punctAfter)))
-                            && !(ch == Trait::latin1ToChar('_') && alNumBefore && alNumAfter);
+                        const bool leftFlanking = !uWhitespaceAfter && (!punctAfter || (punctAfter && uWhitespaceOrPunctBefore));
+                        const bool rightFlanking = !uWhitespaceBefore && (!punctBefore || (punctBefore && (uWhitespaceAfter || punctAfter)));
 
                         if (leftFlanking || rightFlanking) {
-                            const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                            for (auto j = 0; j < style.length(); ++j) {
-                                d.push_back({dt, line, i - style.length() + j, 1, space, spaceAfter,
-                                    word, false, leftFlanking, rightFlanking});
-                            }
+                            d.push_back({Delimiter::Strikethrough,
+                                         line,
+                                         i - style.length(),
+                                         style.length(),
+                                         word,
+                                         false,
+                                         leftFlanking,
+                                         rightFlanking});
 
                             word = false;
                         } else {
                             word = true;
                         }
-
-                        --i;
+                    } else {
+                        word = true;
                     }
-                    // ~
-                    else if (str[i] == Trait::latin1ToChar('~') && !backslash) {
-                        typename Trait::String style;
 
-                        const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
-                        const bool uWhitespaceBefore = (i > 0 ? Trait::isUnicodeWhitespace(str[i - 1]) : true);
-                        const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
+                    --i;
+                }
+                // [
+                else if (str[i] == Trait::latin1ToChar('[') && !backslash) {
+                    d.push_back({Delimiter::SquareBracketsOpen, line, i, 1, word, false});
 
-                        while (i < str.length() && str[i] == Trait::latin1ToChar('~')) {
-                            style.push_back(str[i]);
+                    word = false;
+                }
+                // !
+                else if (str[i] == Trait::latin1ToChar('!') && !backslash) {
+                    if (i + 1 < str.length()) {
+                        if (str[i + 1] == Trait::latin1ToChar('[')) {
+                            d.push_back({Delimiter::ImageOpen, line, i, 2, word, false});
+
                             ++i;
-                        }
 
-                        if (style.length() <= 2) {
-                            const bool punctAfter = (i < str.length() ? str[i].isPunct() || str[i].isSymbol() : true);
-                            const bool uWhitespaceAfter = (i < str.length() ? Trait::isUnicodeWhitespace(str[i]) : true);
-                            const bool leftFlanking = !uWhitespaceAfter && (!punctAfter || (punctAfter && uWhitespaceOrPunctBefore));
-                            const bool rightFlanking = !uWhitespaceBefore && (!punctBefore || (punctBefore && (uWhitespaceAfter || punctAfter)));
-
-                            if (leftFlanking || rightFlanking) {
-                                const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                                d.push_back({Delimiter::Strikethrough,
-                                             line,
-                                             i - style.length(),
-                                             style.length(),
-                                             space,
-                                             spaceAfter,
-                                             word,
-                                             false,
-                                             leftFlanking,
-                                             rightFlanking});
-
-                                word = false;
-                            } else {
-                                word = true;
-                            }
+                            word = false;
                         } else {
                             word = true;
                         }
-
-                        --i;
-                    }
-                    // [
-                    else if (str[i] == Trait::latin1ToChar('[') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::SquareBracketsOpen, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // !
-                    else if (str[i] == Trait::latin1ToChar('!') && !backslash) {
-                        if (i + 1 < str.length()) {
-                            if (str[i + 1] == Trait::latin1ToChar('[')) {
-                                const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                                d.push_back({Delimiter::ImageOpen, line, i, 2, space, spaceAfter, word, false});
-
-                                ++i;
-
-                                word = false;
-                            } else {
-                                word = true;
-                            }
-                        } else {
-                            word = true;
-                        }
-                    }
-                    // (
-                    else if (str[i] == Trait::latin1ToChar('(') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::ParenthesesOpen, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // ]
-                    else if (str[i] == Trait::latin1ToChar(']') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::SquareBracketsClose, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // )
-                    else if (str[i] == Trait::latin1ToChar(')') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::ParenthesesClose, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // <
-                    else if (str[i] == Trait::latin1ToChar('<') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::Less, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // >
-                    else if (str[i] == Trait::latin1ToChar('>') && !backslash) {
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::Greater, line, i, 1, space, spaceAfter, word, false});
-
-                        word = false;
-                    }
-                    // `
-                    else if (str[i] == Trait::latin1ToChar('`')) {
-                        typename Trait::String code;
-
-                        while (i < str.length() && str[i] == Trait::latin1ToChar('`')) {
-                            code.push_back(str[i]);
-                            ++i;
-                        }
-
-                        if (backslash) {
-                            if (i - code.length() - 2 >= 0) {
-                                if (str[i - code.length() - 2].isSpace())
-                                    space = true;
-                            } else {
-                                space = true;
-                            }
-                        }
-
-                        const bool spaceAfter = (i < str.length() ? str[i].isSpace() : true);
-
-                        d.push_back({Delimiter::InlineCode,
-                                     line,
-                                     i - code.length() - (backslash ? 1 : 0),
-                                     code.length() + (backslash ? 1 : 0),
-                                     space,
-                                     spaceAfter,
-                                     word,
-                                     backslash});
-
-                        word = false;
-
-                        --i;
-                    }
-                    // $
-                    else if (str[i] == Trait::latin1ToChar('$')) {
-                        typename Trait::String m;
-
-                        while (i < str.length() && str[i] == Trait::latin1ToChar('$')) {
-                            m.push_back(str[i]);
-                            ++i;
-                        }
-
-                        if (m.length() <= 2 && !backslash) {
-                            d.push_back({Delimiter::Math, line, i - m.length(), m.length(),
-                                false, false, false, false});
-                        }
-
-                        word = false;
-
-                        --i;
                     } else {
                         word = true;
                     }
                 }
+                // (
+                else if (str[i] == Trait::latin1ToChar('(') && !backslash) {
+                    d.push_back({Delimiter::ParenthesesOpen, line, i, 1, word, false});
+
+                    word = false;
+                }
+                // ]
+                else if (str[i] == Trait::latin1ToChar(']') && !backslash) {
+                    d.push_back({Delimiter::SquareBracketsClose, line, i, 1, word, false});
+
+                    word = false;
+                }
+                // )
+                else if (str[i] == Trait::latin1ToChar(')') && !backslash) {
+                    d.push_back({Delimiter::ParenthesesClose, line, i, 1, word, false});
+
+                    word = false;
+                }
+                // <
+                else if (str[i] == Trait::latin1ToChar('<') && !backslash) {
+                    d.push_back({Delimiter::Less, line, i, 1, word, false});
+
+                    word = false;
+                }
+                // >
+                else if (str[i] == Trait::latin1ToChar('>') && !backslash) {
+                    d.push_back({Delimiter::Greater, line, i, 1, word, false});
+
+                    word = false;
+                }
+                // `
+                else if (str[i] == Trait::latin1ToChar('`')) {
+                    typename Trait::String code;
+
+                    while (i < str.length() && str[i] == Trait::latin1ToChar('`')) {
+                        code.push_back(str[i]);
+                        ++i;
+                    }
+
+                    d.push_back({Delimiter::InlineCode,
+                                 line,
+                                 i - code.length() - (backslash ? 1 : 0),
+                                 code.length() + (backslash ? 1 : 0),
+                                 word,
+                                 backslash});
+
+                    word = false;
+
+                    --i;
+                }
+                // $
+                else if (str[i] == Trait::latin1ToChar('$')) {
+                    typename Trait::String m;
+
+                    while (i < str.length() && str[i] == Trait::latin1ToChar('$')) {
+                        m.push_back(str[i]);
+                        ++i;
+                    }
+
+                    if (m.length() <= 2 && !backslash) {
+                        d.push_back({Delimiter::Math, line, i - m.length(), m.length(),
+                            false, false, false, false});
+                    }
+
+                    word = false;
+
+                    --i;
+                } else {
+                    word = true;
+                }
 
                 if (!now) {
                     backslash = false;
-                    space = false;
                 }
             }
         }
@@ -4319,36 +4273,26 @@ initLastItemWithOpts(TextParsingOpts<Trait> &po,
 template<class Trait>
 inline void
 makeTextObject(const typename Trait::String &text,
-               bool spaceBefore,
-               bool spaceAfter,
                TextParsingOpts<Trait> &po,
                long long int startPos,
                long long int startLine,
                long long int endPos,
                long long int endLine)
 {
-    auto s = removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text));
-
-    if (!s.isEmpty()) {
-        spaceBefore = spaceBefore || s[0].isSpace();
-        spaceAfter = spaceAfter || s[s.size() - 1].isSpace();
+    if (endPos < 0 && endLine - 1 >= 0) {
+        endPos = po.m_fr.m_data.at(endLine - 1).first.length() - 1;
+        --endLine;
     }
 
-    s = s.simplified();
+    auto s = removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(
+        text.length() > endPos - startPos ? text.sliced(0, endPos - startPos + 1) : text));
 
     if (!s.isEmpty()) {
-        po.m_rawTextData.push_back({text, startPos, startLine, spaceBefore, spaceAfter});
-
-        if (endPos < 0 && endLine - 1 >= 0) {
-            endPos = po.m_fr.m_data.at(endLine - 1).first.length() - 1;
-            --endLine;
-        }
+        po.m_rawTextData.push_back({text, startPos, startLine});
 
         std::shared_ptr<Text<Trait>> t(new Text<Trait>);
         t->setText(s);
         t->setOpts(po.m_opts);
-        t->setSpaceBefore(spaceBefore);
-        t->setSpaceAfter(spaceAfter);
         t->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
         t->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
         t->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos));
@@ -4372,22 +4316,16 @@ makeTextObject(const typename Trait::String &text,
 template<class Trait>
 inline void
 makeTextObjectWithLineBreak(const typename Trait::String &text,
-                            bool spaceBefore,
-                            bool spaceAfter,
                             TextParsingOpts<Trait> &po,
                             long long int startPos,
                             long long int startLine,
                             long long int endPos,
                             long long int endLine)
 {
-    MD_UNUSED(spaceAfter)
-
-    makeTextObject(text, spaceBefore, true, po, startPos, startLine, endPos, endLine);
+    makeTextObject(text, po, startPos, startLine, endPos, endLine);
 
     std::shared_ptr<LineBreak<Trait>> hr(new LineBreak<Trait>);
     hr->setText(po.m_fr.m_data.at(endLine).first.asString().sliced(endPos + 1));
-    hr->setSpaceAfter(true);
-    hr->setSpaceBefore(po.m_fr.m_data.at(endLine).first.asString()[endPos].isSpace());
     hr->setStartColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos + 1));
     hr->setStartLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
     hr->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(po.m_fr.m_data.at(endLine).first.length() - 1));
@@ -4452,13 +4390,6 @@ makeText(
     long long int startPos = (isLastChar ? 0 : po.m_pos);
     long long int startLine = (isLastChar ? po.m_line + 1 : po.m_line);
 
-    bool spaceBefore = (po.m_pos > 0 && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
-                            po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
-                                po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() :
-                            true) || po.m_isSpaceBefore;
-
-    po.m_isSpaceBefore = false;
-
     bool lineBreak =
         (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
             (po.m_line == lastLine ? (lastPos == po.m_fr.m_data.at(po.m_line).first.length() &&
@@ -4470,15 +4401,13 @@ makeText(
         if (po.m_line != (long long int)(po.m_fr.m_data.size() - 1)) {
             const auto &line = po.m_fr.m_data.at(po.m_line).first.asString();
 
-            makeTextObjectWithLineBreak(text, spaceBefore, true, po, startPos, startLine,
+            makeTextObjectWithLineBreak(text, po, startPos, startLine,
                 line.length() - lineBreakLength<Trait>(line) - 1, po.m_line);
 
             startPos = 0;
             startLine = po.m_line + 1;
 
             text.clear();
-
-            spaceBefore = true;
         }
     }; // makeTOWLB
 
@@ -4495,14 +4424,7 @@ makeText(
 
         po.m_pos = (po.m_line == lastLine ? lastPos : po.m_fr.m_data.at(po.m_line).first.length());
 
-        bool isSpaceAfter = po.m_pos > 0 ? po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
-            po.m_pos == po.m_fr.m_data.at(po.m_line).first.length() : true;
-        isSpaceAfter = !isSpaceAfter && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
-            po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() : isSpaceAfter;
-
         makeTextObject(text,
-                       spaceBefore,
-                       isSpaceAfter,
                        po,
                        startPos,
                        startLine,
@@ -4528,7 +4450,7 @@ makeText(
             if (lineBreak) {
                 makeTOWLB();
             } else {
-                makeTextObject(text, true, true, po, 0, po.m_line,
+                makeTextObject(text, po, 0, po.m_line,
                     po.m_fr.m_data.at(po.m_line).first.length() - 1, po.m_line);
             }
 
@@ -4543,15 +4465,10 @@ makeText(
 
         po.m_pos = lastPos;
 
-        bool isSpaceAfter = po.m_pos > 0 ? po.m_fr.m_data.at(po.m_line).first[po.m_pos - 1].isSpace() ||
-            po.m_pos == po.m_fr.m_data.at(po.m_line).first.length() : true;
-        isSpaceAfter = !isSpaceAfter && po.m_pos < po.m_fr.m_data.at(po.m_line).first.length() ?
-            po.m_fr.m_data.at(po.m_line).first[po.m_pos].isSpace() : isSpaceAfter;
-
         if (!lineBreak) {
             text.push_back(s);
 
-            makeTextObject(text, true, isSpaceAfter, po, 0, lastLine, lastPos - 1, lastLine);
+            makeTextObject(text, po, 0, lastLine, lastPos - 1, lastLine);
         } else {
             s = removeLineBreak<Trait>(s);
             text.push_back(s);
@@ -5058,7 +4975,7 @@ eatRawHtml(long long int line,
             (line == toLine ? (toPos >= 0 ? toPos - pos : po.m_fr.m_data[line].first.length() - pos) :
                 po.m_fr.m_data[line].first.length() - pos));
 
-        if (!h.isEmpty() && !first.isEmpty()) {
+        if (!h.isEmpty() && !first.isEmpty() && po.m_html.m_html->endLine() != po.m_fr.m_data[line].second.m_lineNumber) {
             h.push_back(Trait::latin1ToChar('\n'));
         }
 
@@ -5113,7 +5030,6 @@ eatRawHtml(long long int line,
                 po.m_parent->setEndLine(po.m_html.m_html->endLine());
                 initLastItemWithOpts<Trait>(po, po.m_html.m_html);
                 po.m_html.m_html->setOpts(po.m_opts);
-                po.m_isSpaceBefore = false;
                 po.m_lastText = nullptr;
             } else {
                 po.m_tmpHtml = po.m_html.m_html;
@@ -5756,7 +5672,6 @@ Parser<Trait>::checkForMath(typename Delims::const_iterator it,
 
             po.m_pos = end->m_pos + end->m_len;
             po.m_line = end->m_line;
-            po.m_isSpaceBefore = false;
             po.m_lastText = nullptr;
         }
 
@@ -5805,7 +5720,7 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it,
                     lnk->setStartLine(po.m_fr.m_data.at(it->m_line).second.m_lineNumber);
                     lnk->setEndColumn(po.m_fr.m_data.at(nit->m_line).first.virginPos(nit->m_pos + nit->m_len - 1));
                     lnk->setEndLine(po.m_fr.m_data.at(nit->m_line).second.m_lineNumber);
-                    lnk->setUrl(url.simplified());
+                    lnk->setUrl(url);
                     lnk->setOpts(po.m_opts);
                     lnk->setTextPos({po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos + 1),
                                      po.m_fr.m_data[it->m_line].second.m_lineNumber,
@@ -5817,7 +5732,6 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it,
 
                 po.m_wasRefLink = false;
                 po.m_firstInParagraph = false;
-                po.m_isSpaceBefore = false;
                 po.m_lastText = nullptr;
 
                 if (updatePos) {
@@ -5902,7 +5816,6 @@ Parser<Trait>::makeInlineCode(long long int startLine,
 
     po.m_wasRefLink = false;
     po.m_firstInParagraph = false;
-    po.m_isSpaceBefore = false;
     po.m_lastText = nullptr;
 }
 
@@ -5982,22 +5895,22 @@ Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::const_iterator sta
                 *pos = {startPos, startLine, endPos, endLine};
             }
 
-            return {{{po.m_fr.m_data.at(start->m_line).first.sliced(p, n).simplified(),
+            return {{{po.m_fr.m_data.at(start->m_line).first.sliced(p, n),
                     {po.m_fr.m_data.at(start->m_line).second.m_lineNumber}}}, it};
         } else {
             if (it->m_line - start->m_line < 3) {
                 typename MdBlock<Trait>::Data res;
                 res.push_back({po.m_fr.m_data.at(start->m_line).first.sliced(
-                    start->m_pos + start->m_len).simplified(), po.m_fr.m_data.at(start->m_line).second});
+                    start->m_pos + start->m_len), po.m_fr.m_data.at(start->m_line).second});
 
                 long long int i = start->m_line + 1;
 
                 for (; i <= it->m_line; ++i) {
                     if (i == it->m_line) {
-                        res.push_back({po.m_fr.m_data.at(i).first.sliced(0, it->m_pos).simplified(),
+                        res.push_back({po.m_fr.m_data.at(i).first.sliced(0, it->m_pos),
                             po.m_fr.m_data.at(i).second});
                     } else {
-                        res.push_back({po.m_fr.m_data.at(i).first.simplified(), po.m_fr.m_data.at(i).second});
+                        res.push_back({po.m_fr.m_data.at(i).first, po.m_fr.m_data.at(i).second});
                     }
                 }
 
@@ -6263,7 +6176,7 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
         link->p()->appendItem(html.m_html);
     }
 
-    link->setText(toSingleLine(text).simplified());
+    link->setText(toSingleLine(text));
     link->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
     link->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
     link->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
@@ -6271,7 +6184,6 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
 
     initLastItemWithOpts<Trait>(po, link);
 
-    po.m_isSpaceBefore = false;
     po.m_lastText = nullptr;
 
     return link;
@@ -6291,7 +6203,7 @@ Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
                                   const WithPosition &textPos,
                                   const WithPosition &linkTextPos)
 {
-    const auto u = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper();
+    const auto u = Trait::latin1ToString("#") + toSingleLine(text).toCaseFolded().toUpper();
     const auto url = u + Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ?
         typename Trait::String() : po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
 
@@ -6300,7 +6212,7 @@ Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
 
     if (po.m_doc->labeledLinks().find(url) != po.m_doc->labeledLinks().cend()) {
         if (!po.m_collectRefLinks) {
-            const auto isLinkTextEmpty = toSingleLine(linkText).simplified().isEmpty();
+            const auto isLinkTextEmpty = toSingleLine(linkText).isEmpty();
 
             const auto link = makeLink(u,
                                        removeBackslashes<Trait>(isLinkTextEmpty ? text : linkText),
@@ -6387,7 +6299,7 @@ Parser<Trait>::makeImage(const typename Trait::String &url,
         }
     }
 
-    img->setText(toSingleLine(removeBackslashes<Trait>(text)).simplified());
+    img->setText(toSingleLine(removeBackslashes<Trait>(text)));
     img->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
     img->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
     img->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
@@ -6397,7 +6309,6 @@ Parser<Trait>::makeImage(const typename Trait::String &url,
 
     initLastItemWithOpts<Trait>(po, img);
 
-    po.m_isSpaceBefore = false;
     po.m_lastText = nullptr;
 
     return img;
@@ -6417,7 +6328,7 @@ Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
                                    const WithPosition &textPos,
                                    const WithPosition &linkTextPos)
 {
-    const auto url = Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() +
+    const auto url = Trait::latin1ToString("#") + toSingleLine(text).toCaseFolded().toUpper() +
         Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ? typename Trait::String() :
             po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
 
@@ -6428,7 +6339,7 @@ Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
 
     if (iit != po.m_doc->labeledLinks().cend()) {
         if (!po.m_collectRefLinks) {
-            const auto isLinkTextEmpty = toSingleLine(linkText).simplified().isEmpty();
+            const auto isLinkTextEmpty = toSingleLine(linkText).isEmpty();
 
             const auto img = makeImage(iit->second->url(),
                                        (isLinkTextEmpty ? text : linkText),
@@ -6801,7 +6712,7 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it,
                 std::tie(label, lit) = checkForLinkLabel(std::next(it), last, po, &labelPos);
 
                 if (lit != std::next(it)) {
-                    const auto isLabelEmpty = toSingleLine(label).simplified().isEmpty();
+                    const auto isLabelEmpty = toSingleLine(label).isEmpty();
 
                     if (!isLabelEmpty
                         && createShortcutImage(label,
@@ -6868,11 +6779,11 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
     if (it != start) {
         // Footnote reference.
         if (text.front().first.asString().startsWith(Trait::latin1ToString("^")) &&
-            text.front().first.asString().simplified().length() > 1 && text.size() == 1 &&
+            text.front().first.asString().length() > 1 && text.size() == 1 &&
             start->m_line == it->m_line) {
             if (!po.m_collectRefLinks) {
                 std::shared_ptr<FootnoteRef<Trait>> fnr(new FootnoteRef<Trait>(
-                    Trait::latin1ToString("#") + toSingleLine(text).simplified().toCaseFolded().toUpper() +
+                    Trait::latin1ToString("#") + toSingleLine(text).toCaseFolded().toUpper() +
                     Trait::latin1ToString("/") + (po.m_workingPath.isEmpty() ? typename Trait::String() :
                         po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName));
                 fnr->setStartColumn(po.m_fr.m_data.at(start->m_line).first.virginPos(start->m_pos));
@@ -6895,13 +6806,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
                 }
 
                 fnrText.push_back(Trait::latin1ToString("]"));
-
                 fnr->setText(fnrText);
-                fnr->setSpaceBefore(start->m_pos > 0 ?
-                    po.m_fr.m_data.at(start->m_line).first[start->m_pos - 1].isSpace() : true);
-                fnr->setSpaceAfter(it->m_pos + it->m_len < po.m_fr.m_data.at(it->m_line).first.length() ?
-                    po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len].isSpace() : true);
-
                 po.m_parent->appendItem(fnr);
 
                 initLastItemWithOpts<Trait>(po, fnr);
@@ -6924,13 +6829,13 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
 
                     std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-                    if (it != start && !toSingleLine(text).simplified().isEmpty()) {
+                    if (it != start && !toSingleLine(text).isEmpty()) {
                         WithPosition urlPos;
                         std::tie(url, title, iit, ok) = checkForRefLink(it, last, po, &urlPos);
 
                         if (ok) {
                             const auto label = Trait::latin1ToString("#") +
-                                toSingleLine(text).simplified().toCaseFolded().toUpper() +
+                                toSingleLine(text).toCaseFolded().toUpper() +
                                 Trait::latin1ToString("/") +
                                 (po.m_workingPath.isEmpty() ? typename Trait::String() :
                                     po.m_workingPath + Trait::latin1ToString("/")) + po.m_fileName;
@@ -7028,7 +6933,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
                 WithPosition labelPos;
                 std::tie(label, lit) = checkForLinkLabel(std::next(it), last, po, &labelPos);
 
-                const auto isLabelEmpty = toSingleLine(label).simplified().isEmpty();
+                const auto isLabelEmpty = toSingleLine(label).isEmpty();
 
                 if (lit != std::next(it)) {
                     if (!isLabelEmpty
@@ -7709,12 +7614,6 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
             po.m_pos = j->m_pos + j->m_len;
             po.m_line = j->m_line;
 
-            if (po.m_lastText) {
-                po.m_lastText->setSpaceAfter(po.m_lastText->isSpaceAfter() ||
-                    (po.m_pos < po.m_fr.m_data[po.m_line].first.length() ?
-                        po.m_fr.m_data[po.m_line].first[po.m_pos].isSpace() : true));
-            }
-
             return j;
         }
     }
@@ -7750,10 +7649,6 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                 po.m_pos = it->m_pos + len;
                 po.m_line = it->m_line;
 
-                po.m_isSpaceBefore = (it->m_pos > 0 ?
-                    po.m_fr.m_data[it->m_line].first[it->m_pos - 1].isSpace() : true) ||
-                        po.m_isSpaceBefore;
-
                 applyStyles(po.m_opts, po.m_styles);
             } else if (!po.m_collectRefLinks) {
                 makeText(it->m_line, it->m_pos + len, po);
@@ -7784,7 +7679,6 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
 {
     std::shared_ptr<Text<Trait>> t(new Text<Trait>);
     t->setOpts(std::static_pointer_cast<Text<Trait>>(*it)->opts());
-    t->setSpaceBefore(std::static_pointer_cast<Text<Trait>>(*it)->isSpaceBefore());
     t->setStartColumn((*it)->startColumn());
     t->setStartLine((*it)->startLine());
 
@@ -7795,15 +7689,7 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
     for (; it != last; ++it) {
         const auto tt = std::static_pointer_cast<Text<Trait>>(*it);
 
-        if (tt->isSpaceBefore()) {
-            data.push_back(Trait::latin1ToChar(' '));
-        }
-
         data.push_back(tt->text());
-
-        if (tt->isSpaceAfter()) {
-            data.push_back(Trait::latin1ToChar(' '));
-        }
 
         if (!tt->openStyles().empty()) {
             std::copy(tt->openStyles().cbegin(), tt->openStyles().cend(),
@@ -7818,8 +7704,7 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
 
     it = std::prev(it);
 
-    t->setText(data.simplified());
-    t->setSpaceAfter(std::static_pointer_cast<Text<Trait>>(*it)->isSpaceAfter());
+    t->setText(data);
     t->setEndColumn((*it)->endColumn());
     t->setEndLine((*it)->endLine());
     t->closeStyles() = close;
@@ -8130,16 +8015,12 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
 
             if (p->items().back()->type() == ItemType::Text) {
                 auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
-                lt->setText(typename Trait::String(lt->text() + (lb->isSpaceBefore() ?
-                    Trait::latin1ToString(" ") : typename Trait::String()) + lb->text()).simplified());
+                lt->setText(lt->text() + lb->text());
                 lt->setEndColumn(lt->endColumn() + lb->text().length());
-                po.m_rawTextData.back().m_str += (lb->isSpaceBefore() ?
-                    Trait::latin1ToString(" ") : typename Trait::String()) + lb->text();
+                po.m_rawTextData.back().m_str += lb->text();
             } else {
                 auto t = std::make_shared<Text<Trait>>();
                 t->setText(lb->text());
-                t->setSpaceBefore(lb->isSpaceBefore());
-                t->setSpaceAfter(lb->isSpaceAfter());
                 t->setStartColumn(lb->startColumn());
                 t->setStartLine(lb->startLine());
                 t->setEndColumn(lb->endColumn());
@@ -8149,8 +8030,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
 
                 const auto pos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
 
-                po.m_rawTextData.push_back({lb->text(), pos.first, pos.second,
-                    lb->isSpaceBefore(), true});
+                po.m_rawTextData.push_back({lb->text(), pos.first, pos.second});
             }
         }
 
@@ -8173,7 +8053,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                 if (!label.first.isEmpty() && ns >= tmp.length()) {
                     label.first = label.first.sliced(1, label.first.length() - 2);
 
-                    if (tmp.asString().simplified().isEmpty()) {
+                    if (tmp.asString().isEmpty()) {
                         p->removeItemAt(p->items().size() - 1);
 
                         if (!p->items().empty()) {
@@ -8182,11 +8062,10 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                             p->setEndLine(last->endLine());
                         }
                     } else {
-                        auto s = replaceEntity<Trait>(tmp.asString().simplified());
+                        auto s = replaceEntity<Trait>(tmp.asString());
                         s = removeBackslashes<typename Trait::String, Trait>(s);
                         t->setText(s);
                         t->setEndColumn(label.second.startColumn() - 1);
-                        t->setSpaceAfter(true);
                         p->setEndColumn(t->endColumn());
                     }
                 } else {
@@ -8629,7 +8508,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
 {
     {
         const auto it = (std::find_if(fr.m_data.rbegin(), fr.m_data.rend(), [](const auto &s) {
-                            return !s.first.simplified().isEmpty();
+                            return !s.first.isEmpty();
                         })).base();
 
         if (it != fr.m_data.end()) {
@@ -8663,7 +8542,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
 
             std::tie(id, it) = checkForLinkText(delims.cbegin(), delims.cend(), po);
 
-            if (!toSingleLine(id).simplified().isEmpty() &&
+            if (!toSingleLine(id).isEmpty() &&
                 id.front().first.asString().startsWith(Trait::latin1ToString("^")) &&
                 it != delims.cend() &&
                 fr.m_data.at(it->m_line).first.length() > it->m_pos + 2 &&
@@ -8694,7 +8573,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
                 parse(stream, f, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
                 if (!f->isEmpty()) {
-                    doc->insertFootnote(Trait::latin1ToString("#") + toSingleLine(id).simplified() +
+                    doc->insertFootnote(Trait::latin1ToString("#") + toSingleLine(id) +
                         Trait::latin1ToString("/") + (!workingPath.isEmpty() ?
                             workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName,
                         f);
@@ -8876,24 +8755,24 @@ listItemData(const typename Trait::String &s,
     if (p < 4) {
         if (s[p] == Trait::latin1ToChar('*') && space) {
             return {true, p + 2, Trait::latin1ToChar('*'),
-                p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+                p + 2 < s.size() ? !s.sliced(p + 2).isEmpty() : false};
         } else if (s[p] == Trait::latin1ToChar('-')) {
             if (isH2<Trait>(s) && wasText) {
                 return {false, p + 2, Trait::latin1ToChar('-'), false};
             } else if (space) {
                 return {true, p + 2, Trait::latin1ToChar('-'),
-                    p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+                    p + 2 < s.size() ? !s.sliced(p + 2).isEmpty() : false};
             }
         } else if (s[p] == Trait::latin1ToChar('+') && space) {
             return {true, p + 2, Trait::latin1ToChar('+'),
-                p + 2 < s.size() ? !s.sliced(p + 2).simplified().isEmpty() : false};
+                p + 2 < s.size() ? !s.sliced(p + 2).isEmpty() : false};
         } else {
             int d = 0, l = 0;
             typename Trait::Char c;
 
             if (isOrderedList<Trait>(s, &d, &l, &c)) {
                 return {true, p + l + 2, c,
-                    p + l + 2 < s.size() ? !s.sliced(p + l + 2).simplified().isEmpty() : false};
+                    p + l + 2 < s.size() ? !s.sliced(p + l + 2).isEmpty() : false};
             } else {
                 return {false, 0, typename Trait::Char(), false};
             }
@@ -9127,7 +9006,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 {
     {
         const auto it = (std::find_if(fr.m_data.rbegin(), fr.m_data.rend(), [](const auto &s) {
-                            return !s.first.simplified().isEmpty();
+                            return !s.first.isEmpty();
                         })).base();
 
         if (it != fr.m_data.end()) {
@@ -9339,7 +9218,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                     }
 
                     while (!nestedList.empty() &&
-                        nestedList.back().first.asString().simplified().isEmpty()) {
+                        nestedList.back().first.asString().isEmpty()) {
                         nestedList.pop_back();
                     }
 

@@ -465,8 +465,6 @@ public:
         if (this != &t) {
             ItemWithOpts<Trait>::applyItemWithOpts(t);
             setText(t.text());
-            setSpaceBefore(t.isSpaceBefore());
-            setSpaceAfter(t.isSpaceAfter());
         }
     }
 
@@ -495,30 +493,8 @@ public:
         m_text = t;
     }
 
-    bool isSpaceBefore() const
-    {
-        return m_isSpaceBefore;
-    }
-
-    void setSpaceBefore(bool on = true)
-    {
-        m_isSpaceBefore = on;
-    }
-
-    bool isSpaceAfter() const
-    {
-        return m_isSpaceAfter;
-    }
-
-    void setSpaceAfter(bool on = true)
-    {
-        m_isSpaceAfter = on;
-    }
-
 private:
     typename Trait::String m_text;
-    bool m_isSpaceBefore = false;
-    bool m_isSpaceAfter = false;
 
     MD_DISABLE_COPY(Text)
 }; // class Text

@@ -80,8 +80,6 @@ TEST_CASE("219")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::FootnoteRef);
         auto fr = static_cast<MD::FootnoteRef<TRAIT> *>(p->items().at(0).get());
         REQUIRE(fr->text() == TRAIT::latin1ToString("[^1]"));
-        REQUIRE(fr->isSpaceBefore());
-        REQUIRE(fr->isSpaceAfter());
         REQUIRE(fr->idPos() == MD::WithPosition{1, 2, 2, 2});
     }
 
@@ -165,12 +163,13 @@ TEST_CASE("221")
     REQUIRE(t->columnsCount() == 4);
     REQUIRE(t->rows().size() == 4);
     auto c = static_cast<MD::TableCell<TRAIT> *>(t->rows()[1]->cells()[0].get());
-    REQUIRE(c->items().size() == 2);
+    REQUIRE(c->items().size() == 3);
     REQUIRE(c->items().at(0)->type() == MD::ItemType::Math);
     auto m = static_cast<MD::Math<TRAIT> *>(c->items().at(0).get());
     REQUIRE(m->startDelim() == MD::WithPosition{1, 2, 1, 2});
     REQUIRE(m->endDelim() == MD::WithPosition{14, 2, 14, 2});
-    REQUIRE(c->items().at(1)->type() == MD::ItemType::Code);
+    REQUIRE(c->items().at(1)->type() == MD::ItemType::Text);
+    REQUIRE(c->items().at(2)->type() == MD::ItemType::Code);
 }
 
 /*
@@ -197,10 +196,12 @@ TEST_CASE("222")
     REQUIRE(t->rows().size() == 5);
     REQUIRE(t->rows()[4]->cells().size() == 3);
     auto c = static_cast<MD::TableCell<TRAIT> *>(t->rows()[4]->cells()[2].get());
-    REQUIRE(c->items().size() == 2);
-    REQUIRE(c->items().at(0)->type() == MD::ItemType::Math);
-    REQUIRE(c->items().at(1)->type() == MD::ItemType::Code);
-    auto ic = static_cast<MD::Code<TRAIT> *>(c->items().at(1).get());
+    REQUIRE(c->items().size() == 4);
+    REQUIRE(c->items().at(0)->type() == MD::ItemType::Text);
+    REQUIRE(c->items().at(1)->type() == MD::ItemType::Math);
+    REQUIRE(c->items().at(2)->type() == MD::ItemType::Text);
+    REQUIRE(c->items().at(3)->type() == MD::ItemType::Code);
+    auto ic = static_cast<MD::Code<TRAIT> *>(c->items().at(3).get());
     REQUIRE(ic->startDelim() == MD::WithPosition{39, 5, 39, 5});
     REQUIRE(ic->endDelim() == MD::WithPosition{70, 5, 70, 5});
 }
@@ -760,9 +761,6 @@ TEST_CASE("236")
         REQUIRE(t->startLine() == 1);
         REQUIRE(t->endColumn() == 4);
         REQUIRE(t->endLine() == 1);
-
-        REQUIRE(t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
 
         REQUIRE(t->text() == TRAIT::latin1ToString("text"));
     }
