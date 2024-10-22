@@ -937,7 +937,7 @@ TEST_CASE("037")
         REQUIRE(t->endColumn() == 1);
         REQUIRE(t->endLine() == 20);
 
-        REQUIRE(t->text() == TRAIT::latin1ToString("[ "));
+        REQUIRE(t->text() == TRAIT::latin1ToString("["));
     }
 
     {
@@ -981,7 +981,7 @@ TEST_CASE("037")
         REQUIRE(t->endColumn() == 4);
         REQUIRE(t->endLine() == 24);
 
-        REQUIRE(t->text() == TRAIT::latin1ToString("[1]: "));
+        REQUIRE(t->text() == TRAIT::latin1ToString("[1]:"));
     }
 
     {
@@ -1418,7 +1418,7 @@ TEST_CASE("041")
             REQUIRE(t->endLine() == 2 + 4 * i);
 
             REQUIRE(t->opts() == MD::TextOption::TextWithoutFormat);
-            REQUIRE(t->text() == TRAIT::latin1ToString("  Paragraph in list"));
+            REQUIRE(t->text() == TRAIT::latin1ToString("Paragraph in list"));
         }
     }
 }
@@ -1879,16 +1879,16 @@ TEST_CASE("046")
         auto p = h->text().get();
         REQUIRE(p->startColumn() == 4);
         REQUIRE(p->startLine() == 26);
-        REQUIRE(p->endColumn() == 13);
+        REQUIRE(p->endColumn() == 12);
         REQUIRE(p->endLine() == 26);
         REQUIRE(p->items().size() == 1);
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->startColumn() == 4);
         REQUIRE(t->startLine() == 26);
-        REQUIRE(t->endColumn() == 13);
+        REQUIRE(t->endColumn() == 12);
         REQUIRE(t->endLine() == 26);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Heading 3 "));
+        REQUIRE(t->text() == TRAIT::latin1ToString("Heading 3"));
         REQUIRE(h->isLabeled());
 
         const typename TRAIT::String label = TRAIT::latin1ToString("#heading-3/") + wd + TRAIT::latin1ToString("046.md");
@@ -1966,7 +1966,7 @@ TEST_CASE("047")
                 REQUIRE(t0->endColumn() == 8);
                 REQUIRE(t0->endLine() == t0->startLine());
 
-                REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1 "));
+                REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
             }
 
             {
@@ -1985,7 +1985,7 @@ TEST_CASE("047")
                 REQUIRE(t1->endColumn() == 18);
                 REQUIRE(t1->endLine() == c1->startLine());
 
-                REQUIRE(t1->text() == TRAIT::latin1ToString(" Column 2"));
+                REQUIRE(t1->text() == TRAIT::latin1ToString("Column 2"));
             }
 
             auto r1 = t->rows().at(1);
@@ -2012,7 +2012,7 @@ TEST_CASE("047")
                 REQUIRE(t0->endColumn() == 8);
                 REQUIRE(t0->endLine() == t0->startLine());
 
-                REQUIRE(t0->text() == TRAIT::latin1ToString("Cell 1   "));
+                REQUIRE(t0->text() == TRAIT::latin1ToString("Cell 1"));
             }
 
             {
@@ -2031,7 +2031,7 @@ TEST_CASE("047")
                 REQUIRE(t1->endColumn() == 16);
                 REQUIRE(t1->endLine() == t1->startLine());
 
-                REQUIRE(t1->text() == TRAIT::latin1ToString(" Cell 2"));
+                REQUIRE(t1->text() == TRAIT::latin1ToString("Cell 2"));
             }
         }
 
@@ -2074,7 +2074,7 @@ TEST_CASE("047")
                 REQUIRE(t0->endColumn() == 10);
                 REQUIRE(t0->endLine() == t0->startLine());
 
-                REQUIRE(t0->text() == TRAIT::latin1ToString(" Column 1 "));
+                REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
             }
 
             {
@@ -2093,7 +2093,7 @@ TEST_CASE("047")
                 REQUIRE(t1->endColumn() == 21);
                 REQUIRE(t1->endLine() == c1->startLine());
 
-                REQUIRE(t1->text() == TRAIT::latin1ToString(" Column 2 "));
+                REQUIRE(t1->text() == TRAIT::latin1ToString("Column 2"));
             }
 
             auto r1 = t->rows().at(1);
@@ -2120,7 +2120,7 @@ TEST_CASE("047")
                 REQUIRE(t0->endColumn() == 10);
                 REQUIRE(t0->endLine() == t0->startLine());
 
-                REQUIRE(t0->text() == TRAIT::latin1ToString(" Cell 1   "));
+                REQUIRE(t0->text() == TRAIT::latin1ToString("Cell 1"));
             }
 
             {
@@ -2139,7 +2139,7 @@ TEST_CASE("047")
                 REQUIRE(t1->endColumn() == 21);
                 REQUIRE(t1->endLine() == t1->startLine());
 
-                REQUIRE(t1->text() == TRAIT::latin1ToString(" Cell 2   "));
+                REQUIRE(t1->text() == TRAIT::latin1ToString("Cell 2"));
             }
         }
 

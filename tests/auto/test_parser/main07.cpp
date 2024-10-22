@@ -754,11 +754,10 @@ TEST_CASE("199")
     REQUIRE(i->delim() == MD::WithPosition{2, 0, 3, 0});
     REQUIRE(i->items().at(0)->type() == MD::ItemType::Paragraph);
     auto p = static_cast<MD::Paragraph<TRAIT> *>(i->items().at(0).get());
-    REQUIRE(p->items().size() == 3);
+    REQUIRE(p->items().size() == 2);
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
-    REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
-    REQUIRE(p->items().at(2)->type() == MD::ItemType::Code);
-    auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(2).get());
+    REQUIRE(p->items().at(1)->type() == MD::ItemType::Code);
+    auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(1).get());
     REQUIRE(c->isInline());
     REQUIRE(c->text() == TRAIT::latin1ToString("    text    "));
 }
@@ -1042,7 +1041,7 @@ TEST_CASE("208")
             REQUIRE(t1->text() == TRAIT::latin1ToString("Text"));
             REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
             auto t2 = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
-            REQUIRE(t2->text() == TRAIT::latin1ToString(" text"));
+            REQUIRE(t2->text() == TRAIT::latin1ToString("text"));
         }
     }
 }

@@ -1114,7 +1114,7 @@ TEST_CASE("134")
     REQUIRE(t0->endColumn() == 10);
     REQUIRE(t0->endLine() == t0->startLine());
 
-    REQUIRE(t0->text() == TRAIT::latin1ToString(" Column 1 "));
+    REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
 
     auto r1 = t->rows().at(1);
     REQUIRE(r1->startColumn() == 0);
@@ -1276,7 +1276,7 @@ TEST_CASE("136")
     REQUIRE(t0->endColumn() == 10);
     REQUIRE(t0->endLine() == t0->startLine());
 
-    REQUIRE(t0->text() == TRAIT::latin1ToString(" Column 1 "));
+    REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
 
     auto r1 = t->rows().at(1);
     REQUIRE(r1->startColumn() == 0);

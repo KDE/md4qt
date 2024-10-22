@@ -77,7 +77,7 @@ TEST_CASE("353")
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
     auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
     REQUIRE(t->opts() == MD::TextWithoutFormat);
-    REQUIRE(t->text() == TRAIT::latin1ToString("* a *"));
+    REQUIRE(t->text() == TRAIT::utf8ToString(u8"* a *"));
 }
 
 TEST_CASE("354")
@@ -1128,7 +1128,7 @@ TEST_CASE("403")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1181,7 +1181,7 @@ TEST_CASE("405")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1195,7 +1195,7 @@ TEST_CASE("405")
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("baz"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" baz"));
     }
 }
 
@@ -1265,7 +1265,7 @@ TEST_CASE("409")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1279,7 +1279,7 @@ TEST_CASE("409")
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("baz"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" baz"));
     }
 }
 
@@ -1355,7 +1355,7 @@ TEST_CASE("412")
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("bar"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" bar"));
     }
 }
 
@@ -1374,7 +1374,7 @@ TEST_CASE("413")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1492,7 +1492,7 @@ TEST_CASE("417")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1506,7 +1506,7 @@ TEST_CASE("417")
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("bop"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" bop"));
     }
 }
 
@@ -1525,7 +1525,7 @@ TEST_CASE("418")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1593,7 +1593,7 @@ TEST_CASE("421")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1646,7 +1646,7 @@ TEST_CASE("423")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1660,7 +1660,7 @@ TEST_CASE("423")
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("baz"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" baz"));
     }
 }
 
@@ -1732,7 +1732,7 @@ TEST_CASE("427")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1746,7 +1746,7 @@ TEST_CASE("427")
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("baz"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" baz"));
     }
 }
 
@@ -1805,7 +1805,7 @@ TEST_CASE("429")
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("bar"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" bar"));
     }
 }
 
@@ -1824,7 +1824,7 @@ TEST_CASE("430")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1850,7 +1850,7 @@ TEST_CASE("431")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     {
@@ -1871,7 +1871,7 @@ TEST_CASE("431")
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("bop"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" bop"));
     }
 }
 
@@ -1890,7 +1890,7 @@ TEST_CASE("432")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::BoldText);
-        REQUIRE(t->text() == TRAIT::latin1ToString("foo"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("foo "));
     }
 
     REQUIRE(p->items().at(1)->type() == MD::ItemType::Link);

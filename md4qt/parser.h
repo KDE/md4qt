@@ -77,6 +77,23 @@ skipSpaces(long long int i, const typename Trait::String &line)
     return i;
 } // skipSpaces
 
+template<class String>
+inline void
+removeSpacesAtEnd(String &s)
+{
+    long long int i = s.length() - 1;
+
+    for (; i >= 0; --i) {
+        if (!s[i].isSpace()) {
+            break;
+        }
+    }
+
+    if (i != s.length() - 1) {
+        s.remove(i + 1, s.length() - i - 1);
+    }
+}
+
 // Returns last non-space character position.
 template<class Trait>
 inline long long int
@@ -605,6 +622,10 @@ isColumnAlignment(const typename Trait::String &s)
     long long int p = skipSpaces<Trait>(0, s);
 
     static const typename Trait::String s_legitime = Trait::latin1ToString(":-");
+
+    if (p >= s.length()) {
+        return false;
+    }
 
     if (!s_legitime.contains(s[p])) {
         return false;
@@ -1913,7 +1934,7 @@ private:
         WithPosition labelPos;
         std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-        if (it != start && !toSingleLine(text).isEmpty()) {
+        if (it != start && !toSingleLine(text).simplified().isEmpty()) {
             if ((this->*functor)(text, po, start->m_line, start->m_pos, start->m_line,
                 start->m_pos + start->m_len, it, {}, false, labelPos, {})) {
                 return it;
@@ -3660,6 +3681,7 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
 
         typename MdBlock<Trait>::Data tmp;
+        removeSpacesAtEnd<typename Trait::InternalString>(fr.m_data.front().first);
         tmp.push_back(fr.m_data.front());
         MdBlock<Trait> block = {tmp, 0};
 
@@ -4277,15 +4299,33 @@ makeTextObject(const typename Trait::String &text,
                long long int startPos,
                long long int startLine,
                long long int endPos,
-               long long int endLine)
+               long long int endLine,
+               bool doRemoveSpacesAtEnd = false)
 {
     if (endPos < 0 && endLine - 1 >= 0) {
         endPos = po.m_fr.m_data.at(endLine - 1).first.length() - 1;
         --endLine;
     }
 
-    auto s = removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(
-        text.length() > endPos - startPos ? text.sliced(0, endPos - startPos + 1) : text));
+    if (endPos == po.m_fr.m_data.at(endLine).first.length() - 1) {
+        doRemoveSpacesAtEnd = true;
+    }
+
+    auto s = removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text));
+
+    if (doRemoveSpacesAtEnd) {
+        removeSpacesAtEnd<typename Trait::String>(s);
+    }
+
+    if (startPos == 0) {
+        if (s.length()) {
+            const auto p = skipSpaces<Trait>(0, s);
+
+            if (p > 0) {
+                s.remove(0, p);
+            }
+        }
+    }
 
     if (!s.isEmpty()) {
         po.m_rawTextData.push_back({text, startPos, startLine});
@@ -4295,13 +4335,13 @@ makeTextObject(const typename Trait::String &text,
         t->setOpts(po.m_opts);
         t->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
         t->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
-        t->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos));
+        t->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos, true));
         t->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
 
         initLastItemWithOpts<Trait>(po, t);
 
-        po.m_parent->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos));
-        po.m_parent->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
+        po.m_parent->setEndColumn(t->endColumn());
+        po.m_parent->setEndLine(t->endLine());
 
         po.m_wasRefLink = false;
         po.m_firstInParagraph = false;
@@ -4322,7 +4362,7 @@ makeTextObjectWithLineBreak(const typename Trait::String &text,
                             long long int endPos,
                             long long int endLine)
 {
-    makeTextObject(text, po, startPos, startLine, endPos, endLine);
+    makeTextObject(text, po, startPos, startLine, endPos, endLine, true);
 
     std::shared_ptr<LineBreak<Trait>> hr(new LineBreak<Trait>);
     hr->setText(po.m_fr.m_data.at(endLine).first.asString().sliced(endPos + 1));
@@ -4393,8 +4433,8 @@ makeText(
     bool lineBreak =
         (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
             (po.m_line == lastLine ? (lastPos == po.m_fr.m_data.at(po.m_line).first.length() &&
-                isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString())) :
-            isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString())));
+                isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.virginSubString())) :
+            isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.virginSubString())));
 
     // makeTOWLB
     auto makeTOWLB = [&]() {
@@ -4412,14 +4452,13 @@ makeText(
     }; // makeTOWLB
 
     if (lineBreak) {
-        text.push_back(removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()).sliced(po.m_pos));
+        text.push_back(removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.virginSubString(po.m_pos)));
 
         makeTOWLB();
     } else {
-        const auto s =
-            po.m_fr.m_data.at(po.m_line).first.asString().sliced(po.m_pos,
-                (po.m_line == lastLine ? lastPos - po.m_pos :
-                    po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos));
+        const auto length = (po.m_line == lastLine ?
+            lastPos - po.m_pos : po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos);
+        const auto s = po.m_fr.m_data.at(po.m_line).first.virginSubString(po.m_pos, length);
         text.push_back(s);
 
         po.m_pos = (po.m_line == lastLine ? lastPos : po.m_fr.m_data.at(po.m_line).first.length());
@@ -4443,8 +4482,8 @@ makeText(
             lineBreak = (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
                 isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()));
 
-            const auto s = (lineBreak ? removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()) :
-                po.m_fr.m_data.at(po.m_line).first.asString());
+            const auto s = (lineBreak ? removeLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.virginSubString()) :
+                po.m_fr.m_data.at(po.m_line).first.virginSubString());
             text.push_back(s);
 
             if (lineBreak) {
@@ -4461,7 +4500,7 @@ makeText(
             lastPos == po.m_fr.m_data.at(po.m_line).first.length() &&
             isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()));
 
-        auto s = po.m_fr.m_data.at(po.m_line).first.asString().sliced(0, lastPos);
+        auto s = po.m_fr.m_data.at(po.m_line).first.virginSubString(0, lastPos);
 
         po.m_pos = lastPos;
 
@@ -6048,7 +6087,7 @@ Parser<Trait>::toSingleLine(const typename MdBlock<Trait>::Data &d)
         if (!first) {
             res.push_back(Trait::latin1ToChar(' '));
         }
-        res.push_back(s.first.asString());
+        res.push_back(s.first.asString().simplified());
         first = false;
     }
 
@@ -6829,7 +6868,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
 
                     std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-                    if (it != start && !toSingleLine(text).isEmpty()) {
+                    if (it != start && !toSingleLine(text).simplified().isEmpty()) {
                         WithPosition urlPos;
                         std::tie(url, title, iit, ok) = checkForRefLink(it, last, po, &urlPos);
 
@@ -7994,6 +8033,45 @@ splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
 }
 
 template<class Trait>
+inline long long int
+lastVirginPositionInParagraph(Item<Trait> *item)
+{
+    switch (item->type()) {
+    case ItemType::Text:
+    case ItemType::Link:
+    case ItemType::Image:
+    case ItemType::FootnoteRef:
+    case ItemType::RawHtml:
+    {
+        auto i = static_cast<ItemWithOpts<Trait> *>(item);
+
+        if (!i->closeStyles().empty()) {
+            return i->closeStyles().back().endColumn();
+        } else {
+            return i->endColumn();
+        }
+    }
+        break;
+
+    case ItemType::Code:
+    case ItemType::Math:
+    {
+        auto c = static_cast<Code<Trait> *>(item);
+
+        if (!c->closeStyles().empty()) {
+            return c->closeStyles().back().endColumn();
+        } else {
+            return c->endDelim().endColumn();
+        }
+    }
+        break;
+
+    default:
+        return -1;
+    }
+}
+
+template<class Trait>
 inline void
 makeHeading(std::shared_ptr<Block<Trait>> parent,
             std::shared_ptr<Document<Trait>> doc,
@@ -8010,27 +8088,50 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
     if (!collectRefLinks) {
         if (p->items().back()->type() == ItemType::LineBreak) {
             auto lb = std::static_pointer_cast<LineBreak<Trait>>(p->items().back());
+            const auto lineBreakBySpaces = lb->text().simplified().isEmpty();
 
             p = makeParagraph<Trait>(p->items().cbegin(), std::prev(p->items().cend()));
+            const auto lineBreakPos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
 
-            if (p->items().back()->type() == ItemType::Text) {
-                auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
-                lt->setText(lt->text() + lb->text());
-                lt->setEndColumn(lt->endColumn() + lb->text().length());
-                po.m_rawTextData.back().m_str += lb->text();
-            } else {
-                auto t = std::make_shared<Text<Trait>>();
-                t->setText(lb->text());
-                t->setStartColumn(lb->startColumn());
-                t->setStartLine(lb->startLine());
-                t->setEndColumn(lb->endColumn());
-                t->setEndLine(lb->endLine());
+            if (!p->isEmpty()) {
+                if (p->items().back()->type() == ItemType::Text) {
+                    auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
 
-                p->appendItem(t);
+                    if (!lineBreakBySpaces) {
+                        auto text = po.m_fr.m_data.at(lineBreakPos.second).first.fullVirginString().sliced(
+                                    lt->startColumn());
+                        po.m_rawTextData.back().m_str = text;
 
-                const auto pos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
+                        if (!lt->text()[0].isSpace()) {
+                            const auto notSpacePos = skipSpaces<Trait>(0, text);
 
-                po.m_rawTextData.push_back({lb->text(), pos.first, pos.second});
+                            text.remove(0, notSpacePos);
+                        }
+
+                        lt->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text)));
+                    }
+
+                    lt->setEndColumn(lt->endColumn() + lb->text().length());
+                } else {
+                    if (!lineBreakBySpaces) {
+                        const auto lastItemVirginPos = lastVirginPositionInParagraph<Trait>(p->items().back().get());
+                        const auto lastItemPos = localPosFromVirgin(po.m_fr, lastItemVirginPos, lineBreakPos.second);
+                        const auto endOfLine = po.m_fr.m_data.at(lineBreakPos.second).first.virginSubString(
+                                    lastItemPos.first + 1);
+                        auto t = std::make_shared<Text<Trait>>();
+                        t->setText(endOfLine);
+                        t->setStartColumn(lastItemVirginPos + 1);
+                        t->setStartLine(lb->startLine());
+                        t->setEndColumn(lb->endColumn());
+                        t->setEndLine(lb->endLine());
+
+                        p->appendItem(t);
+
+                        const auto pos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
+
+                        po.m_rawTextData.push_back({lb->text(), pos.first, pos.second});
+                    }
+                }
             }
         }
 
@@ -8043,18 +8144,13 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                 auto text = po.m_rawTextData.back();
                 typename Trait::InternalString tmp(text.m_str);
                 label = findAndRemoveHeaderLabel<Trait>(tmp);
-                const auto ns = (label.second.startColumn() != -1 ?
-                    skipSpaces<Trait>(label.second.startColumn(), text.m_str) : tmp.length());
-                label.second.setStartColumn(t->startColumn() + label.second.startColumn());
-                label.second.setEndColumn(t->startColumn() + label.second.endColumn());
-                label.second.setStartLine(t->startLine());
-                label.second.setEndLine(t->endLine());
 
-                if (!label.first.isEmpty() && ns >= tmp.length()) {
+                if (!label.first.isEmpty()) {
                     label.first = label.first.sliced(1, label.first.length() - 2);
 
-                    if (tmp.asString().isEmpty()) {
+                    if (tmp.asString().simplified().isEmpty()) {
                         p->removeItemAt(p->items().size() - 1);
+                        po.m_rawTextData.pop_back();
 
                         if (!p->items().empty()) {
                             const auto last = std::static_pointer_cast<WithPosition>(p->items().back());
@@ -8062,15 +8158,69 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                             p->setEndLine(last->endLine());
                         }
                     } else {
-                        auto s = replaceEntity<Trait>(tmp.asString());
-                        s = removeBackslashes<typename Trait::String, Trait>(s);
-                        t->setText(s);
-                        t->setEndColumn(label.second.startColumn() - 1);
+                        const auto notSpacePos = tmp.virginPos(skipSpaces<Trait>(0, tmp.asString()));
+                        const auto virginLine = t->endLine();
+
+                        if (label.second.startColumn() > notSpacePos) {
+                            auto text = tmp.fullVirginString().sliced(0, label.second.startColumn());
+                            po.m_rawTextData.back().m_str = text;
+
+                            if (!t->text()[0].isSpace()) {
+                                const auto notSpacePos = skipSpaces<Trait>(0, text);
+
+                                text.remove(0, notSpacePos);
+                            }
+
+                            t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text)));
+                            t->setEndColumn(label.second.startColumn() - 1);
+
+                            const auto lastPos = t->endColumn();
+                            const auto pos = localPosFromVirgin(po.m_fr, label.second.endColumn() + 1, virginLine);
+
+                            if (pos.first != -1) {
+                                t = std::make_shared<Text<Trait>>();
+                                t->setStartColumn(label.second.endColumn() + 1);
+                                t->setStartLine(virginLine);
+                                t->setEndColumn(lastPos);
+                                t->setEndLine(virginLine);
+                                p->appendItem(t);
+
+                                po.m_rawTextData.push_back({po.m_fr.m_data[pos.second].first.asString().sliced(pos.first),
+                                                            pos.first, pos.second});
+                            }
+                        }
+
+                        const auto pos = localPosFromVirgin(po.m_fr, label.second.endColumn() + 1, virginLine);
+
+                        if (pos.first != -1) {
+                            po.m_rawTextData.back() = {po.m_fr.m_data[pos.second].first.asString().sliced(pos.first),
+                                                       pos.first, pos.second};
+
+                            auto text = po.m_rawTextData.back().m_str;
+
+                            if (!text.simplified().isEmpty()) {
+                                if (p->items().size() == 1) {
+                                    const auto ns = skipSpaces<Trait>(0, text);
+
+                                    text.remove(0, ns);
+                                }
+
+                                t->setStartColumn(label.second.endColumn() + 1);
+                                t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(text)));
+                            } else {
+                                po.m_rawTextData.pop_back();
+                                p->removeItemAt(p->items().size() - 1);
+                            }
+                        }
+
                         p->setEndColumn(t->endColumn());
                     }
                 } else {
                     label.first.clear();
                 }
+
+                label.second.setStartLine(t->startLine());
+                label.second.setEndLine(t->endLine());
             }
         }
 
@@ -9389,7 +9539,7 @@ Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                         math.push_back(Trait::latin1ToChar('\n'));
                     }
 
-                    math.push_back(l.first.virginString());
+                    math.push_back(l.first.virginSubString());
 
                     first = false;
                 }
@@ -9459,9 +9609,9 @@ Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
             }
             first = false;
 
-            code.push_back((indent > 0 ? l.first.virginString(ns < indent ? ns : indent) +
+            code.push_back((indent > 0 ? l.first.virginSubString(ns < indent ? ns : indent) +
                     typename Trait::String(Trait::latin1ToChar('\n')) :
-                typename Trait::String(l.first.virginString()) +
+                typename Trait::String(l.first.virginSubString()) +
                     typename Trait::String(Trait::latin1ToChar('\n'))));
         }
 

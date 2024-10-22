@@ -481,7 +481,7 @@ TEST_CASE("virgin_string")
 
         MD::replaceTabs<TRAIT>(s);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("\tcode"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\tcode"));
     }
 
     {
@@ -491,7 +491,7 @@ TEST_CASE("virgin_string")
 
         s.remove(0, 2);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("  code"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code"));
     }
 
     {
@@ -501,7 +501,7 @@ TEST_CASE("virgin_string")
 
         s.remove(0, 2);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("  \tcode"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode"));
     }
 
     {
@@ -509,7 +509,7 @@ TEST_CASE("virgin_string")
 
         MD::replaceTabs<TRAIT>(s);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("\tcode\t"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\tcode\t"));
     }
 
     {
@@ -519,7 +519,7 @@ TEST_CASE("virgin_string")
 
         s.remove(0, 2);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("  code\t"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code\t"));
     }
 
     {
@@ -530,7 +530,7 @@ TEST_CASE("virgin_string")
         s.remove(0, 2);
         s.remove(s.length() - 2, 2);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("  \tcode\t  "));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode\t  "));
     }
 
     {
@@ -540,7 +540,7 @@ TEST_CASE("virgin_string")
 
         MD::replaceTabs<TRAIT>(s);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("\t\tcode\t\t"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
     }
 
     {
@@ -550,7 +550,7 @@ TEST_CASE("virgin_string")
 
         s.remove(0, s.length());
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("\t\tcode\t\t"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
     }
 
     {
@@ -560,7 +560,7 @@ TEST_CASE("virgin_string")
 
         s.remove(0, s.length());
 
-        REQUIRE(s.virginString(-1, s.length() + 1) == TRAIT::latin1ToString("\t\tcode\t\t"));
+        REQUIRE(s.virginSubString(-1, s.length() + 1) == TRAIT::latin1ToString("\t\tcode\t\t"));
     }
 
     {
@@ -569,13 +569,13 @@ TEST_CASE("virgin_string")
         s.remove(0, 2);
         s.remove(s.length() - 1, 1);
 
-        REQUIRE(s.virginString() == TRAIT::latin1ToString("x"));
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("x"));
     }
 
     {
         TRAIT::InternalString s(TRAIT::latin1ToString("text"));
 
-        REQUIRE(s.virginString(1, 1) == TRAIT::latin1ToString("e"));
+        REQUIRE(s.virginSubString(1, 1) == TRAIT::latin1ToString("e"));
     }
 
     {
@@ -583,7 +583,7 @@ TEST_CASE("virgin_string")
 
         MD::replaceTabs<TRAIT>(s);
 
-        REQUIRE(s.virginString(0, 12) == TRAIT::latin1ToString("\t\tcode"));
+        REQUIRE(s.virginSubString(0, 12) == TRAIT::latin1ToString("\t\tcode"));
     }
 
     {
@@ -591,6 +591,27 @@ TEST_CASE("virgin_string")
 
         MD::replaceTabs<TRAIT>(s);
 
-        REQUIRE(s.virginString(4) == TRAIT::latin1ToString("a\t\tb"));
+        REQUIRE(s.virginSubString(4) == TRAIT::latin1ToString("a\t\tb"));
+    }
+}
+
+TEST_CASE("backslash")
+{
+    {
+        TRAIT::InternalString s(TRAIT::latin1ToString("\\|"));
+
+        s = MD::removeBackslashes<typename TRAIT::InternalString, TRAIT>(s);
+
+        REQUIRE(s.virginPos(0) == 1);
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("|"));
+    }
+
+    {
+        TRAIT::InternalString s(TRAIT::latin1ToString("abcde\\|"));
+
+        s.replace(TRAIT::latin1ToString("\\|"), TRAIT::latin1ToString("|"));
+
+        REQUIRE(s.virginPos(5) == 5);
+        REQUIRE(s.virginSubString(5) == TRAIT::latin1ToString("\\|"));
     }
 }
