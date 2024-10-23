@@ -174,9 +174,9 @@ protected:
         if (!m_justCollectFootnoteRefs) {
             openStyle(m->openStyles());
 
-            m_html.push_back(m->isInline() ? Trait::latin1ToString("$ ") : Trait::latin1ToString("$$ "));
+            m_html.push_back(m->isInline() ? Trait::latin1ToString("$") : Trait::latin1ToString("$$"));
             m_html.push_back(prepareTextForHtml<Trait>(m->expr()));
-            m_html.push_back(m->isInline() ? Trait::latin1ToString(" $") : Trait::latin1ToString(" $$"));
+            m_html.push_back(m->isInline() ? Trait::latin1ToString("$") : Trait::latin1ToString("$$"));
 
             closeStyle(m->closeStyles());
         }
