@@ -691,7 +691,7 @@ template<class Trait>
 inline int
 isTableAlignment(const typename Trait::String &s)
 {
-    const auto columns = splitString<Trait>(s, Trait::latin1ToChar('|'));
+    const auto columns = splitString<Trait>(s.simplified(), Trait::latin1ToChar('|'));
 
     for (const auto &c : columns) {
         if (!isColumnAlignment<Trait>(c)) {
