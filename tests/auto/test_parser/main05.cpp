@@ -1109,9 +1109,9 @@ TEST_CASE("134")
     REQUIRE(c0->items().at(0)->type() == MD::ItemType::Text);
 
     auto t0 = static_cast<MD::Text<TRAIT> *>(c0->items().at(0).get());
-    REQUIRE(t0->startColumn() == 2);
+    REQUIRE(t0->startColumn() == 1);
     REQUIRE(t0->startLine() == c0->startLine());
-    REQUIRE(t0->endColumn() == 9);
+    REQUIRE(t0->endColumn() == 10);
     REQUIRE(t0->endLine() == t0->startLine());
 
     REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
@@ -1271,9 +1271,9 @@ TEST_CASE("136")
     REQUIRE(c0->items().at(0)->type() == MD::ItemType::Text);
 
     auto t0 = static_cast<MD::Text<TRAIT> *>(c0->items().at(0).get());
-    REQUIRE(t0->startColumn() == 2);
+    REQUIRE(t0->startColumn() == 1);
     REQUIRE(t0->startLine() == c0->startLine());
-    REQUIRE(t0->endColumn() == 9);
+    REQUIRE(t0->endColumn() == 10);
     REQUIRE(t0->endLine() == t0->startLine());
 
     REQUIRE(t0->text() == TRAIT::latin1ToString("Column 1"));
@@ -2163,7 +2163,7 @@ TEST_CASE("148")
         REQUIRE(p->endColumn() == 25);
         REQUIRE(p->endLine() == 0);
 
-        REQUIRE(p->items().size() == 2);
+        REQUIRE(p->items().size() == 3);
 
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
         auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
@@ -2175,15 +2175,24 @@ TEST_CASE("148")
         REQUIRE(l->urlPos() == MD::WithPosition{11, 0, 15, 0});
 
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
-        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        auto s = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(s->startColumn() == 17);
+        REQUIRE(s->startLine() == 0);
+        REQUIRE(s->endColumn() == 17);
+        REQUIRE(s->endLine() == 0);
+        REQUIRE(s->opts() == MD::TextWithoutFormat);
+        REQUIRE(s->text() == TRAIT::latin1ToString(" "));
+        REQUIRE(s->openStyles().size() == 0);
+        REQUIRE(s->closeStyles().size() == 0);
+
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
         REQUIRE(t->startColumn() == 20);
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 23);
         REQUIRE(t->endLine() == 0);
         REQUIRE(t->opts() == MD::BoldText);
         REQUIRE(t->text() == TRAIT::latin1ToString("text"));
-        REQUIRE(t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
         REQUIRE(t->openStyles().size() == 1);
         REQUIRE(t->openStyles().at(0) == MD::StyleDelim{MD::BoldText, 18, 0, 19, 0});
         REQUIRE(t->closeStyles().size() == 1);

@@ -39,8 +39,6 @@ TEST_CASE("249")
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
         REQUIRE(t->opts() == MD::ItalicText);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(!t->isSpaceAfter());
         REQUIRE(t->text() == TRAIT::latin1ToString("text"));
         REQUIRE(t->openStyles().empty());
         REQUIRE(t->closeStyles().empty());
@@ -87,7 +85,7 @@ TEST_CASE("250")
     REQUIRE(t->startLine() == 0);
     REQUIRE(t->endColumn() == 29);
     REQUIRE(t->endLine() == 0);
-    REQUIRE(t->text() == TRAIT::latin1ToString("Syntax Highlighting QML API"));
+    REQUIRE(t->text() == TRAIT::latin1ToString("Syntax Highlighting QML API   "));
 }
 
 /*
@@ -142,8 +140,8 @@ TEST_CASE("252")
     REQUIRE(h->text()->items().size() == 2);
     REQUIRE(h->text()->items().at(1)->type() == MD::ItemType::Text);
     auto t = static_cast<MD::Text<TRAIT> *>(h->text()->items().at(1).get());
-    REQUIRE(t->text() == TRAIT::latin1ToString("\\"));
-    REQUIRE(t->startColumn() == 7);
+    REQUIRE(t->text() == TRAIT::latin1ToString(" \\"));
+    REQUIRE(t->startColumn() == 6);
     REQUIRE(t->endColumn() == 7);
 }
 
@@ -166,10 +164,10 @@ TEST_CASE("253")
     REQUIRE(h->text()->items().size() == 1);
     REQUIRE(h->text()->items().at(0)->type() == MD::ItemType::Text);
     auto t = static_cast<MD::Text<TRAIT> *>(h->text()->items().at(0).get());
-    REQUIRE(t->text() == TRAIT::latin1ToString("{#id} \\"));
-    REQUIRE(t->startColumn() == 0);
+    REQUIRE(t->text() == TRAIT::latin1ToString("\\"));
+    REQUIRE(t->startColumn() == 5);
     REQUIRE(t->endColumn() == 6);
-    REQUIRE(h->labelPos() == MD::WithPosition{-1, -1, -1, -1});
+    REQUIRE(h->labelPos() == MD::WithPosition{0, 0, 4, 0});
 }
 
 /*
@@ -440,7 +438,7 @@ void check257WithSemiOpt(std::shared_ptr<MD::Document<TRAIT>> doc)
     {
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
-        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" text"));
         REQUIRE(t->opts() == MD::ItalicText);
         REQUIRE(t->openStyles().empty());
         REQUIRE(t->closeStyles().size() == 1);
@@ -1040,5 +1038,35 @@ TEST_CASE("273")
         REQUIRE(li->items().at(3)->type() == MD::ItemType::RawHtml);
         REQUIRE(li->items().at(4)->type() == MD::ItemType::List);
         REQUIRE(li->items().at(5)->type() == MD::ItemType::RawHtml);
+    }
+}
+
+/*
+* text
+
+    | Column 1 |
+    | -------- |
+    | Cell 1 |
+
+*/
+TEST_CASE("274")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/274.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(l->items().size() == 1);
+
+    {
+        REQUIRE(l->items().at(0)->type() == MD::ItemType::ListItem);
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(0).get());
+        REQUIRE(li->items().size() == 2);
+        REQUIRE(li->items().at(0)->type() == MD::ItemType::Paragraph);
+        REQUIRE(li->items().at(1)->type() == MD::ItemType::Table);
     }
 }

@@ -279,20 +279,14 @@ TEST_CASE("156")
     REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
     auto t1 = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
     REQUIRE(t1->text() == TRAIT::latin1ToString("("));
-    REQUIRE(!t1->isSpaceBefore());
-    REQUIRE(!t1->isSpaceAfter());
     REQUIRE(p->items().at(3)->type() == MD::ItemType::RawHtml);
     REQUIRE(p->items().at(4)->type() == MD::ItemType::Text);
     auto t2 = static_cast<MD::Text<TRAIT> *>(p->items().at(4).get());
     REQUIRE(t2->text() == TRAIT::latin1ToString("link"));
-    REQUIRE(!t2->isSpaceBefore());
-    REQUIRE(!t2->isSpaceAfter());
     REQUIRE(p->items().at(5)->type() == MD::ItemType::RawHtml);
     REQUIRE(p->items().at(6)->type() == MD::ItemType::Text);
     auto t3 = static_cast<MD::Text<TRAIT> *>(p->items().at(6).get());
     REQUIRE(t3->text() == TRAIT::latin1ToString(")"));
-    REQUIRE(!t3->isSpaceBefore());
-    REQUIRE(t3->isSpaceAfter());
 }
 
 /*
@@ -352,13 +346,11 @@ TEST_CASE("157")
     {
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
-        REQUIRE(t->text() == TRAIT::latin1ToString("To get started,"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("To get started, "));
         REQUIRE(t->startColumn() == 3);
         REQUIRE(t->startLine() == 1);
         REQUIRE(t->endColumn() == 18);
         REQUIRE(t->endLine() == 1);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
     }
 
     {
@@ -457,8 +449,6 @@ TEST_CASE("158")
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 7);
         REQUIRE(t->endLine() == 0);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
     }
 
     {
@@ -474,13 +464,11 @@ TEST_CASE("158")
     {
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
-        REQUIRE(t->text() == TRAIT::latin1ToString("To get started,"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("To get started, "));
         REQUIRE(t->startColumn() == 3);
         REQUIRE(t->startLine() == 1);
         REQUIRE(t->endColumn() == 18);
         REQUIRE(t->endLine() == 1);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
     }
 
     {
@@ -1129,9 +1117,9 @@ TEST_CASE("168")
     REQUIRE(c0->items().at(0)->type() == MD::ItemType::Text);
 
     auto t0 = static_cast<MD::Text<TRAIT> *>(c0->items().at(0).get());
-    REQUIRE(t0->startColumn() == 2);
+    REQUIRE(t0->startColumn() == 1);
     REQUIRE(t0->startLine() == c0->startLine());
-    REQUIRE(t0->endColumn() == 6);
+    REQUIRE(t0->endColumn() == 7);
     REQUIRE(t0->endLine() == t0->startLine());
 
     REQUIRE(t0->text() == TRAIT::latin1ToString("table"));
@@ -1159,10 +1147,10 @@ TEST_CASE("168")
     auto h1 = static_cast<MD::RawHtml<TRAIT> *>(c1->items().at(0).get());
     REQUIRE(h1->startColumn() == 2);
     REQUIRE(h1->startLine() == c1->startLine());
-    REQUIRE(h1->endColumn() == 24);
+    REQUIRE(h1->endColumn() == 25);
     REQUIRE(h1->endLine() == c1->startLine());
 
-    REQUIRE(h1->text() == TRAIT::latin1ToString("<img src=\"img/img.png\">"));
+    REQUIRE(h1->text() == TRAIT::latin1ToString(" <img src=\"img/img.png\"> "));
 }
 
 /*
@@ -1211,9 +1199,9 @@ TEST_CASE("169")
     REQUIRE(c0->items().at(0)->type() == MD::ItemType::Text);
 
     auto t0 = static_cast<MD::Text<TRAIT> *>(c0->items().at(0).get());
-    REQUIRE(t0->startColumn() == 2);
+    REQUIRE(t0->startColumn() == 1);
     REQUIRE(t0->startLine() == c0->startLine());
-    REQUIRE(t0->endColumn() == 6);
+    REQUIRE(t0->endColumn() == 7);
     REQUIRE(t0->endLine() == t0->startLine());
 
     REQUIRE(t0->text() == TRAIT::latin1ToString("table"));
@@ -1241,10 +1229,10 @@ TEST_CASE("169")
     auto h1 = static_cast<MD::RawHtml<TRAIT> *>(c1->items().at(0).get());
     REQUIRE(h1->startColumn() == 2);
     REQUIRE(h1->startLine() == c1->startLine());
-    REQUIRE(h1->endColumn() == 16);
+    REQUIRE(h1->endColumn() == 17);
     REQUIRE(h1->endLine() == c1->startLine());
 
-    REQUIRE(h1->text() == TRAIT::latin1ToString("<pre>code</pre>"));
+    REQUIRE(h1->text() == TRAIT::latin1ToString(" <pre>code</pre> "));
 }
 
 /*

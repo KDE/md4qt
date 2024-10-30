@@ -62,7 +62,7 @@ TEST_CASE("092")
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
     auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
     REQUIRE(t->opts() == MD::TextWithoutFormat);
-    REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+    REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
     REQUIRE(t->startColumn() == 0);
     REQUIRE(t->startLine() == 0);
     REQUIRE(t->endColumn() == 4);
@@ -203,7 +203,7 @@ TEST_CASE("096")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
         REQUIRE(t->startColumn() == 0);
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 4);
@@ -874,12 +874,11 @@ TEST_CASE("106")
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
     auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
     REQUIRE(t->opts() == MD::TextWithoutFormat);
-    REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+    REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
     REQUIRE(t->startColumn() == 0);
     REQUIRE(t->startLine() == 0);
     REQUIRE(t->endColumn() == 4);
     REQUIRE(t->endLine() == 0);
-    REQUIRE(t->isSpaceAfter());
 
     REQUIRE(p->items().at(1)->type() == MD::ItemType::RawHtml);
     auto h = static_cast<MD::RawHtml<TRAIT> *>(p->items().at(1).get());
@@ -1000,7 +999,7 @@ TEST_CASE("110")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
         REQUIRE(t->startColumn() == 0);
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 4);
@@ -1118,12 +1117,11 @@ TEST_CASE("113")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
         REQUIRE(t->startColumn() == 0);
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 4);
         REQUIRE(t->endLine() == 0);
-        REQUIRE(t->isSpaceAfter());
     }
 
     {
@@ -1145,8 +1143,6 @@ TEST_CASE("113")
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 35);
         REQUIRE(t->endLine() == 0);
-        REQUIRE(!t->isSpaceBefore());
-        REQUIRE(!t->isSpaceAfter());
     }
 
     {
@@ -1216,9 +1212,8 @@ TEST_CASE("114")
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" Text"));
         REQUIRE(t->startColumn() == 35);
-        REQUIRE(t->isSpaceBefore());
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 39);
         REQUIRE(t->endLine() == 0);
@@ -1343,12 +1338,11 @@ TEST_CASE("117")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("Text "));
         REQUIRE(t->startColumn() == 0);
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 4);
         REQUIRE(t->endLine() == 0);
-        REQUIRE(t->isSpaceAfter());
     }
 
     {

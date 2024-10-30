@@ -86,9 +86,9 @@ major extensions and sugar and cherry on the cake.
 | Markdown library | Result |
 | --- | --- |
 | [cmark-gfm](https://github.com/github/cmark-gfm) | 0.23 ms |
-| [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.55 ms |
-| `md4qt` with `Qt6` | 3.6 ms |
-| `md4qt` with `Qt6` without `GitHub` autolinks extension | 3.1 ms |
+| [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.24 ms |
+| `md4qt` with `Qt6` | 2.8 ms |
+| `md4qt` with `Qt6` without `GitHub` autolinks extension | 2.4 ms |
 
 > *This measurement done with test file in [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it)*
 >
@@ -314,12 +314,12 @@ text plugins.
   `MD::Parser::addTextPlugin()` method.
 
   A most important thing in `TextParsingOpts` structure is a
-  `std::vector< TextData > rawTextData;`. This vector contains not processed raw
-  text data from `Markdown`. The size of `rawTextData` is the same as a count of
+  `std::vector< TextData > m_rawTextData;`. This vector contains not processed raw
+  text data from `Markdown`. The size of `m_rawTextData` is the same as a count of
   `Text` items in `Paragraph`, and theirs sizes should remain equal. So, if you replace
   one of text item with something, for example link, corresponding text item
-  should be removed from `Paragraph` and `rawTextData`. Or if you replace just
-  a part of text item - it should be modified in `Paragraph` and `rawTextData`.
+  should be removed from `Paragraph` and `m_rawTextData`. Or if you replace just
+  a part of text item - it should be modified in `Paragraph` and `m_rawTextData`.
   Be careful, it's UB, if you will make a mistake here, possibly you will crash.
 
   One more thing - don't forget to set positions of elements in `Document` to new
@@ -335,8 +335,6 @@ text plugins.
       typename Trait::String m_str;
       long long int m_pos = -1;
       long long int m_line = -1;
-      bool m_spaceBefore = false;
-      bool m_spaceAfter = false;
   };
   ```
 
@@ -387,7 +385,7 @@ that can be handy for plugin implementation.
   ```
 
   But `processGitHubAutolinkExtension()` is not so trivial :) Have a look
-  at its implementation to have a good example, it's placed in `parser.hpp`.
+  at its implementation to have a good example, it's placed in `parser.h`.
 
   Good luck with plugining. :)
 

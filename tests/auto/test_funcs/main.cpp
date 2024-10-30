@@ -398,8 +398,6 @@ TEST_CASE("paragraph_to_label")
         t->setStartLine(0);
         t->setEndColumn(5);
         t->setEndLine(0);
-        t->setSpaceBefore(false);
-        t->setSpaceAfter(true);
         p.appendItem(t);
 
         REQUIRE(MD::paragraphToLabel(&p) == TRAIT::latin1ToString("icu"));
@@ -421,8 +419,6 @@ TEST_CASE("paragraph_to_label")
             t->setStartLine(0);
             t->setEndColumn(5);
             t->setEndLine(0);
-            t->setSpaceBefore(false);
-            t->setSpaceAfter(true);
             p.appendItem(t);
         }
 
@@ -432,8 +428,6 @@ TEST_CASE("paragraph_to_label")
         t->setStartLine(1);
         t->setEndColumn(3);
         t->setEndLine(1);
-        t->setSpaceBefore(true);
-        t->setSpaceAfter(true);
         p.appendItem(t);
 
         REQUIRE(MD::paragraphToLabel(&p) == TRAIT::latin1ToString("icutext"));
@@ -455,8 +449,6 @@ TEST_CASE("paragraph_to_label")
             t->setStartLine(0);
             t->setEndColumn(11);
             t->setEndLine(0);
-            t->setSpaceBefore(false);
-            t->setSpaceAfter(true);
             p.appendItem(t);
         }
 
@@ -550,8 +542,6 @@ void makeText(MD::TextParsingOpts<TRAIT> &po,
     t->setStartLine(line);
     t->setEndColumn(0);
     t->setEndLine(line);
-    t->setSpaceBefore(false);
-    t->setSpaceAfter(false);
     t->setOpts(opts);
 
     if (startStyle)
@@ -560,7 +550,7 @@ void makeText(MD::TextParsingOpts<TRAIT> &po,
     if (endStyle)
         t->closeStyles().push_back({opts, 0, 0, 0, 0});
 
-    po.m_rawTextData.push_back({TRAIT::latin1ToString("Text"), 0, line, false, false});
+    po.m_rawTextData.push_back({TRAIT::latin1ToString("Text"), 0, line});
 
     p->appendItem(t);
 }

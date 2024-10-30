@@ -80,8 +80,6 @@ TEST_CASE("219")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::FootnoteRef);
         auto fr = static_cast<MD::FootnoteRef<TRAIT> *>(p->items().at(0).get());
         REQUIRE(fr->text() == TRAIT::latin1ToString("[^1]"));
-        REQUIRE(fr->isSpaceBefore());
-        REQUIRE(fr->isSpaceAfter());
         REQUIRE(fr->idPos() == MD::WithPosition{1, 2, 2, 2});
     }
 
@@ -165,12 +163,13 @@ TEST_CASE("221")
     REQUIRE(t->columnsCount() == 4);
     REQUIRE(t->rows().size() == 4);
     auto c = static_cast<MD::TableCell<TRAIT> *>(t->rows()[1]->cells()[0].get());
-    REQUIRE(c->items().size() == 2);
+    REQUIRE(c->items().size() == 3);
     REQUIRE(c->items().at(0)->type() == MD::ItemType::Math);
     auto m = static_cast<MD::Math<TRAIT> *>(c->items().at(0).get());
     REQUIRE(m->startDelim() == MD::WithPosition{1, 2, 1, 2});
     REQUIRE(m->endDelim() == MD::WithPosition{14, 2, 14, 2});
-    REQUIRE(c->items().at(1)->type() == MD::ItemType::Code);
+    REQUIRE(c->items().at(1)->type() == MD::ItemType::Text);
+    REQUIRE(c->items().at(2)->type() == MD::ItemType::Code);
 }
 
 /*
@@ -197,10 +196,11 @@ TEST_CASE("222")
     REQUIRE(t->rows().size() == 5);
     REQUIRE(t->rows()[4]->cells().size() == 3);
     auto c = static_cast<MD::TableCell<TRAIT> *>(t->rows()[4]->cells()[2].get());
-    REQUIRE(c->items().size() == 2);
+    REQUIRE(c->items().size() == 3);
     REQUIRE(c->items().at(0)->type() == MD::ItemType::Math);
-    REQUIRE(c->items().at(1)->type() == MD::ItemType::Code);
-    auto ic = static_cast<MD::Code<TRAIT> *>(c->items().at(1).get());
+    REQUIRE(c->items().at(1)->type() == MD::ItemType::Text);
+    REQUIRE(c->items().at(2)->type() == MD::ItemType::Code);
+    auto ic = static_cast<MD::Code<TRAIT> *>(c->items().at(2).get());
     REQUIRE(ic->startDelim() == MD::WithPosition{39, 5, 39, 5});
     REQUIRE(ic->endDelim() == MD::WithPosition{70, 5, 70, 5});
 }
@@ -532,7 +532,7 @@ TEST_CASE("232")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
     auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
-    REQUIRE(p->items().size() == 2);
+    REQUIRE(p->items().size() == 3);
 
     {
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
@@ -546,9 +546,13 @@ TEST_CASE("232")
         REQUIRE(l->urlPos() == MD::WithPosition{0, 0, 13, 0});
     }
 
+    REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+    REQUIRE(t->text() == TRAIT::latin1ToString("   "));
+
     {
-        REQUIRE(p->items().at(1)->type() == MD::ItemType::Link);
-        auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Link);
+        auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(2).get());
         REQUIRE(l->startColumn() == 17);
         REQUIRE(l->startLine() == 0);
         REQUIRE(l->endColumn() == 30);
@@ -655,7 +659,7 @@ TEST_CASE("234")
         REQUIRE(t->startLine() == 0);
         REQUIRE(t->endColumn() == 19);
         REQUIRE(t->endLine() == 0);
-        REQUIRE(t->text() == TRAIT::latin1ToString(") ("));
+        REQUIRE(t->text() == TRAIT::latin1ToString(")   ("));
     }
 
     {
@@ -761,10 +765,7 @@ TEST_CASE("236")
         REQUIRE(t->endColumn() == 4);
         REQUIRE(t->endLine() == 1);
 
-        REQUIRE(t->isSpaceBefore());
-        REQUIRE(t->isSpaceAfter());
-
-        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("text "));
     }
 
     {
@@ -782,11 +783,11 @@ TEST_CASE("236")
     {
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
-        REQUIRE(t->startColumn() == 20);
+        REQUIRE(t->startColumn() == 19);
         REQUIRE(t->startLine() == 1);
         REQUIRE(t->endColumn() == 23);
         REQUIRE(t->endLine() == 1);
-        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" text"));
     }
 
     {
@@ -844,11 +845,11 @@ TEST_CASE("237")
     {
         REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
-        REQUIRE(t->startColumn() == 15);
+        REQUIRE(t->startColumn() == 14);
         REQUIRE(t->startLine() == 1);
         REQUIRE(t->endColumn() == 18);
         REQUIRE(t->endLine() == 1);
-        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->text() == TRAIT::latin1ToString(" text"));
     }
 
     {
@@ -976,7 +977,7 @@ TEST_CASE("240")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
         auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
-        REQUIRE(p->items().size() == 3);
+        REQUIRE(p->items().size() == 5);
 
         {
             REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
@@ -986,14 +987,18 @@ TEST_CASE("240")
             REQUIRE(l->urlPos() == l->textPos());
         }
 
-        REQUIRE(p->items().at(1)->type() == MD::ItemType::Code);
-        auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Code);
+        auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(2).get());
         REQUIRE(c->startDelim() == MD::WithPosition{15, 0, 15, 0});
         REQUIRE(c->endDelim() == MD::WithPosition{20, 0, 20, 0});
 
+        REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
+
         {
-            REQUIRE(p->items().at(2)->type() == MD::ItemType::Link);
-            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(2).get());
+            REQUIRE(p->items().at(4)->type() == MD::ItemType::Link);
+            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(4).get());
             REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
             REQUIRE(l->textPos() == MD::WithPosition{22, 0, 35, 0});
             REQUIRE(l->urlPos() == l->textPos());
@@ -1005,24 +1010,30 @@ TEST_CASE("240")
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::Paragraph);
         auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(3).get());
-        REQUIRE(p->items().size() == 3);
+        REQUIRE(p->items().size() == 6);
+
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
 
         {
-            REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
-            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
+            REQUIRE(p->items().at(1)->type() == MD::ItemType::Link);
+            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(1).get());
             REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
             REQUIRE(l->textPos() == MD::WithPosition{2, 2, 15, 2});
             REQUIRE(l->urlPos() == l->textPos());
         }
 
-        REQUIRE(p->items().at(1)->type() == MD::ItemType::Code);
-        auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
+
+        REQUIRE(p->items().at(3)->type() == MD::ItemType::Code);
+        auto c = static_cast<MD::Code<TRAIT> *>(p->items().at(3).get());
         REQUIRE(c->startDelim() == MD::WithPosition{19, 2, 19, 2});
         REQUIRE(c->endDelim() == MD::WithPosition{24, 2, 24, 2});
 
+        REQUIRE(p->items().at(4)->type() == MD::ItemType::Text);
+
         {
-            REQUIRE(p->items().at(2)->type() == MD::ItemType::Link);
-            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(2).get());
+            REQUIRE(p->items().at(5)->type() == MD::ItemType::Link);
+            auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(5).get());
             REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
             REQUIRE(l->textPos() == MD::WithPosition{28, 2, 41, 2});
             REQUIRE(l->urlPos() == l->textPos());

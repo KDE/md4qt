@@ -703,7 +703,7 @@ TEST_CASE("012")
     REQUIRE(t1->endColumn() == 11);
     REQUIRE(t1->endLine() == 0);
 
-    REQUIRE(t1->text() == TRAIT::latin1ToString("Code in the"));
+    REQUIRE(t1->text() == TRAIT::latin1ToString("Code in the "));
 
     REQUIRE(dp->items().at(1)->type() == MD::ItemType::Code);
 
@@ -2288,7 +2288,7 @@ TEST_CASE("030")
         REQUIRE(t1->endColumn() == 4);
         REQUIRE(t1->endLine() == 0);
 
-        REQUIRE(t1->text() == TRAIT::latin1ToString("Text"));
+        REQUIRE(t1->text() == TRAIT::latin1ToString("Text "));
 
         REQUIRE(p->items().at(1)->type() == MD::ItemType::Image);
 
@@ -2311,7 +2311,7 @@ TEST_CASE("030")
         REQUIRE(t2->endColumn() == 31);
         REQUIRE(t2->endLine() == 0);
 
-        REQUIRE(t2->text() == TRAIT::latin1ToString("continue"));
+        REQUIRE(t2->text() == TRAIT::latin1ToString(" continue "));
 
         REQUIRE(p->items().at(3)->type() == MD::ItemType::Image);
 
@@ -2334,7 +2334,7 @@ TEST_CASE("030")
         REQUIRE(t3->endColumn() == 55);
         REQUIRE(t3->endLine() == 0);
 
-        REQUIRE(t3->text() == TRAIT::latin1ToString("and"));
+        REQUIRE(t3->text() == TRAIT::latin1ToString(" and "));
 
         REQUIRE(p->items().at(5)->type() == MD::ItemType::Image);
 

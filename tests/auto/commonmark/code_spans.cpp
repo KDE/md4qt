@@ -291,7 +291,7 @@ TEST_CASE("342")
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
         auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
         REQUIRE(t->opts() == MD::TextWithoutFormat);
-        REQUIRE(t->text() == TRAIT::latin1ToString("[not a"));
+        REQUIRE(t->text() == TRAIT::latin1ToString("[not a "));
     }
 
     REQUIRE(p->items().at(1)->type() == MD::ItemType::Code);
