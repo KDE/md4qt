@@ -19,6 +19,7 @@ This library parses Markdown into tree structure.
 * [Example](#example)
 * [Benchmark](#benchmark)
 * [Playground](#playground)
+* [Changelog](#changelog)
 * [Q/A](#qa)
   * [Why another AST Markdown parser?](#why-another-ast-markdown-parser)
   * [What should I know about links in the document?](#what-should-i-know-about-links-in-the-document)
@@ -99,6 +100,13 @@ major extensions and sugar and cherry on the cake.
 You can play in action with `md4qt` in [Markdown Tools](https://github.com/igormironchik/markdown-tools). There you can find `Markdown` editor/viewer/converter to `PDF`.
 
 And [KleverNotes](https://invent.kde.org/office/klevernotes) from `KDE` uses `md4qt` too.
+
+# Changelog
+
+* Note that vesrion **4.0.0** is API incompatible with **3.0.0**. In version **4.0.0** were
+changed rules with spaces, this version fully supports CommonMark standard in this question.
+Methods `isSpaceBefore()`, `isSpaceAfter()` were removed, and spaces are presented as in
+Markdown, so keep it in mind.
 
 # Q/A
 
