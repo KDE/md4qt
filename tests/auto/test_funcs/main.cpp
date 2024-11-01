@@ -498,10 +498,10 @@ TEST_CASE("is_email")
     static const auto i63 = typename TRAIT::String(63, TRAIT::latin1ToChar('i'));
     static const auto i64 = typename TRAIT::String(64, TRAIT::latin1ToChar('i'));
 
-    static const auto okEmail = TRAIT::latin1ToString("igor@") + i63 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
+    static const TRAIT::String okEmail = TRAIT::latin1ToString("igor@") + i63 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
     REQUIRE(MD::isEmail<TRAIT>(okEmail));
 
-    static const auto wrongEmail = TRAIT::latin1ToString("igor@") + i64 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
+    static const TRAIT::String wrongEmail = TRAIT::latin1ToString("igor@") + i64 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
     REQUIRE(!MD::isEmail<TRAIT>(wrongEmail));
 
     REQUIRE(!MD::isEmail<TRAIT>(TRAIT::latin1ToString("i[]gor@gmail.com")));
