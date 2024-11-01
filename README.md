@@ -19,7 +19,7 @@ This library parses Markdown into tree structure.
 * [Example](#example)
 * [Benchmark](#benchmark)
 * [Playground](#playground)
-* [Changelog](#changelog)
+* [Release notes](#release-notes)
 * [Q/A](#qa)
   * [Why another AST Markdown parser?](#why-another-ast-markdown-parser)
   * [What should I know about links in the document?](#what-should-i-know-about-links-in-the-document)
@@ -88,8 +88,8 @@ major extensions and sugar and cherry on the cake.
 | --- | --- |
 | [cmark-gfm](https://github.com/github/cmark-gfm) | 0.23 ms |
 | [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it) | 2.24 ms |
-| `md4qt` with `Qt6` | 2.8 ms |
-| `md4qt` with `Qt6` without `GitHub` autolinks extension | 2.4 ms |
+| `md4qt` with `Qt6` | 2.9 ms |
+| `md4qt` with `Qt6` without `GitHub` autolinks extension | 2.5 ms |
 
 > *This measurement done with test file in [markdown-it (Rust)](https://github.com/markdown-it-rust/markdown-it)*
 >
@@ -101,7 +101,7 @@ You can play in action with `md4qt` in [Markdown Tools](https://github.com/igorm
 
 And [KleverNotes](https://invent.kde.org/office/klevernotes) from `KDE` uses `md4qt` too.
 
-# Changelog
+# Release notes
 
 * Note that vesrion **4.0.0** is API incompatible with **3.0.0**. In version **4.0.0** were
 changed rules with spaces, this version fully supports CommonMark standard in this question.
