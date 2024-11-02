@@ -4588,12 +4588,10 @@ skipSpacesInHtml(long long int &l,
                  const typename MdBlock<Trait>::Data &fr)
 {
     while (l < (long long int)fr.size()) {
-        while (p < fr[l].first.length()) {
-            if (!fr[l].first[p].isSpace()) {
-                return;
-            }
+        p = skipSpaces<Trait>(p, fr[l].first.asString());
 
-            ++p;
+        if (p < fr[l].first.length()) {
+            return;
         }
 
         p = 0;
