@@ -2071,6 +2071,7 @@ private:
     }
 
 private:
+    //! Used in tests.
     friend struct PrivateAccess;
 
 private:
