@@ -43,8 +43,10 @@
 namespace MD
 {
 
+//! Starting HTML comment string.
 static const char *s_startComment = "<!--";
 
+//! \return Is \p indent indent belongs to list with previous \p indents indents.
 inline bool
 indentInList(const std::vector<long long int> *indents,
              long long int indent,
@@ -63,7 +65,7 @@ indentInList(const std::vector<long long int> *indents,
     }
 }
 
-// Skip spaces in line from pos \p i.
+//! Skip spaces in line from position \p i.
 template<class Trait>
 inline long long int
 skipSpaces(long long int i, const typename Trait::String &line)
@@ -75,8 +77,10 @@ skipSpaces(long long int i, const typename Trait::String &line)
     }
 
     return i;
-} // skipSpaces
+}
 
+
+//! Remove spaces at the end of string \p s.
 template<class String>
 inline void
 removeSpacesAtEnd(String &s)
@@ -94,7 +98,7 @@ removeSpacesAtEnd(String &s)
     }
 }
 
-// Returns last non-space character position.
+//! \return Last non-space character position.
 template<class Trait>
 inline long long int
 lastNonSpacePos(const typename Trait::String &line)
@@ -106,7 +110,7 @@ lastNonSpacePos(const typename Trait::String &line)
     }
 
     return i;
-} // lastNonSpacePos
+}
 
 //! \return Starting sequence of the same characters.
 template<class Trait>
@@ -193,7 +197,7 @@ isOrderedList(const typename Trait::String &s,
 // RawHtmlBlock
 //
 
-//! Internal structure.
+//! Internal structure for pre-storing HTML.
 template<class Trait>
 struct RawHtmlBlock {
     std::shared_ptr<RawHtml<Trait>> m_html = {};
@@ -219,6 +223,7 @@ struct RawHtmlBlock {
     }
 }; // struct RawHtmlBlock
 
+//! Reset pre-stored HTML.
 template<class Trait>
 inline void resetHtmlTag(RawHtmlBlock<Trait> &html)
 {
@@ -233,7 +238,7 @@ inline void resetHtmlTag(RawHtmlBlock<Trait> &html)
 // MdLineData
 //
 
-//! Internal structure.
+//! Internal structure for auxiliary information about a line in Markdown.
 struct MdLineData {
     long long int m_lineNumber = -1;
     using CommentData = std::pair<char, bool>;
@@ -246,7 +251,7 @@ struct MdLineData {
 // MdBlock
 //
 
-//! Internal structure.
+//! Internal structure for block of text in Markdown.
 template<class Trait>
 struct MdBlock {
     using Line = std::pair<typename Trait::InternalString, MdLineData>;
@@ -436,6 +441,7 @@ isCodeFences(const typename Trait::String &s, bool closing = false)
     return true;
 }
 
+//! Skip escaped sequence of characters till first space.
 template<class Trait>
 inline typename Trait::String
 readEscapedSequence(long long int i,
@@ -473,10 +479,12 @@ readEscapedSequence(long long int i,
     return str.sliced(start, i - start);
 }
 
+//! Characters that can be escaped.
 template<class Trait>
 static const typename Trait::String s_canBeEscaped =
     Trait::latin1ToString("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
 
+//! Remove backslashes from the string.
 template<class String, class Trait>
 inline String
 removeBackslashes(const String &s)
@@ -660,6 +668,7 @@ isColumnAlignment(const typename Trait::String &s)
     return true;
 }
 
+//! Split string.
 template<class Trait>
 typename Trait::StringList
 splitString(const typename Trait::String &str, const typename Trait::Char &ch);
@@ -735,6 +744,7 @@ isHtmlComment(const typename Trait::String &s)
     return endFound;
 }
 
+//! Replace entities in the string with corresponding character.
 template<class Trait>
 inline typename Trait::String
 replaceEntity(const typename Trait::String &s)
@@ -817,6 +827,7 @@ replaceEntity(const typename Trait::String &s)
     return res;
 }
 
+//! Remove backslashes in block.
 template<class Trait>
 inline typename MdBlock<Trait>::Data
 removeBackslashes(const typename MdBlock<Trait>::Data &d)
@@ -847,9 +858,13 @@ enum class OptimizeParagraphType {
 // TextPlugin
 //
 
+//! ID of text plugin.
 enum TextPlugin : int {
+    //! Unknown plugin.
     UnknownPluginID = 0,
+    //! GitHub's autolinks plugin.
     GitHubAutoLinkPluginID = 1,
+    //! First user defined plugin ID.
     UserDefinedPluginID = 255
 }; // enum TextPlugin
 
@@ -857,8 +872,23 @@ enum TextPlugin : int {
 // Style
 //
 
-enum class Style { Italic1, Italic2, Bold1, Bold2, Strikethrough, Unknown };
+//! Emphasis type.
+enum class Style {
+    //! "*"
+    Italic1,
+    //! "_"
+    Italic2,
+    //! "**"
+    Bold1,
+    //! "__"
+    Bold2,
+    //! "~"
+    Strikethrough,
+    //! Unknown.
+    Unknown
+};
 
+//! \return Text option from style.
 inline TextOption
 styleToTextOption(Style s)
 {
@@ -896,6 +926,7 @@ using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
 // TextPluginsMap
 //
 
+//! Type of the map of text plugins.
 template<class Trait>
 using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
                                                 bool,
@@ -905,6 +936,7 @@ using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
 // TextParsingOpts
 //
 
+//! Internal structure for auxiliary options for parser.
 template<class Trait>
 struct TextParsingOpts {
     MdBlock<Trait> &m_fr;
@@ -1081,6 +1113,7 @@ localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long lo
     "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
     "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 */
+//! \return Is the given string a valid email?
 template<class Trait>
 inline bool
 isEmail(const typename Trait::String &url)
@@ -1169,10 +1202,12 @@ isEmail(const typename Trait::String &url)
     return false;
 }
 
+//! \return Is the fiven string a valid URL?
 template<class Trait>
 inline bool
 isValidUrl(const typename Trait::String &url);
 
+//! \return Is the given string a GitHub autolink?
 template<class Trait>
 inline bool
 isGitHubAutolink(const typename Trait::String &url);
@@ -1227,6 +1262,7 @@ isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
 
 #endif
 
+//! Process GitHub autolinks for the text with index \p idx.
 template<class Trait>
 inline long long int
 processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
@@ -1358,6 +1394,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
     return ret;
 }
 
+//! GitHub autolinks plugin.
 template<class Trait>
 inline void
 githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
@@ -1379,7 +1416,7 @@ githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
 // Parser
 //
 
-//! MD parser.
+//! Markdown parser.
 template<class Trait>
 class Parser final
 {
@@ -2274,6 +2311,7 @@ private:
 
 #endif
 
+//! \return Is HTML comment closed?
 template<class Trait>
 inline bool
 checkForEndHtmlComments(const typename Trait::String &line,
@@ -2288,6 +2326,7 @@ checkForEndHtmlComments(const typename Trait::String &line,
     return false;
 }
 
+//! Collect information about HTML comments.
 template<class Trait>
 inline void
 checkForHtmlComments(const typename Trait::InternalString &line,
@@ -2402,6 +2441,7 @@ Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
     ctx.m_startOfCodeInList.clear();
 }
 
+//! Replace tabs with spaces (just for internal simpler use).
 template<class Trait>
 inline void
 replaceTabs(typename Trait::InternalString &s)
@@ -2768,7 +2808,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
                 break;
             }
         }
-        //! Empty new line in list.
+        // Empty new line in list.
         else if (ctx.m_emptyLineInList) {
             if (indentInListValue || isListType(ctx.m_lineType) || ctx.m_lineType == BlockType::SomethingInList) {
                 for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
@@ -3033,6 +3073,7 @@ Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
 
 #endif
 
+//! Resolve links in the document.
 template<class Trait>
 void
 resolveLinks(typename Trait::StringList &linksToParse,
@@ -3132,6 +3173,7 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
     }
 }
 
+//! \return Position of first character in list item.
 template<class Trait>
 inline long long int
 posOfListItem(const typename Trait::String &s,
@@ -3174,6 +3216,7 @@ posOfListItem(const typename Trait::String &s,
     return p;
 }
 
+//! \return Level in indents for the given position.
 inline long long int
 listLevel(const std::vector<long long int> &indents,
           long long int pos)
@@ -3398,6 +3441,7 @@ Parser<Trait>::clearCache()
     m_parsedFiles.clear();
 }
 
+//! \return Number of columns in table, if the given string is a table header.
 template<class Trait>
 inline int
 isTableHeader(const typename Trait::String &s)
@@ -3462,6 +3506,7 @@ Parser<Trait>::parseText(MdBlock<Trait> &fr,
     }
 }
 
+//! Find and remove heading label.
 template<class Trait>
 inline std::pair<typename Trait::String, WithPosition>
 findAndRemoveHeaderLabel(typename Trait::InternalString &s)
@@ -3491,6 +3536,7 @@ findAndRemoveHeaderLabel(typename Trait::InternalString &s)
     return {};
 }
 
+//! Convert string to label.
 template<class Trait>
 inline typename Trait::String
 stringToLabel(const typename Trait::String &s)
@@ -3511,6 +3557,7 @@ stringToLabel(const typename Trait::String &s)
     return res;
 }
 
+//! Convert Paragraph to label.
 template<class Trait>
 inline typename Trait::String
 paragraphToLabel(Paragraph<Trait> *p)
@@ -3565,6 +3612,7 @@ paragraphToLabel(Paragraph<Trait> *p)
     return l;
 }
 
+//! Find and remove closing sequence of "#" in heading.
 template<class Trait>
 inline WithPosition
 findAndRemoveClosingSequence(typename Trait::InternalString &s)
@@ -3717,6 +3765,7 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
     }
 }
 
+//! Prepare data in table cell for parsing.
 template<class Trait>
 inline typename Trait::InternalString
 prepareTableData(typename Trait::InternalString s)
@@ -3726,6 +3775,7 @@ prepareTableData(typename Trait::InternalString s)
     return s;
 }
 
+//! Split table's row on cells.
 template<class Trait>
 inline std::pair<typename Trait::InternalStringList, std::vector<long long int>>
 splitTableRow(const typename Trait::InternalString &s)
@@ -3923,6 +3973,7 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
     }
 }
 
+//! \return Is the given string a heading's service sequence?
 template<class Trait>
 inline bool
 isH(const typename Trait::String &s,
@@ -3955,6 +4006,7 @@ isH(const typename Trait::String &s,
     return true;
 }
 
+//! \return Is the given string a heading's service sequence of level 1?
 template<class Trait>
 inline bool
 isH1(const typename Trait::String &s)
@@ -3962,6 +4014,7 @@ isH1(const typename Trait::String &s)
     return isH<Trait>(s, Trait::latin1ToChar('='));
 }
 
+//! \return Is the given string a heading's service sequence of level 2?
 template<class Trait>
 inline bool
 isH2(const typename Trait::String &s)
@@ -3969,6 +4022,7 @@ isH2(const typename Trait::String &s)
     return isH<Trait>(s, Trait::latin1ToChar('-'));
 }
 
+//! \return Previous position in the block.
 template<class Trait>
 inline std::pair<long long int, long long int>
 prevPosition(const MdBlock<Trait> &fr,
@@ -3991,6 +4045,7 @@ prevPosition(const MdBlock<Trait> &fr,
     return {pos, line};
 }
 
+//! \return Next position in the block.
 template<class Trait>
 inline std::pair<long long int, long long int>
 nextPosition(const MdBlock<Trait> &fr,
@@ -4257,6 +4312,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
     return d;
 }
 
+//! \return Is the given string a line break.
 template<class Trait>
 inline bool
 isLineBreak(const typename Trait::String &s)
@@ -4264,6 +4320,7 @@ isLineBreak(const typename Trait::String &s)
     return (s.endsWith(Trait::latin1ToString("  ")) || s.endsWith(Trait::latin1ToString("\\")));
 }
 
+//! \return Length of line break.
 template<class Trait>
 inline long long int
 lineBreakLength(const typename Trait::String &s)
@@ -4271,6 +4328,7 @@ lineBreakLength(const typename Trait::String &s)
     return (s.endsWith(Trait::latin1ToString("  ")) ? 2 : 1);
 }
 
+//! Remove line break from the end of string.
 template<class Trait>
 inline typename Trait::String
 removeLineBreak(const typename Trait::String &s)
@@ -4282,6 +4340,7 @@ removeLineBreak(const typename Trait::String &s)
     }
 }
 
+//! Initialize item with style information and set it as last item.
 template<class Trait>
 inline void
 initLastItemWithOpts(TextParsingOpts<Trait> &po,
@@ -4292,6 +4351,7 @@ initLastItemWithOpts(TextParsingOpts<Trait> &po,
     po.m_lastItemWithStyle = item;
 }
 
+//! Make text item.
 template<class Trait>
 inline void
 makeTextObject(const typename Trait::String &text,
@@ -4353,6 +4413,7 @@ makeTextObject(const typename Trait::String &text,
     }
 }
 
+//! Make text item with line break.
 template<class Trait>
 inline void
 makeTextObjectWithLineBreak(const typename Trait::String &text,
@@ -4377,6 +4438,7 @@ makeTextObjectWithLineBreak(const typename Trait::String &text,
     po.m_parent->appendItem(hr);
 }
 
+//! Check for table in paragraph.
 template<class Trait>
 inline void
 checkForTableInParagraph(TextParsingOpts<Trait> &po,
@@ -4406,6 +4468,7 @@ checkForTableInParagraph(TextParsingOpts<Trait> &po,
     po.m_lastTextPos = po.m_fr.m_data.back().first.length();
 }
 
+//! Make text item.
 template<class Trait>
 inline void
 makeText(
@@ -4517,6 +4580,7 @@ makeText(
     }
 }
 
+//! Skip spaces.
 template<class Trait>
 inline void
 skipSpacesInHtml(long long int &l,
@@ -4537,6 +4601,7 @@ skipSpacesInHtml(long long int &l,
     }
 }
 
+//! Read HTML attribute value.
 template<class Trait>
 inline std::pair<bool, bool>
 readUnquotedHtmlAttrValue(long long int &l,
@@ -4560,6 +4625,7 @@ readUnquotedHtmlAttrValue(long long int &l,
     return {p - start > 0, p - start > 0};
 }
 
+//! Read HTML attribute value.
 template<class Trait>
 inline std::pair<bool, bool>
 readHtmlAttrValue(long long int &l,
@@ -4616,6 +4682,7 @@ readHtmlAttrValue(long long int &l,
     return {true, true};
 }
 
+//! Read HTML attribute.
 template<class Trait>
 inline std::pair<bool, bool>
 readHtmlAttr(long long int &l,
@@ -4710,10 +4777,12 @@ readHtmlAttr(long long int &l,
     return readHtmlAttrValue<Trait>(l, p, fr);
 }
 
+//! \return Is HTML tag at the given position?
 template<class Trait>
 inline std::tuple<bool, long long int, long long int, bool, typename Trait::String>
 isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int rule);
 
+//! \return Is after the given position only HTML tags?
 template<class Trait>
 inline bool
 isOnlyHtmlTagsAfterOrClosedRule1(long long int line,
@@ -4766,6 +4835,7 @@ isOnlyHtmlTagsAfterOrClosedRule1(long long int line,
     return false;
 }
 
+//! \return Is setext heading in the lines?
 template<class Trait>
 inline bool
 isSetextHeadingBetween(const TextParsingOpts<Trait> &po,
@@ -4784,6 +4854,7 @@ isSetextHeadingBetween(const TextParsingOpts<Trait> &po,
     return false;
 }
 
+//! \return Is HTML tag at the given position?
 template<class Trait>
 inline std::tuple<bool, long long int, long long int, bool, typename Trait::String>
 isHtmlTag(long long int line,
@@ -4944,6 +5015,7 @@ isHtmlTag(long long int line,
     return {false, line, pos, first, {}};
 }
 
+//! Read HTML tag.
 template<class Trait>
 inline std::pair<typename Trait::String, bool>
 Parser<Trait>::readHtmlTag(typename Delims::const_iterator it,
@@ -4988,6 +5060,7 @@ Parser<Trait>::findIt(typename Delims::const_iterator it,
     return ret;
 }
 
+//! Read HTML data.
 template<class Trait>
 inline void
 eatRawHtml(long long int line,
@@ -6405,6 +6478,7 @@ Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
     return false;
 }
 
+//! Skip space in the block up to 1 new line.
 template<class Trait>
 inline void
 skipSpacesUpTo1Line(long long int &line,
@@ -6419,6 +6493,7 @@ skipSpacesUpTo1Line(long long int &line,
     }
 }
 
+//! Read link's destination.
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
 readLinkDestination(long long int line,
@@ -6535,6 +6610,7 @@ readLinkDestination(long long int line,
     }
 }
 
+//! Read link's title.
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
 readLinkTitle(long long int line,
@@ -7017,6 +7093,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
     return start;
 }
 
+//! \return Is the given style close previous corresponding style?
 inline bool
 isClosingStyle(const std::vector<std::pair<Style, long long int>> &styles,
                Style s)
@@ -7028,6 +7105,7 @@ isClosingStyle(const std::vector<std::pair<Style, long long int>> &styles,
     return it != styles.cend();
 }
 
+//! Close style.
 inline void
 closeStyle(std::vector<std::pair<Style, long long int>> &styles,
            Style s)
@@ -7041,6 +7119,7 @@ closeStyle(std::vector<std::pair<Style, long long int>> &styles,
     }
 }
 
+//! Apply styles.
 inline void
 applyStyles(int &opts,
             const std::vector<std::pair<Style, long long int>> &styles)
@@ -7069,6 +7148,7 @@ applyStyles(int &opts,
     }
 }
 
+//! Append possible emphasis.
 inline void
 appendPossibleDelimiter(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
                         long long int len,
@@ -7080,6 +7160,7 @@ appendPossibleDelimiter(std::vector<std::vector<std::pair<std::pair<long long in
     }
 }
 
+//! \return Longest sequense of emphasis with more openings.
 inline std::vector<std::pair<std::pair<long long int, bool>, int>>
 longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars)
 {
@@ -7117,6 +7198,7 @@ longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<s
     return ret;
 }
 
+//! Make variants of emphasies.
 inline void
 collectDelimiterVariants(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
                          long long int itLength,
@@ -7520,6 +7602,7 @@ Parser<Trait>::incrementIterator(typename Delims::const_iterator it,
     }
 }
 
+//! Append close style.
 template<class Trait>
 inline void
 appendCloseStyle(TextParsingOpts<Trait> &po,
@@ -7711,6 +7794,7 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
     return incrementIterator(it, last, count - 1);
 }
 
+//! Concatenate texts in block.
 template<class Trait>
 inline std::shared_ptr<Text<Trait>>
 concatenateText(typename Block<Trait>::Items::const_iterator it,
@@ -7751,6 +7835,7 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
     return t;
 }
 
+//! \return Is optimization type a semi one.
 inline bool
 isSemiOptimization(OptimizeParagraphType t)
 {
@@ -7764,6 +7849,7 @@ isSemiOptimization(OptimizeParagraphType t)
     }
 }
 
+//! \return Is optimization type without raw data optimization?
 inline bool
 isWithoutRawDataOptimization(OptimizeParagraphType t)
 {
@@ -7777,6 +7863,7 @@ isWithoutRawDataOptimization(OptimizeParagraphType t)
     }
 }
 
+//! Optimize Paragraph.
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p,
@@ -7883,6 +7970,7 @@ Parser<Trait>::parseTableInParagraph(TextParsingOpts<Trait> &po,
     }
 }
 
+//! Normalize position.
 inline void
 normalizePos(long long int &pos,
              long long int &line,
@@ -7958,6 +8046,7 @@ Parser<Trait>::isListOrQuoteAfterHtml(TextParsingOpts<Trait> &po)
     return false;
 }
 
+//! Make Paragraph.
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 makeParagraph(typename Block<Trait>::Items::const_iterator first,
@@ -7977,6 +8066,7 @@ makeParagraph(typename Block<Trait>::Items::const_iterator first,
     return p;
 }
 
+//! Split Paragraph and free HTML.
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
@@ -8032,6 +8122,7 @@ splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
     }
 }
 
+//! \return Last virgin position of the item.
 template<class Trait>
 inline long long int
 lastVirginPositionInParagraph(Item<Trait> *item)
@@ -8071,6 +8162,7 @@ lastVirginPositionInParagraph(Item<Trait> *item)
     }
 }
 
+//! Make heading.
 template<class Trait>
 inline void
 makeHeading(std::shared_ptr<Block<Trait>> parent,
@@ -8256,6 +8348,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
     }
 }
 
+//! \return Index of text item for the given index in raw text data.
 template<class Trait>
 inline long long int
 textAtIdx(std::shared_ptr<Paragraph<Trait>> p,
@@ -8276,6 +8369,7 @@ textAtIdx(std::shared_ptr<Paragraph<Trait>> p,
     return -1;
 }
 
+//! Process text plugins.
 template<class Trait>
 inline void
 checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p,
@@ -8293,6 +8387,7 @@ checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p,
     }
 }
 
+//! Make horizontal line.
 template<class Trait>
 inline void
 makeHorLine(const typename MdBlock<Trait>::Line &line,
@@ -8842,6 +8937,7 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
     }
 }
 
+//! \return Is the given string a new list item.
 template<class Trait>
 inline bool
 isListItemAndNotNested(const typename Trait::String &s,
@@ -8875,6 +8971,7 @@ isListItemAndNotNested(const typename Trait::String &s,
         return false;
 }
 
+//! \return Indent.
 template<class Trait>
 inline std::pair<long long int, long long int>
 calculateIndent(const typename Trait::String &s,
@@ -8883,6 +8980,7 @@ calculateIndent(const typename Trait::String &s,
     return {0, skipSpaces<Trait>(p, s)};
 }
 
+//! \return List item data.
 template<class Trait>
 inline std::tuple<bool, long long int, typename Trait::Char, bool>
 listItemData(const typename Trait::String &s,
@@ -8932,6 +9030,7 @@ listItemData(const typename Trait::String &s,
     return {false, 0, typename Trait::Char(), false};
 }
 
+//! Set last position of the item.
 template<class Trait>
 inline void
 setLastPos(std::shared_ptr<Item<Trait>> item,
@@ -8942,6 +9041,7 @@ setLastPos(std::shared_ptr<Item<Trait>> item,
     item->setEndLine(line);
 }
 
+//! Update last position of all parent.
 template<class Trait>
 inline void
 updateLastPosInList(const RawHtmlBlock<Trait> &html)

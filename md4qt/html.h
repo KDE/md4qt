@@ -21,6 +21,7 @@ namespace MD
 namespace details
 {
 
+//! \return HTML content for heading's ID.
 template<class Trait>
 typename Trait::String headingIdToHtml(Heading<Trait> *h)
 {
@@ -39,6 +40,7 @@ typename Trait::String headingIdToHtml(Heading<Trait> *h)
     return html;
 }
 
+//! Prepare text to insert into HTML content.
 template<class Trait>
 typename Trait::String prepareTextForHtml(const typename Trait::String &t)
 {
@@ -50,6 +52,7 @@ typename Trait::String prepareTextForHtml(const typename Trait::String &t)
     return tmp;
 }
 
+//! \return HTML content for table alignment.
 template<class Trait>
 typename Trait::String tableAlignmentToHtml(typename Table<Trait>::Alignment a)
 {
@@ -87,6 +90,7 @@ public:
     HtmlVisitor() = default;
     ~HtmlVisitor() override = default;
 
+    //! Walk through the document.
     virtual typename Trait::String toHtml(std::shared_ptr<Document<Trait>> doc,
                                           const typename Trait::String &hrefForRefBackImage,
                                           bool wrappedInArticle = true)
@@ -104,6 +108,7 @@ public:
     }
 
 protected:
+    //! Insert into HTML tags for opening styles.
     virtual void openStyle(const typename ItemWithOpts<Trait>::Styles &styles)
     {
         for (const auto &s : styles) {
@@ -126,6 +131,7 @@ protected:
         }
     }
 
+    //! Insert into HTML tags for closing styles.
     virtual void closeStyle(const typename ItemWithOpts<Trait>::Styles &styles)
     {
         for (const auto &s : styles) {
@@ -148,12 +154,14 @@ protected:
         }
     }
 
+    //! Handle new line in HTML.
     void onAddLineEnding() override
     {
         if (!m_justCollectFootnoteRefs)
             m_html.push_back(Trait::latin1ToString("\n"));
     }
 
+    //! Handle text item.
     void onText(
         //! Text.
         Text<Trait> *t) override
@@ -167,6 +175,7 @@ protected:
         }
     }
 
+    //! Handle LaTeX math expression.
     void onMath(
         //! Math.
         Math<Trait> *m) override
@@ -182,6 +191,7 @@ protected:
         }
     }
 
+    //! Handle line break.
     void onLineBreak(
         //! Linebreak.
         LineBreak<Trait> *) override
@@ -191,6 +201,7 @@ protected:
         }
     }
 
+    //! Handle paragraph.
     void onParagraph(
         //! Paragraph.
         Paragraph<Trait> *p,
@@ -209,6 +220,7 @@ protected:
         }
     }
 
+    //! Handle heading.
     void onHeading(
         //! Heading.
         Heading<Trait> *h) override
@@ -236,6 +248,7 @@ protected:
         }
     }
 
+    //! Handle code block.
     void onCode(
         //! Code.
         Code<Trait> *c) override
@@ -257,6 +270,7 @@ protected:
         }
     }
 
+    //! Handle inline code.
     void onInlineCode(
         //! Code.
         Code<Trait> *c) override
@@ -274,6 +288,7 @@ protected:
         }
     }
 
+    //! Handle blockquote.
     void onBlockquote(
         //! Blockquote.
         Blockquote<Trait> *b) override
@@ -289,6 +304,7 @@ protected:
         }
     }
 
+    //! Handle list.
     void onList(
         //! List.
         List<Trait> *l) override
@@ -347,6 +363,7 @@ protected:
         }
     }
 
+    //! Handle table.
     void onTable(
         //! Table.
         Table<Trait> *t) override
@@ -428,6 +445,7 @@ protected:
         }
     }
 
+    //! Handle anchor.
     void onAnchor(
         //! Anchor.
         Anchor<Trait> *a) override
@@ -439,6 +457,7 @@ protected:
         }
     }
 
+    //! Handle raw HTML.
     void onRawHtml(
         //! Raw HTML.
         RawHtml<Trait> *h) override
@@ -452,6 +471,7 @@ protected:
         }
     }
 
+    //! Handle horizontal line.
     void onHorizontalLine(
         //! Horizontal line.
         HorizontalLine<Trait> *) override
@@ -461,6 +481,7 @@ protected:
         }
     }
 
+    //! Handle link.
     void onLink(
         //! Link.
         Link<Trait> *l) override
@@ -515,6 +536,7 @@ protected:
         }
     }
 
+    //! Handle image.
     void onImage(
         //! Image.
         Image<Trait> *i) override
@@ -532,6 +554,7 @@ protected:
         }
     }
 
+    //! Handle footnote reference.
     void onFootnoteRef(
         //! Footnote reference.
         FootnoteRef<Trait> *ref) override
@@ -590,6 +613,7 @@ protected:
             onText(static_cast<Text<Trait> *>(ref));
     }
 
+    //! Handle list item.
     void onListItem(
         //! List item.
         ListItem<Trait> *i,
@@ -625,6 +649,7 @@ protected:
         }
     }
 
+    //! Handle heading.
     virtual void onHeading(
         //! Heading.
         Heading<Trait> *h,
@@ -649,6 +674,7 @@ protected:
         }
     }
 
+    //! Handle footnotes.
     virtual void onFootnotes(const typename Trait::String &hrefForRefBackImage)
     {
         if (!m_fns.empty()) {
@@ -709,6 +735,7 @@ protected:
     }
 
 protected:
+    //! HTML content.
     typename Trait::String m_html;
     //! Just collect footnote references?
     bool m_justCollectFootnoteRefs = false;
@@ -717,9 +744,13 @@ protected:
     //! Is this HTML wrapped in artcile tag?
     bool m_isWrappedInArticle = true;
 
+    //! Auxiliary struct to process footnotes.
     struct FootnoteRefStuff {
+        //! ID of footnote.
         typename Trait::String m_id;
+        //! Count of references with this ID.
         long long int m_count = 0;
+        //! Number of footnote reference with this ID.
         long long int m_current = 0;
     };
 
@@ -729,11 +760,17 @@ protected:
 
 } /* namespace details */
 
+//! Convert Document to HTML.
 template<class Trait>
 typename Trait::String
-toHtml(std::shared_ptr<Document<Trait>> doc,
+toHtml(
+       //! Markdown document.
+       std::shared_ptr<Document<Trait>> doc,
+       //! Wrap HTML into <body> tag?
        bool wrapInBodyTag = true,
+       //! String that will be applied as URL for image for back link from footnote.
        const typename Trait::String &hrefForRefBackImage = {},
+       //! Wrap HTML with <article> tag?
        bool wrapInArticle = true)
 {
     typename Trait::String html;

@@ -89,6 +89,7 @@ public:
     {
     }
 
+    //! Apply positions to this from other.
     void applyPositions(const WithPosition &other)
     {
         if (this != &other) {
@@ -96,44 +97,62 @@ public:
         }
     }
 
+    //! \return Start column.
     long long int startColumn() const
     {
         return m_startColumn;
     }
+
+    //! \return Start line.
     long long int startLine() const
     {
         return m_startLine;
     }
+
+    //! \return End column.
     long long int endColumn() const
     {
         return m_endColumn;
     }
+
+    //! \return End line.
     long long int endLine() const
     {
         return m_endLine;
     }
 
+    //! Set start column.
     void setStartColumn(long long int c)
     {
         m_startColumn = c;
     }
+
+    //! Set start line.
     void setStartLine(long long int l)
     {
         m_startLine = l;
     }
+
+    //! Set end column.
     void setEndColumn(long long int c)
     {
         m_endColumn = c;
     }
+
+    //! Set end line.
     void setEndLine(long long int l)
     {
         m_endLine = l;
     }
 
 private:
+    //! Start column
     long long int m_startColumn = -1;
+    //! Start line.
     long long int m_startLine = -1;
+    //! End column.
     long long int m_endColumn = -1;
+    //! End line.
     long long int m_endLine = -1;
 }; // class WithPosition
 
@@ -162,8 +181,10 @@ protected:
 public:
     ~Item() override = default;
 
+    //! \return Type of the item.
     virtual ItemType type() const = 0;
 
+    //! Clone this item.
     virtual std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const = 0;
 
 private:
@@ -190,6 +211,7 @@ enum TextOption {
 // StyleDelim
 //
 
+//! Emphasis in the Markdown document.
 class StyleDelim final : public WithPosition
 {
 public:
@@ -205,11 +227,13 @@ public:
 
     ~StyleDelim() override = default;
 
+    //! \return Style.
     int style() const
     {
         return m_style;
     }
 
+    //! Set style.
     void setStyle(int t)
     {
         m_style = t;
@@ -228,6 +252,8 @@ inline bool operator==(const StyleDelim &l, const StyleDelim &r)
 // ItemWithOpts
 //
 
+//! Base class for items that can have style options.
+//! These are all items in Paragraph.
 template<class Trait>
 class ItemWithOpts : public Item<Trait>
 {
@@ -237,6 +263,7 @@ protected:
 public:
     ~ItemWithOpts() override = default;
 
+    //! Apply other item with options to this.
     void applyItemWithOpts(const ItemWithOpts<Trait> &other)
     {
         if (this != &other) {
@@ -247,41 +274,51 @@ public:
         }
     }
 
+    //! Type of list of emphasis.
     using Styles = typename Trait::template Vector<StyleDelim>;
 
+    //! \return Style options.
     int opts() const
     {
         return m_opts;
     }
 
+    //! Set style options.
     void setOpts(int o)
     {
         m_opts = o;
     }
 
+    //! \return List of all opening emphasises.
     const Styles &openStyles() const
     {
         return m_openStyles;
     }
 
+    //! \return List of all opening emphasises.
     Styles &openStyles()
     {
         return m_openStyles;
     }
 
+    //! \return List of all closing emphasises.
     const Styles &closeStyles() const
     {
         return m_closeStyles;
     }
 
+    //! \return List of all closing emphasises.
     Styles &closeStyles()
     {
         return m_closeStyles;
     }
 
 private:
+    //! Style options.
     int m_opts = 0;
+    //! List of opening emphasises.
     Styles m_openStyles;
+    //! List of closing emphasises.
     Styles m_closeStyles;
 
     MD_DISABLE_COPY(ItemWithOpts)
@@ -299,11 +336,13 @@ public:
     PageBreak() = default;
     ~PageBreak() override = default;
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::PageBreak;
     }
 
+    //! Clone this page break.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -327,11 +366,13 @@ public:
     HorizontalLine() = default;
     ~HorizontalLine() override = default;
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::HorizontalLine;
     }
 
+    //! Clone this horizontal line.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -362,6 +403,7 @@ public:
 
     ~Anchor() override = default;
 
+    //! Clone this anchor.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -369,11 +411,13 @@ public:
         return std::make_shared<Anchor<Trait>>(m_label);
     }
 
+    //! \return item type.
     ItemType type() const override
     {
         return ItemType::Anchor;
     }
 
+    //! \return Label of this anchor.
     const typename Trait::String &label() const
     {
         return m_label;
@@ -382,6 +426,7 @@ public:
 private:
     MD_DISABLE_COPY(Anchor)
 
+    //! Label
     typename Trait::String m_label;
 }; // class Anchor
 
@@ -397,6 +442,7 @@ public:
     RawHtml() = default;
     ~RawHtml() override = default;
 
+    //! Clone this raw HTML.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -409,16 +455,19 @@ public:
         return h;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::RawHtml;
     }
 
+    //! \return HTML content.
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
+    //! Set HTML content.
     void setText(const typename Trait::String &t)
     {
         m_text = t;
@@ -431,18 +480,24 @@ protected:
     template<class T>
     friend struct UnprotectedDocsMethods;
 
+    //! \return Is this HTML a free tag, not inline one.
+    //! \note This method is for internal use only.
     bool isFreeTag() const
     {
         return m_isFreeTag;
     }
 
+    //! Set that this HTML is a free, not inline one.
+    //! \note This method is for internal use only.
     void setFreeTag(bool on = true)
     {
         m_isFreeTag = on;
     }
 
 private:
+    //! HTML content.
     typename Trait::String m_text;
+    //! Is this HTML a free tag, not inline one.
     bool m_isFreeTag = true;
 
     MD_DISABLE_COPY(RawHtml)
@@ -452,7 +507,7 @@ private:
 // Text
 //
 
-//! Text.
+//! Text item in Paragraph.
 template<typename Trait>
 class Text : public ItemWithOpts<Trait>
 {
@@ -460,6 +515,7 @@ public:
     Text() = default;
     ~Text() override = default;
 
+    //! Apply other text to this.
     void applyText(const Text<Trait> &t)
     {
         if (this != &t) {
@@ -468,6 +524,7 @@ public:
         }
     }
 
+    //! Clone this text item.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -478,22 +535,26 @@ public:
         return t;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Text;
     }
 
+    //! \return Text content.
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
+    //! Set text content.
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
 private:
+    //! Text content.
     typename Trait::String m_text;
 
     MD_DISABLE_COPY(Text)
@@ -511,6 +572,7 @@ public:
     LineBreak() = default;
     ~LineBreak() override = default;
 
+    //! Clone this line break.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -521,6 +583,7 @@ public:
         return b;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::LineBreak;
@@ -534,7 +597,7 @@ private:
 // Block
 //
 
-//! Abstract block.
+//! Abstract block (storage of child items).
 template<class Trait>
 class Block : public Item<Trait>
 {
@@ -544,9 +607,12 @@ protected:
 public:
     ~Block() override = default;
 
+    //! Type of pointer to child item.
     using ItemSharedPointer = std::shared_ptr<Item<Trait>>;
+    //! Type of list of children.
     using Items = typename Trait::template Vector<ItemSharedPointer>;
 
+    //! Apply other block to this.
     void applyBlock(const Block<Trait> &other, Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
@@ -559,38 +625,45 @@ public:
         }
     }
 
+    //! \return List of child items.
     const Items &items() const
     {
         return m_items;
     }
 
+    //! Insert child item at give position.
     void insertItem(long long int idx, ItemSharedPointer i)
     {
         m_items.insert(m_items.cbegin() + idx, i);
     }
 
+    //! Append child item.
     void appendItem(ItemSharedPointer i)
     {
         m_items.push_back(i);
     }
 
+    //! Remove child item at the given position.
     void removeItemAt(long long int idx)
     {
         if (idx >= 0 && idx < static_cast<long long int>(m_items.size()))
             m_items.erase(m_items.cbegin() + idx);
     }
 
+    //! \return Child item at the given position.
     ItemSharedPointer getItemAt(long long int idx) const
     {
         return m_items.at(idx);
     }
 
+    //! \return Is there no children.
     bool isEmpty() const
     {
         return m_items.empty();
     }
 
 private:
+    //! Child items.
     Items m_items;
 
     MD_DISABLE_COPY(Block)
@@ -608,6 +681,7 @@ public:
     Paragraph() = default;
     ~Paragraph() override = default;
 
+    //! Clone this paragraph.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto p = std::make_shared<Paragraph<Trait>>();
@@ -616,6 +690,7 @@ public:
         return p;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Paragraph;
@@ -641,8 +716,10 @@ public:
 
     ~Heading() override = default;
 
+    //! Type of list of service chanracters.
     using Delims = typename Trait::template Vector<WithPosition>;
 
+    //! Clone this heading.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto h = std::make_shared<Heading<Trait>>();
@@ -659,73 +736,91 @@ public:
         return h;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Heading;
     }
 
+    //! Type of smart pointer to paragraph.
     using ParagraphSharedPointer = std::shared_ptr<Paragraph<Trait>>;
 
+    //! \return Content of the heading.
     ParagraphSharedPointer text() const
     {
         return m_text;
     }
 
+    //! Set content of the heading.
     void setText(ParagraphSharedPointer t)
     {
         m_text = t;
     }
 
+    //! \return Level of the heading.
     int level() const
     {
         return m_level;
     }
 
+    //! Set level of the heading.
     void setLevel(int l)
     {
         m_level = l;
     }
 
+    //! \return Is this heading has label?
     bool isLabeled() const
     {
         return m_label.size() > 0;
     }
 
+    //! \return Label of the heading.
     const typename Trait::String &label() const
     {
         return m_label;
     }
 
+    //! Set label of the heading.
     void setLabel(const typename Trait::String &l)
     {
         m_label = l;
     }
 
+    //! \return List of service characters.
     const Delims &delims() const
     {
         return m_delims;
     }
 
+    //! Set list of service characters.
     void setDelims(const Delims &d)
     {
         m_delims = d;
     }
 
+    //! \return Position of a label in the heading.
     const WithPosition &labelPos() const
     {
         return m_labelPos;
     }
 
+    //! Set position of a label in the heading.
     void setLabelPos(const WithPosition &p)
     {
         m_labelPos = p;
     }
 
 private:
+    //! Content of the heading.
     ParagraphSharedPointer m_text;
+    //! Level of the heading.
     int m_level = 0;
+    //! Label of the heading.
     typename Trait::String m_label;
+    //! List of service characters.
     Delims m_delims;
+    //! Position of the label.
     WithPosition m_labelPos;
 
     MD_DISABLE_COPY(Heading)
@@ -743,6 +838,7 @@ public:
     Blockquote() = default;
     ~Blockquote() override = default;
 
+    //! Clone this blockquote.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto b = std::make_shared<Blockquote<Trait>>();
@@ -752,24 +848,29 @@ public:
         return b;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Blockquote;
     }
 
+    //! Type of a list of service characters.
     using Delims = typename Trait::template Vector<WithPosition>;
 
+    //! \return List of service characters.
     const Delims &delims() const
     {
         return m_delims;
     }
 
+    //! \return List of service characters.
     Delims &delims()
     {
         return m_delims;
     }
 
 private:
+    //! List of service characters.
     Delims m_delims;
 
     MD_DISABLE_COPY(Blockquote)
@@ -779,7 +880,7 @@ private:
 // ListItem
 //
 
-//! List item.
+//! List item in a list.
 template<class Trait>
 class ListItem final : public Block<Trait>
 {
@@ -787,6 +888,7 @@ public:
     ListItem() = default;
     ~ListItem() override = default;
 
+    //! Clone this list item.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<ListItem<Trait>>();
@@ -802,94 +904,126 @@ public:
         return l;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::ListItem;
     }
 
     //! Type of the list.
-    enum ListType { Ordered, Unordered }; // enum ListType
+    enum ListType {
+        //! Ordered.
+        Ordered,
+        //! Unordered
+        Unordered
+    }; // enum ListType
 
     //! Preliminary state of the ordered list.
-    enum OrderedListPreState { Start, Continue }; // enum OrderedListPreState
+    enum OrderedListPreState {
+        //! Start item.
+        Start,
+        //! Continue of the list
+        Continue
+    }; // enum OrderedListPreState
 
+    //! \return Type of the list.
     ListType listType() const
     {
         return m_listType;
     }
 
+    //! Set type of the list.
     void setListType(ListType t)
     {
         m_listType = t;
     }
 
+    //! \return Preliminary state of the ordered list.
     OrderedListPreState orderedListPreState() const
     {
         return m_orderedListState;
     }
 
+    //! Set preliminary state of the ordered list.
     void setOrderedListPreState(OrderedListPreState s)
     {
         m_orderedListState = s;
     }
 
+    //! \return Start number of the ordered list
     int startNumber() const
     {
         return m_startNumber;
     }
 
+    //! Set start number of the ordered list.
     void setStartNumber(int n)
     {
         m_startNumber = n;
     }
 
+    //! \return Is this list item a task list item?
     bool isTaskList() const
     {
         return m_isTaskList;
     }
 
+    //! Set this list item to be a tsk list item.
     void setTaskList(bool on = true)
     {
         m_isTaskList = on;
     }
 
+    //! \return Is this task list item checked?
     bool isChecked() const
     {
         return m_isChecked;
     }
 
+    //! Set this task list item to be checked.
     void setChecked(bool on = true)
     {
         m_isChecked = on;
     }
 
+    //! \return Service character position.
     const WithPosition &delim() const
     {
         return m_delim;
     }
 
+    //! Set service character position.
     void setDelim(const WithPosition &d)
     {
         m_delim = d;
     }
 
+    //! \return Position of the task list "checkbox" in Markdown.
     const WithPosition &taskDelim() const
     {
         return m_taskDelim;
     }
 
+    //! Set position of the task list "checkbox" in Markdown.
     void setTaskDelim(const WithPosition &d)
     {
         m_taskDelim = d;
     }
 
 private:
+    //! Type of the list.
     ListType m_listType = Unordered;
+    //! Preliminary state of the ordered list.
     OrderedListPreState m_orderedListState = Start;
+    //! Start number of the ordered list.
     int m_startNumber = 1;
+    //! Is this list item a task list item?
     bool m_isTaskList = false;
+    //! Is this task list item checked?
     bool m_isChecked = false;
+    //! Service character position.
     WithPosition m_delim = {};
+    //! Task list "checkbox" position.
     WithPosition m_taskDelim = {};
 
     MD_DISABLE_COPY(ListItem)
@@ -907,6 +1041,7 @@ public:
     List() = default;
     ~List() override = default;
 
+    //! Clone this list.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<List<Trait>>();
@@ -915,6 +1050,7 @@ public:
         return l;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::List;
@@ -940,6 +1076,7 @@ public:
 
     ~LinkBase() override = default;
 
+    //! Apply other base of link to this.
     void applyLinkBase(const LinkBase<Trait> &other, Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
@@ -952,68 +1089,85 @@ public:
         }
     }
 
+    //! Type of a smart pointer to link's description.
     using ParagraphSharedPointer = std::shared_ptr<Paragraph<Trait>>;
 
+    //! \return URL of the link.
     const typename Trait::String &url() const
     {
         return m_url;
     }
 
+    //! Set URL of the link.
     void setUrl(const typename Trait::String &u)
     {
         m_url = u;
     }
 
+    //! Not parsed text of link's description.
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
+    //! Set not parsed text of link's description.
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
+    //! \return Is this link empty?
     bool isEmpty() const
     {
         return m_url.size() <= 0;
     }
 
+    //! \return Pointer to parsed text of link's description.
     ParagraphSharedPointer p() const
     {
         return m_p;
     }
 
+    //! Set pointer to parsed text of link's description.
     void setP(ParagraphSharedPointer v)
     {
         m_p = v;
     }
 
+    //! \return Position of link's desciption.
     const WithPosition &textPos() const
     {
         return m_textPos;
     }
 
+    //! Set position of link's description.
     void setTextPos(const WithPosition &pos)
     {
         m_textPos = pos;
     }
 
+    //! \return Position of URL.
     const WithPosition &urlPos() const
     {
         return m_urlPos;
     }
 
+    //! Set position of URL.
     void setUrlPos(const WithPosition &pos)
     {
         m_urlPos = pos;
     }
 
 private:
+    //! URL.
     typename Trait::String m_url;
+    //! Not parsed content of link's description.
     typename Trait::String m_text;
+    //! Parsed content of link's description.
     ParagraphSharedPointer m_p;
+    //! Position of link's description.
     WithPosition m_textPos = {};
+    //! URL position.
     WithPosition m_urlPos = {};
 
     MD_DISABLE_COPY(LinkBase)
@@ -1031,6 +1185,7 @@ public:
     Image() = default;
     ~Image() override = default;
 
+    //! Clone this image.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto i = std::make_shared<Image<Trait>>();
@@ -1039,6 +1194,7 @@ public:
         return i;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Image;
@@ -1063,6 +1219,7 @@ public:
     {
     }
 
+    //! Clone this link.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<Link<Trait>>();
@@ -1074,24 +1231,29 @@ public:
 
     ~Link() override = default;
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Link;
     }
 
+    //! Type of a smart pointer to image.
     using ImageSharedPointer = std::shared_ptr<Image<Trait>>;
 
+    //! \return Image of the link.
     ImageSharedPointer img() const
     {
         return m_img;
     }
 
+    //! Set image of the link.
     void setImg(ImageSharedPointer i)
     {
         m_img = i;
     }
 
 private:
+    //! Image of the link.
     ImageSharedPointer m_img;
 
     MD_DISABLE_COPY(Link)
@@ -1116,6 +1278,7 @@ public:
 
     ~Code() override = default;
 
+    //! Apply other code to this.
     void applyCode(const Code<Trait> &other)
     {
         if (this != &other) {
@@ -1130,6 +1293,7 @@ public:
         }
     }
 
+    //! Clone this code.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1140,88 +1304,110 @@ public:
         return c;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Code;
     }
 
+    //! \return Content of the code.
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
+    //! Set content of the code.
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
+    //! \return Is this code inline?
     bool isInline() const
     {
         return m_inlined;
     }
 
+    //! Set this code to be inline.
     void setInline(bool on = true)
     {
         m_inlined = on;
     }
 
+    //! \return Syntax of the fensed code block.
     const typename Trait::String &syntax() const
     {
         return m_syntax;
     }
 
+    //! Set syntax of the fensed code block.
     void setSyntax(const typename Trait::String &s)
     {
         m_syntax = s;
     }
 
+    //! \return Position of the syntax of the fensed code block.
     const WithPosition &syntaxPos() const
     {
         return m_syntaxPos;
     }
 
+    //! Set position of the syntax of the fensed code block.
     void setSyntaxPos(const WithPosition &p)
     {
         m_syntaxPos = p;
     }
 
+    //! \return Position of the start service characters.
     const WithPosition &startDelim() const
     {
         return m_startDelim;
     }
 
+    //! Set position of the start service characters.
     void setStartDelim(const WithPosition &d)
     {
         m_startDelim = d;
     }
 
+    //! \return Position of the ending service characters.
     const WithPosition &endDelim() const
     {
         return m_endDelim;
     }
 
+    //! Set position of the ending service characters.
     void setEndDelim(const WithPosition &d)
     {
         m_endDelim = d;
     }
 
+    //! \return Is this a fensed code block?
     bool isFensedCode() const
     {
         return m_fensed;
     }
 
+    //! Set this code block to be a fensed code block.
     void setFensedCode(bool on = true)
     {
         m_fensed = on;
     }
 
 private:
+    //! Content of the code.
     typename Trait::String m_text;
+    //! Is this code inline?
     bool m_inlined = true;
+    //! Is this code a fensed code block.
     bool m_fensed = false;
+    //! Syntax of the fensed code lock.
     typename Trait::String m_syntax;
+    //! Position of start service characters.
     WithPosition m_startDelim = {};
+    //! Position of ending service characters.
     WithPosition m_endDelim = {};
+    //! Position of syntax of fensed code block.
     WithPosition m_syntaxPos = {};
 
     MD_DISABLE_COPY(Code)
@@ -1231,7 +1417,7 @@ private:
 // Math
 //
 
-//! Math expression.
+//! LaTeX math expression.
 template<class Trait>
 class Math final : public Code<Trait>
 {
@@ -1243,6 +1429,7 @@ public:
 
     ~Math() override = default;
 
+    //! Clone this LaTeX math expression.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1253,16 +1440,19 @@ public:
         return m;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Math;
     }
 
+    //! \return Content.
     const typename Trait::String &expr() const
     {
         return Code<Trait>::text();
     }
 
+    //! Set content.
     void setExpr(const typename Trait::String &e)
     {
         Code<Trait>::setText(e);
@@ -1284,6 +1474,7 @@ public:
     TableCell() = default;
     ~TableCell() override = default;
 
+    //! Clone this table cell.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto c = std::make_shared<TableCell<Trait>>();
@@ -1292,6 +1483,7 @@ public:
         return c;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::TableCell;
@@ -1313,6 +1505,7 @@ public:
     TableRow() = default;
     ~TableRow() override = default;
 
+    //! Clone this table row.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto t = std::make_shared<TableRow<Trait>>();
@@ -1325,30 +1518,37 @@ public:
         return t;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::TableRow;
     }
 
+    //! Type of a smart pointer to table cell.
     using TableCellSharedPointer = std::shared_ptr<TableCell<Trait>>;
+    //! Type of a list of table cells.
     using Cells = typename Trait::template Vector<TableCellSharedPointer>;
 
+    //! \return List of cells.
     const Cells &cells() const
     {
         return m_cells;
     }
 
+    //! Append cell.
     void appendCell(TableCellSharedPointer c)
     {
         m_cells.push_back(c);
     }
 
+    //! \return Is this row empty?
     bool isEmpty() const
     {
         return m_cells.empty();
     }
 
 private:
+    //! List of cells.
     Cells m_cells;
 
     MD_DISABLE_COPY(TableRow)
@@ -1366,6 +1566,7 @@ public:
     Table() = default;
     ~Table() override = default;
 
+    //! Clone this table.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto t = std::make_shared<Table<Trait>>();
@@ -1382,34 +1583,49 @@ public:
         return t;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Table;
     }
 
+    //! Type of a smart pointer to table row.
     using TableRowSharedPointer = std::shared_ptr<TableRow<Trait>>;
+    //! Type of list of rows.
     using Rows = typename Trait::template Vector<TableRowSharedPointer>;
 
+    //! \return List of rows.
     const Rows &rows() const
     {
         return m_rows;
     }
 
+    //! Append row.
     void appendRow(TableRowSharedPointer r)
     {
         m_rows.push_back(r);
     }
 
     //! Alignment.
-    enum Alignment { AlignLeft, AlignRight, AlignCenter }; // enum Alignmnet.
+    enum Alignment {
+        //! Left.
+        AlignLeft,
+        //! Right.
+        AlignRight,
+        //! Center.
+        AlignCenter
+    }; // enum Alignmnet.
 
+    //! Type of list alignments.
     using ColumnsAlignments = typename Trait::template Vector<Alignment>;
 
+    //! \return Alignment of the given column.
     Alignment columnAlignment(int idx) const
     {
         return m_aligns.at(idx);
     }
 
+    //! Set alignment of the given column.
     void setColumnAlignment(int idx, Alignment a)
     {
         if (idx + 1 > columnsCount()) {
@@ -1419,18 +1635,22 @@ public:
         }
     }
 
+    //! \return Count of columns.
     int columnsCount() const
     {
         return m_aligns.size();
     }
 
+    //! \return Is this table empty?
     bool isEmpty() const
     {
         return (m_aligns.empty() || m_rows.empty());
     }
 
 private:
+    //! Rows.
     Rows m_rows;
+    //! Columns' alignments.
     ColumnsAlignments m_aligns;
 
     MD_DISABLE_COPY(Table)
@@ -1440,7 +1660,7 @@ private:
 // FootnoteRef
 //
 
-//! Footnote ref.
+//! Footnote reference.
 template<class Trait>
 class FootnoteRef final : public Text<Trait>
 {
@@ -1452,6 +1672,7 @@ public:
 
     ~FootnoteRef() override = default;
 
+    //! Clone this footnote reference.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1463,28 +1684,34 @@ public:
         return f;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::FootnoteRef;
     }
 
+    //! \return ID of footnote reference.
     const typename Trait::String &id() const
     {
         return m_id;
     }
 
+    //! \return Position of ID.
     const WithPosition &idPos() const
     {
         return m_idPos;
     }
 
+    //! Set position of ID.
     void setIdPos(const WithPosition &pos)
     {
         m_idPos = pos;
     }
 
 private:
+    //! ID.
     typename Trait::String m_id;
+    //! Position of ID.
     WithPosition m_idPos;
 
     MD_DISABLE_COPY(FootnoteRef)
@@ -1502,6 +1729,7 @@ public:
     Footnote() = default;
     ~Footnote() override = default;
 
+    //! Clone this footnote.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto f = std::make_shared<Footnote<Trait>>();
@@ -1511,22 +1739,26 @@ public:
         return f;
     }
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Footnote;
     }
 
+    //! \return Position of ID.
     const WithPosition &idPos() const
     {
         return m_idPos;
     }
 
+    //! Set position of ID.
     void setIdPos(const WithPosition &pos)
     {
         m_idPos = pos;
     }
 
 private:
+    //! Position of ID.
     WithPosition m_idPos = {};
 
     MD_DISABLE_COPY(Footnote)
@@ -1544,11 +1776,13 @@ public:
     Document() = default;
     ~Document() override = default;
 
+    //! \return Type of the item.
     ItemType type() const override
     {
         return ItemType::Document;
     }
 
+    //! Clone this document.
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1569,48 +1803,63 @@ public:
         return d;
     }
 
+    //! Type of a smart pointer to footnote.
     using FootnoteSharedPointer = std::shared_ptr<Footnote<Trait>>;
+    //! Type of a map of footnotes.
     using Footnotes = typename Trait::template Map<typename Trait::String, FootnoteSharedPointer>;
 
+    //! \return Map of footnotes.
     const Footnotes &footnotesMap() const
     {
         return m_footnotes;
     }
 
+    //! Insert footnote with the give ID.
     void insertFootnote(const typename Trait::String &id, FootnoteSharedPointer fn)
     {
         m_footnotes.insert({id, fn});
     }
 
+    //! Type of a smart pointer to link.
     using LinkSharedPointer = std::shared_ptr<Link<Trait>>;
+    //! Type of a map of shortcut links.
     using LabeledLinks = typename Trait::template Map<typename Trait::String, LinkSharedPointer>;
 
+    //! \return Map of shortcut links.
     const LabeledLinks &labeledLinks() const
     {
         return m_labeledLinks;
     }
 
+    //! Insert shortcut link with the given label.
     void insertLabeledLink(const typename Trait::String &label, LinkSharedPointer lnk)
     {
         m_labeledLinks.insert({label, lnk});
     }
 
+    //! Type of a smart pointer to heading.
     using HeadingSharedPointer = std::shared_ptr<Heading<Trait>>;
+    //! Type of a map of headings.
     using LabeledHeadings = typename Trait::template Map<typename Trait::String, HeadingSharedPointer>;
 
+    //! \return Map of headings.
     const LabeledHeadings &labeledHeadings() const
     {
         return m_labeledHeadings;
     }
 
+    //! Insert heading with the given label.
     void insertLabeledHeading(const typename Trait::String &label, HeadingSharedPointer h)
     {
         m_labeledHeadings.insert({label, h});
     }
 
 private:
+    //! Map of footnotes.
     Footnotes m_footnotes;
+    //! Map of shortcut links.
     LabeledLinks m_labeledLinks;
+    //! Map of headings.
     LabeledHeadings m_labeledHeadings;
 
     MD_DISABLE_COPY(Document)
