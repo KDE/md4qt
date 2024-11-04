@@ -9,3 +9,8 @@ deprecated: false
 release: true
 cmakename: md4qt
 mailinglist: kde-devel
+public_source_dirs:
+  - md4qt
+libraries:
+  - license: MIT
+    cmake: md4qt
