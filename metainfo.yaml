@@ -4,6 +4,7 @@ platforms:
     - name: Linux
     - name: FreeBSD
     - name: Android
+    - name: Windows
 public_lib: true
 deprecated: false
 release: true
