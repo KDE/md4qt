@@ -1,1 +1,3 @@
 MARKDOWN_ID_STYLE      = GITHUB
+
+EXTRACT_ALL            = YES
