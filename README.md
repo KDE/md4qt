@@ -405,11 +405,11 @@ that can be handy for plugin implementation.
   Consider we want to replace any occurence of `@X` by some kind of a link. Before
   modifications we had.
 
-  ![](https://invent.kde.org/libraries/md4qt/-/raw/master/doc/paragraph_before.svg?ref_type=heads)
+  ![](./docs/pics/paragraph_before.svg)
 
   And after work of your plugin we should have.
 
-  ![](https://invent.kde.org/libraries/md4qt/-/raw/master/doc/paragraph_after.svg?ref_type=heads)
+  ![](./docs/pics/paragraph_after.svg)
 
 ### How can I get a string of `StyleDelim`?
 
