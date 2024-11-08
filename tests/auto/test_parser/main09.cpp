@@ -1070,3 +1070,43 @@ TEST_CASE("274")
         REQUIRE(li->items().at(1)->type() == MD::ItemType::Table);
     }
 }
+
+/*
+- list
+<!--
+- a
+-->
+
+More text
+
+*/
+TEST_CASE("275")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/275.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 4);
+
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(l->startColumn() == 0);
+    REQUIRE(l->startLine() == 0);
+    REQUIRE(l->endColumn() == 5);
+    REQUIRE(l->endLine() == 0);
+
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::RawHtml);
+    auto h = static_cast<MD::RawHtml<TRAIT>*>(doc->items().at(2).get());
+    REQUIRE(h->startColumn() == 0);
+    REQUIRE(h->startLine() == 1);
+    REQUIRE(h->endColumn() == 2);
+    REQUIRE(h->endLine() == 3);
+
+    REQUIRE(doc->items().at(3)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(3).get());
+    REQUIRE(p->startColumn() == 0);
+    REQUIRE(p->startLine() == 5);
+    REQUIRE(p->endColumn() == 8);
+    REQUIRE(p->endLine() == 5);
+}

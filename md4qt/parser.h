@@ -9120,24 +9120,31 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
 
         auto processLastHtml = [&](std::shared_ptr<ListItem<Trait>> resItem) {
             if (html.m_html && resItem) {
-                auto htmlParent = (resItem->startLine() == html.m_html->startLine() ||
+                html.m_parent = (resItem->startLine() == html.m_html->startLine() ||
                     html.m_html->startColumn() >= resItem->startColumn() + indent ?
                         resItem : html.findParent(html.m_html->startColumn()));
 
-                if (!htmlParent) {
-                    htmlParent = html.m_topParent;
+                if (!html.m_parent) {
+                    html.m_parent = html.m_topParent;
                 }
 
-                if (htmlParent != resItem) {
+                if (html.m_parent != resItem) {
                     addListMakeNew();
                 }
 
+                const auto continueHtml = html.m_onLine && html.m_continueHtml && html.m_parent == html.m_topParent;
+
                 if (!collectRefLinks) {
-                    htmlParent->appendItem(html.m_html);
+                    if (!continueHtml) {
+                        html.m_parent->appendItem(html.m_html);
+                    }
+
                     updateLastPosInList<Trait>(html);
                 }
 
-                resetHtmlTag<Trait>(html);
+                if (!continueHtml) {
+                    resetHtmlTag<Trait>(html);
+                }
             }
         };
 
@@ -9364,7 +9371,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     std::vector<std::pair<RawHtmlBlock<Trait>, long long int>> htmlToAdd;
     long long int line = -1;
 
-    auto parseStream = [&] (StringListStream<Trait> &stream)
+    auto parseStream = [&](StringListStream<Trait> &stream)
     {
         const auto tmpHtml = html;
         html = parse(stream, item, doc, linksToParse, workingPath, fileName, collectRefLinks, false, true);
@@ -9373,123 +9380,147 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         html.m_toAdjustLastPos = tmpHtml.m_toAdjustLastPos;
     };
 
-    for (auto last = fr.m_data.end(); it != last; ++it, ++pos) {
-        if (!fensedCode) {
-            fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(
-                typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
-                    it->first.asString().sliced(indent) : it->first.asString());
+    auto processHtml = [&](auto it) -> bool
+    {
+        if (html.m_html.get()) {
+            html.m_parent = html.findParent(html.m_html->startColumn());
 
-            if (fensedCode) {
-                startOfCode = startSequence<Trait>(it->first.asString());
+            if (!html.m_parent) {
+                html.m_parent = html.m_topParent;
             }
-        } else if (fensedCode &&
-                   isCodeFences<Trait>(it->first.asString().startsWith(
-                        typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
-                            it->first.asString().sliced(indent) : it->first.asString(),
-                        true) && startSequence<Trait>(it->first.asString()).contains(startOfCode)) {
-            fensedCode = false;
+
+            data.clear();
+
+            if (html.m_continueHtml) {
+                MdBlock<Trait> tmp;
+                tmp.m_emptyLineAfter = fr.m_emptyLineAfter;
+                std::copy(it, fr.m_data.end(), std::back_inserter(tmp.m_data));
+
+                parseText(tmp, html.m_parent, doc, linksToParse, workingPath, fileName,
+                    collectRefLinks, html);
+
+                return true;
+            }
+
+            htmlToAdd.push_back({html, html.m_parent->items().size()});
+            updateLastPosInList<Trait>(html);
+            resetHtmlTag<Trait>(html);
         }
 
-        if (!fensedCode) {
-            long long int newIndent = 0;
-            bool ok = false;
+        return false;
+    };
 
-            std::tie(ok, newIndent, std::ignore, wasText) = listItemData<Trait>(
-                it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
-                    it->first.asString().sliced(indent) : it->first.asString(),
-                wasText);
+    if (!processHtml(std::prev(it))) {
+        for (auto last = fr.m_data.end(); it != last; ++it, ++pos) {
+            if (!fensedCode) {
+                fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(
+                    typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                        it->first.asString().sliced(indent) : it->first.asString());
 
-            if (ok) {
-                StringListStream<Trait> stream(data);
+                if (fensedCode) {
+                    startOfCode = startSequence<Trait>(it->first.asString());
+                }
+            } else if (fensedCode &&
+                       isCodeFences<Trait>(it->first.asString().startsWith(
+                            typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                                it->first.asString().sliced(indent) : it->first.asString(),
+                            true) && startSequence<Trait>(it->first.asString()).contains(startOfCode)) {
+                fensedCode = false;
+            }
 
-                parseStream(stream);
+            if (!fensedCode) {
+                long long int newIndent = 0;
+                bool ok = false;
 
-                data.clear();
+                std::tie(ok, newIndent, std::ignore, wasText) = listItemData<Trait>(
+                    it->first.asString().startsWith(typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                        it->first.asString().sliced(indent) : it->first.asString(),
+                    wasText);
 
-                if (html.m_html.get()) {
-                    html.m_parent = html.findParent(html.m_html->startColumn());
+                if (ok) {
+                    StringListStream<Trait> stream(data);
 
-                    if (!html.m_parent) {
-                        html.m_parent = html.m_topParent;
-                    }
+                    parseStream(stream);
 
-                    if (html.m_continueHtml) {
-                        MdBlock<Trait> tmp;
-                        tmp.m_emptyLineAfter = fr.m_emptyLineAfter;
-                        std::copy(it, last, std::back_inserter(tmp.m_data));
+                    data.clear();
 
-                        parseText(tmp, html.m_parent, doc, linksToParse, workingPath, fileName,
-                            collectRefLinks, html);
-
+                    if (processHtml(it)) {
                         break;
                     }
 
-                    htmlToAdd.push_back({html, html.m_parent->items().size()});
-                    updateLastPosInList<Trait>(html);
-                    resetHtmlTag<Trait>(html);
-                }
+                    if (!htmlToAdd.empty() && htmlToAdd.back().first.m_parent == html.m_topParent) {
+                        line = it->second.m_lineNumber;
 
-                if (!htmlToAdd.empty() && htmlToAdd.back().first.m_parent == html.m_topParent) {
-                    line = it->second.m_lineNumber;
+                        break;
+                    } else {
+                        typename MdBlock<Trait>::Data nestedList;
+                        nestedList.push_back(*it);
+                        ++it;
 
-                    break;
-                } else {
-                    typename MdBlock<Trait>::Data nestedList;
-                    nestedList.push_back(*it);
-                    ++it;
+                        wasEmptyLine = false;
 
-                    wasEmptyLine = false;
+                        for (; it != last; ++it) {
+                            const auto ns = skipSpaces<Trait>(0, it->first.asString());
+                            std::tie(ok, std::ignore, std::ignore, wasText) =
+                                listItemData<Trait>((ns >= indent ? it->first.asString().sliced(indent) :
+                                    it->first.asString()), wasText);
 
-                    for (; it != last; ++it) {
-                        const auto ns = skipSpaces<Trait>(0, it->first.asString());
-                        std::tie(ok, std::ignore, std::ignore, wasText) =
-                            listItemData<Trait>((ns >= indent ? it->first.asString().sliced(indent) :
-                                it->first.asString()), wasText);
+                            if (ok) {
+                                wasEmptyLine = false;
+                            }
 
-                        if (ok) {
-                            wasEmptyLine = false;
+                            if (ok || ns >= indent + newIndent || ns == it->first.length() || !wasEmptyLine) {
+                                nestedList.push_back(*it);
+                            } else {
+                                break;
+                            }
+
+                            wasEmptyLine = (ns == it->first.length());
+
+                            wasText = (wasEmptyLine ? false : wasText);
                         }
 
-                        if (ok || ns >= indent + newIndent || ns == it->first.length() || !wasEmptyLine) {
-                            nestedList.push_back(*it);
-                        } else {
+                        for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it) {
+                            it->first = it->first.sliced(std::min(skipSpaces<Trait>(
+                                0, it->first.asString()), indent));
+                        }
+
+                        while (!nestedList.empty() &&
+                            nestedList.back().first.asString().isEmpty()) {
+                            nestedList.pop_back();
+                        }
+
+                        MdBlock<Trait> block = {nestedList, 0};
+
+                        line = parseList(block, item, doc, linksToParse, workingPath, fileName,
+                            collectRefLinks, html);
+
+                        if (line >= 0) {
                             break;
                         }
 
-                        wasEmptyLine = (ns == it->first.length());
+                        for (; it != last; ++it) {
+                            if (it->first.asString().startsWith(typename Trait::String(
+                                indent, Trait::latin1ToChar(' ')))) {
+                                it->first = it->first.sliced(indent);
+                            }
 
-                        wasText = (wasEmptyLine ? false : wasText);
-                    }
-
-                    for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it) {
-                        it->first = it->first.sliced(std::min(skipSpaces<Trait>(
-                            0, it->first.asString()), indent));
-                    }
-
-                    while (!nestedList.empty() &&
-                        nestedList.back().first.asString().isEmpty()) {
-                        nestedList.pop_back();
-                    }
-
-                    MdBlock<Trait> block = {nestedList, 0};
-
-                    line = parseList(block, item, doc, linksToParse, workingPath, fileName,
-                        collectRefLinks, html);
-
-                    if (line >= 0) {
-                        break;
-                    }
-
-                    for (; it != last; ++it) {
-                        if (it->first.asString().startsWith(typename Trait::String(
-                            indent, Trait::latin1ToChar(' ')))) {
-                            it->first = it->first.sliced(indent);
+                            data.push_back(*it);
                         }
 
-                        data.push_back(*it);
+                        break;
+                    }
+                } else {
+                    if (it->first.asString().startsWith(typename Trait::String(
+                        indent, Trait::latin1ToChar(' ')))) {
+                        it->first = it->first.sliced(indent);
                     }
 
-                    break;
+                    data.push_back(*it);
+
+                    wasEmptyLine = (skipSpaces<Trait>(0, it->first.asString()) == it->first.length());
+
+                    wasText = !wasEmptyLine;
                 }
             } else {
                 if (it->first.asString().startsWith(typename Trait::String(
@@ -9498,37 +9529,30 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                 }
 
                 data.push_back(*it);
-
-                wasEmptyLine = (skipSpaces<Trait>(0, it->first.asString()) == it->first.length());
-
-                wasText = !wasEmptyLine;
-            }
-        } else {
-            if (it->first.asString().startsWith(typename Trait::String(
-                indent, Trait::latin1ToChar(' ')))) {
-                it->first = it->first.sliced(indent);
-            }
-
-            data.push_back(*it);
-        }
-    }
-
-    if (!data.empty()) {
-        StringListStream<Trait> stream(data);
-
-        parseStream(stream);
-
-        if (html.m_html) {
-            html.m_parent = html.findParent(html.m_html->startColumn());
-
-            if (!html.m_parent) {
-                html.m_parent = html.m_topParent;
             }
         }
+
+        if (!data.empty()) {
+            StringListStream<Trait> stream(data);
+
+            parseStream(stream);
+
+            if (html.m_html) {
+                html.m_parent = html.findParent(html.m_html->startColumn());
+
+                if (!html.m_parent) {
+                    html.m_parent = html.m_topParent;
+                }
+            }
+        }
+    } else {
+        item.reset();
     }
 
     if (!collectRefLinks) {
-        parent->appendItem(item);
+        if (item) {
+            parent->appendItem(item);
+        }
 
         long long int i = 0;
 
@@ -9546,31 +9570,33 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
             }
         }
 
-        long long int htmlStartColumn = -1;
-        long long int htmlStartLine = -1;
+        if (item) {
+            long long int htmlStartColumn = -1;
+            long long int htmlStartLine = -1;
 
-        if (html.m_html) {
-            std::tie(htmlStartColumn, htmlStartLine) =
-                localPosFromVirgin<Trait>(fr, html.m_html->startColumn(), html.m_html->startLine());
-        }
-
-        long long int localLine = (html.m_html ? htmlStartLine : fr.m_data.size() - 1);
-
-        if (html.m_html) {
-            if (skipSpaces<Trait>(0, fr.m_data[localLine].first.asString()) >= htmlStartColumn) {
-                --localLine;
+            if (html.m_html) {
+                std::tie(htmlStartColumn, htmlStartLine) =
+                    localPosFromVirgin<Trait>(fr, html.m_html->startColumn(), html.m_html->startLine());
             }
+
+            long long int localLine = (html.m_html ? htmlStartLine : fr.m_data.size() - 1);
+
+            if (html.m_html) {
+                if (skipSpaces<Trait>(0, fr.m_data[localLine].first.asString()) >= htmlStartColumn) {
+                    --localLine;
+                }
+            }
+
+            const auto lastLine = fr.m_data[localLine].second.m_lineNumber;
+
+            const auto lastColumn = fr.m_data[localLine].first.virginPos(
+                fr.m_data[localLine].first.length() ? fr.m_data[localLine].first.length() - 1 : 0);
+
+            item->setEndColumn(lastColumn);
+            item->setEndLine(lastLine);
+            parent->setEndColumn(lastColumn);
+            parent->setEndLine(lastLine);
         }
-
-        const auto lastLine = fr.m_data[localLine].second.m_lineNumber;
-
-        const auto lastColumn = fr.m_data[localLine].first.virginPos(
-            fr.m_data[localLine].first.length() ? fr.m_data[localLine].first.length() - 1 : 0);
-
-        item->setEndColumn(lastColumn);
-        item->setEndLine(lastLine);
-        parent->setEndColumn(lastColumn);
-        parent->setEndLine(lastLine);
     }
 
     if (resItem) {
