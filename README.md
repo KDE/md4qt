@@ -20,6 +20,7 @@ This library parses Markdown into tree structure.
 * [Benchmark](#benchmark)
 * [Playground](#playground)
 * [Release notes](#release-notes)
+* [Known issues](#known-issues)
 * [Q/A](#qa)
   * [Why another AST Markdown parser?](#why-another-ast-markdown-parser)
   * [What should I know about links in the document?](#what-should-i-know-about-links-in-the-document)
@@ -107,6 +108,43 @@ And [KleverNotes](https://invent.kde.org/office/klevernotes) from `KDE` uses `md
 changed rules with spaces, this version fully supports CommonMark standard in this question.
 Methods `isSpaceBefore()`, `isSpaceAfter()` were removed, and spaces are presented as in
 Markdown, so keep it in mind.
+
+# Known issues
+
+* In opposite to CommonMark `md4qt` has one difference. If in list item first element is HTML
+CommonMark doesn't apply rule to lazzy continuation lines as this is not a paragraph,
+whereas `md4qt` do so. For example.
+
+  ```md
+  * <!--
+  -->
+  ```
+
+  In CommonMark will be.
+
+  ```html
+  <ul>
+  <li>
+  <!--
+  </li>
+  </ul>
+  <p>--&gt;</p>
+  ```
+
+  And in `md4qt` it will be.
+
+  ```html
+  <ul>
+  <li>
+  <!--
+  -->
+  </li>
+  </ul>
+  ```
+
+  I know about this difference. And I decided to keep it. But if somebody
+  will provide compelling reasons to do exactly as in CommonMark in this case, I will
+  work with this question.
 
 # Q/A
 
