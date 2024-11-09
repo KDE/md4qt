@@ -37,12 +37,12 @@ This library parses Markdown into tree structure.
   * [Why don't you have an implementation for pure `STL` with `std::string`?](#why-dont-you-have-an-implementation-for-pure-stl-with-stdstring)
   * [Is it possible to write custom text plugin for this parser?](#is-it-possible-to-write-custom-text-plugin-for-this-parser)
     * [What is a `ID` of a plugin?](#what-is-a-id-of-a-plugin)
-    * [What is a `TextPluginFunc< Trait >`?](#what-is-a-textpluginfunc-trait-)
+    * [What is a `MD::TextPluginFunc<Trait>`?](#what-is-a-mdtextpluginfunctrait)
     * [What is `processInLinks` flag for?](#what-is-processinlinks-flag-for)
     * [What for is a `userData` argument?](#what-for-is-a-userdata-argument)
     * [Could you show an example of a plugin?](#could-you-show-an-example-of-a-plugin)
     * [I didn't understand how raw text data correlates with a paragraph.](#i-didnt-understand-how-raw-text-data-correlates-with-a-paragraph)
-    * [How can I get a string of `StyleDelim`?](#how-can-i-get-a-string-of-styledelim)
+    * [How can I get a string of `MD::StyleDelim`?](#how-can-i-get-a-string-of-mdstyledelim)
   * [Is it possible to find `Markdown` item by its position?](#is-it-possible-to-find-markdown-item-by-its-position)
   * [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
   * [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
@@ -55,16 +55,16 @@ This library parses Markdown into tree structure.
 
 int main()
 {
-    MD::Parser< MD::QStringTrait > p;
+    MD::Parser<MD::QStringTrait> p;
 
-    auto doc = p.parse( QStringLiteral( "your_markdown.md" ) );
+    auto doc = p.parse(QStringLiteral("your_markdown.md"));
 
     for (auto it = doc->items().cbegin(), last = doc->items().cend(); it != last; ++it) {
         switch ((*it)->type())
         {
         case MD::ItemType::Anchor :
         {
-            auto a = static_cast< MD::Anchor< MD::QStringTrait >* > ( it->get() );
+            auto a = static_cast<MD::Anchor<MD::QStringTrait>*> (it->get());
             qDebug() << a->label();
         }
             break;
@@ -81,7 +81,7 @@ int main()
 # Benchmark
 
 Approximate benchmark with [cmark-gfm](https://github.com/github/cmark-gfm) says,
-that Qt6 version of `md4qt` is slower ~14 times.
+that Qt6 version of `md4qt` is slower ~13 times.
 But you will get complete C++ tree structure of the Markdown document with all
 major extensions and sugar and cherry on the cake.
 
@@ -222,7 +222,7 @@ So, how can I use `md4qt` with `Qt6` and `ICU`?
 ---
 
  * To build with `ICU` support you need to define `MD4QT_ICU_STL_SUPPORT`
-before including `md4qt/parser.hpp`. In this case you will get access to
+before including `parser.h`. In this case you will get access to
 `MD::UnicodeStringTrait`, that can be passed to `MD::Parser` as template
 parameter. You will receive in dependencies `C++ STL`, `ICU` and
 `uriparser`.
@@ -262,9 +262,9 @@ How can I convert `MD::Document` into `HTML`?
 
    ```cpp
    #define MD4QT_QT_SUPPORT
-   #include <md4qt/traits.hpp>
-   #include <md4qt/parser.hpp>
-   #include <md4qt/html.hpp>
+   #include <md4qt/traits.h>
+   #include <md4qt/parser.h>
+   #include <md4qt/html.h>
 
    int main()
    {
@@ -288,14 +288,14 @@ of any element will point to the last symbol in this element.
 
 ## How can I easily traverse through the `MD::Document`?
 
-* Since version `2.6.0` in `md4qt/visitor.hpp` header implemented `MD::Visitor` interface
+* Since version `2.6.0` in `visitor.h` header implemented `MD::Visitor` interface
 with which you can easily walk through the document, all you need is implement/override
 virtual methods to handle that or another element in the document, like:
 
   ```cpp
   virtual void onHeading(
       //! Heading.
-      Heading< Trait > *h) = 0;
+      MD::Heading<Trait> *h) = 0;
   ```
 
 ## Why don't you have an implementation for pure `STL` with `std::string`?
@@ -316,7 +316,7 @@ text plugins.
       //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
       int id,
       //! Function of a plugin, that will be invoked to processs raw text.
-      TextPluginFunc<Trait> plugin,
+      MD::TextPluginFunc<Trait> plugin,
       //! Should this plugin be used in parsing of internals of links?
       bool processInLinks,
       //! User data that will be passed to plugin function.
@@ -335,11 +335,11 @@ text plugins.
   }; // enum TextPlugin
   ```
 
-  `UserDefinedPluginID` value. Note that plugins will be invoked corresponding
+  `MD::UserDefinedPluginID` value. Note that plugins will be invoked corresponding
   to its `ID` from smallest to largest, so a developer can handle an order of text
   plugins.
 
-### What is a `TextPluginFunc< Trait >`?
+### What is a `MD::TextPluginFunc<Trait>`?
 
 * Text plugin is a usual function with a signature
 
@@ -349,32 +349,32 @@ text plugins.
       TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
   ```
 
-  You will get already parsed `Paragraph` with all items in it. And you are
+  You will get already parsed `MD::Paragraph` with all items in it. And you are
   able to process remaining raw text data and check it for what you need.
 
-  `TextParsingOpts` is an auxiliary structure with some data. You are interested
+  `MD::TextParsingOpts` is an auxiliary structure with some data. You are interested
   in `bool collectRefLinks;`, when this flag is `true` the parser is in a state of
   collecting reference links, and on this stage plugin may do nothing.
 
   A last argument of plugin function is a user data, that was passed to 
   `MD::Parser::addTextPlugin()` method.
 
-  A most important thing in `TextParsingOpts` structure is a
-  `std::vector< TextData > m_rawTextData;`. This vector contains not processed raw
+  A most important thing in `MD::TextParsingOpts` structure is a
+  `std::vector<TextData> m_rawTextData;`. This vector contains not processed raw
   text data from `Markdown`. The size of `m_rawTextData` is the same as a count of
-  `Text` items in `Paragraph`, and theirs sizes should remain equal. So, if you replace
+  `MD::Text` items in `MD::Paragraph`, and theirs sizes should remain equal. So, if you replace
   one of text item with something, for example link, corresponding text item
-  should be removed from `Paragraph` and `m_rawTextData`. Or if you replace just
-  a part of text item - it should be modified in `Paragraph` and `m_rawTextData`.
+  should be removed from `MD::Paragraph` and `m_rawTextData`. Or if you replace just
+  a part of text item - it should be modified in `MD::Paragraph` and `m_rawTextData`.
   Be careful, it's UB, if you will make a mistake here, possibly you will crash.
 
-  One more thing - don't forget to set positions of elements in `Document` to new
+  One more thing - don't forget to set positions of elements in `MD::Document` to new
   values if you change something, and don't forget about such things like
-  `openStyles()` and `closeStyles()` of `ItemWithOpts` items. Document should
+  `MD::ItemWithOpts::openStyles()` and `MD::ItemWithOpts::closeStyles()`. Document should
   remain correct after your manipulations, so any syntax highlighter, for example,
   won't do a mistake.
 
-  Note, that `TextData` is
+  Note, that `MD::TextData` is
 
   ```cpp
   struct TextData {
@@ -384,8 +384,8 @@ text plugins.
   };
   ```
 
-  And `pos` and `line` here is relative to `MdBlock< Trait > & fr;` member of
-  `TextParsingOpts`, but document require absolute positions in the `Markdown`
+  And `m_pos` and `m_line` here is relative to `MD::MdBlock<Trait> & fr;` member of
+  `MD::TextParsingOpts`, but document require absolute positions in the `Markdown`
   text. So when you will set positions to new items, use, for example, a following
   code.
 
@@ -393,7 +393,7 @@ text plugins.
   setEndColumn(po.fr.data.at(s.line).first.virginPos(s.pos));
   ```
 
-  where `s` is an object of `TextData` type.
+  where `s` is an object of `MD::TextData` type.
 
 ### What is `processInLinks` flag for?
 
@@ -430,7 +430,7 @@ that can be handy for plugin implementation.
   }
   ```
 
-  But `processGitHubAutolinkExtension()` is not so trivial :) Have a look
+  But `MD::processGitHubAutolinkExtension()` is not so trivial :) Have a look
   at its implementation to have a good example, it's placed in `parser.h`.
 
   Good luck with plugining. :)
@@ -449,7 +449,7 @@ that can be handy for plugin implementation.
 
   ![](./docs/pics/paragraph_after.svg)
 
-### How can I get a string of `StyleDelim`?
+### How can I get a string of `MD::StyleDelim`?
 
 * Since version `3.0.0` was added a function to get a substring from text fragment with given
 virgin positions.
@@ -473,12 +473,12 @@ virgin positions.
 ## Is it possible to find `Markdown` item by its position?
 
  * Since version `3.0.0` was added new structure `MD::PosCache`. You can pass
-`MD::Document` into its `initialize()` method and find first item with all its
-nested first children by given position with `findFirstInCache()` method.
+`MD::Document` into its `MD::PosCache::initialize()` method and find first item with all its
+nested first children by given position with `MD::PosCache::findFirstInCache()` method.
 
 ## How can I walk through the document and find all items of given type?
 
- * Since version `3.0.0` was added algorithm `forEach()`.
+ * Since version `3.0.0` was added algorithm `MD::forEach()`.
 
    ```cpp
    //! Calls function for each item in the document with the given type.
@@ -498,8 +498,8 @@ nested first children by given position with `findFirstInCache()` method.
 
 ## How can I add and process a custom (user-defined) item in `MD::Document`?
 
- * Since version `3.0.0` in `MD::ItemType` enum appeared `UserDefined` enumerator.
+ * Since version `3.0.0` in `MD::ItemType` enum appeared `MD::UserDefined` enumerator.
 So you can inherit from any `MD::Item` class and return from `type()` method
 value greater or equal `MD::ItemType::UserData`. To handle user-defined types of
-items in `MD::Visitor` class now exists method `void onUserDefined( Item< Trait > * item )`.
+items in `MD::Visitor` class now exists method `void onUserDefined(MD::Item<Trait> *item)`.
 So you can handle your custom items and do what you need.
