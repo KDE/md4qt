@@ -29,7 +29,7 @@ This library parses Markdown into tree structure.
   * [Does the library throw exceptions?](#does-the-library-throw-exceptions)
   * [Why `MD::Parser` and `MD::Document` are templates?](#why-mdparser-and-mddocument-are-templates)
   * [So, how can I use `md4qt` with `Qt6` and `ICU`?](#so-how-can-i-use-md4qt-with-qt6-and-icu)
-  * [`ICU` is slower then `Qt6`? Really?](#icu-is-slower-then-qt6-really)
+  * [`ICU` is slower than `Qt6`? Really?](#icu-is-slower-than-qt6-really)
   * [Why is parsing wrong on Windows with `std::ifstream`?](#why-is-parsing-wrong-on-windows-with-stdifstream)
   * [How can I convert `MD::Document` into `HTML`?](#how-can-i-convert-mddocument-into-html)
   * [How can I obtain positions of blocks/elements in `Markdown` file?](#how-can-i-obtain-positions-of-blockselements-in-markdown-file)
@@ -104,16 +104,16 @@ And [KleverNotes](https://invent.kde.org/office/klevernotes) from `KDE` uses `md
 
 # Release notes
 
-* Note that vesrion **4.0.0** is API incompatible with **3.0.0**. In version **4.0.0** were
+* Note that version **4.0.0** is API incompatible with **3.0.0**. In version **4.0.0** were
 changed rules with spaces, this version fully supports CommonMark standard in this question.
 Methods `isSpaceBefore()`, `isSpaceAfter()` were removed, and spaces are presented as in
 Markdown, so keep it in mind.
 
 # Known issues
 
-* In opposite to CommonMark `md4qt` has one difference. If in list item first element is HTML
-CommonMark doesn't apply rule to lazzy continuation lines as this is not a paragraph,
-whereas `md4qt` do so. For example.
+* In contrast to CommonMark, `md4qt` has one difference. If in list item first element is HTML
+CommonMark doesn't apply rule to lazy continuation lines as this is not a paragraph,
+whereas `md4qt` does so. For example.
 
   ```md
   * <!--
@@ -157,11 +157,11 @@ Why another AST Markdown parser?
  knew about `cmark-gfm`. Ok, code is written and tested. Let it be.
 
    What I can say yet, is that this library is C++. And for some people can be
-   easier to use C++ code instead of C with freeing memory by hands. Qt do things
+   easier to use C++ code instead of C with freeing memory by hand. Qt do things
    easier by handling text encoding... So let it be, guys.
 
    And one more cherry on the cake - `md4qt` can parse Markdown recursively.
-   What it is described bellow.
+   What it is described below.
 
 What should I know about links in the document?
 ---
@@ -186,8 +186,8 @@ labeled links, look:
 What is the second argument of `MD::Parser::parse()`?
 ---
 
- * Second argument of `MD::Parser::parse()` is a flag that tells to the
-parser to process Markdown files recursively or no. If parsing is recursive
+ * Second argument of `MD::Parser::parse()` is a flag that tells the
+parser to process Markdown files recursively or not. If parsing is recursive
 then if in the targeted Markdown file exist links to other Markdown files,
 then they will be parsed too and will exist in the resulting document.
 
@@ -195,16 +195,16 @@ What is an `MD::Anchor`?
 ---
 
  * As `md4qt` supports recursive Markdown parsing, then in the resulting
-document can be represented more then one Markdown file. Each file in the
-document starts with `MD::Anchor`, it just shows that during traverse through
+document can be represented more than one Markdown file. Each file in the
+document starts with `MD::Anchor`, it just shows that during traversing through
 the document you reached new file.
 
 Does the library throw exceptions?
 ---
 
  * No. This library doesn't use exceptions. Any text is a valid Markdown, so I
-don't need to inform user about errors. Qt itself doesn't use exceptions too.
-So you can caught only standard C++ exceptions, like `std::bad_alloc`, for
+don't need to inform user about errors. Qt itself doesn't use exceptions either.
+So you can catch only standard C++ exceptions, like `std::bad_alloc`, for
 example. Possibly with `MD::UnicodeStringTrait` you will catch more standard
 exceptions, possibly I missed something somewhere, but I tried to negotiate
 all possible exceptions.
@@ -235,22 +235,22 @@ parameter. You will receive in dependencies `C++ STL`, `ICU` and
    You can define both to have ability to use `md4qt` with `Qt6` and
    `ICU`.
 
-`ICU` is slower then `Qt6`? Really?
+`ICU` is slower than `Qt6`? Really?
 ---
 
  * Don't believe anybody, just build built-in `md_benchamrk` and have a
-look. Dry numbers says, that `Qt6` `QString` ~2 times faster
+look. Dry numbers say, that `Qt6` `QString` is ~2 times faster than
 `icu::UnicodeString` in such tasks. Markdown parsing implies to check
 every symbol, and tied to use access to every character in the string
 with `operator [] (...)`, or member `at(...)`. I do it very often in the
-parser's code and profiler says that most of the run-time is spent
-on such operations. `QString` just more optimized for access separate
-character then `icu::UnicodeString`...
+parser's code and the profiler says that most of the run-time is spent
+on such operations. `QString` is just more optimized for accessing separate
+characters than `icu::UnicodeString`...
 
 Why is parsing wrong on Windows with `std::ifstream`?
 ---
 
- * Such problem can occur on Windows with MSVC if you open file in text
+ * Such a problem can occur on Windows with MSVC if you open the file in text
 mode, so for `MD::Parser` always open `std::ifstream` with `std::ios::binary`
 flag. And yes, I expect to receive UTF-8 encoded content...
 
@@ -300,10 +300,10 @@ virtual methods to handle that or another element in the document, like:
 
 ## Why don't you have an implementation for pure `STL` with `std::string`?
 
-* Because of performance, I did an pure `STL` implementation where string class
+* Because of performance, I did a pure `STL` implementation where the string class
 was an `std::string` with some small third-party library to handle `UTF8`, and
 benchmark said that the performance was like with `Qt6` `QString`, so I decided
-to not support third trait. Maybe because I so lazy?
+to not support third trait. Maybe because I am lazy?
 
 ## Is it possible to write custom text plugin for this parser?
 
