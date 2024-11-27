@@ -3,9 +3,9 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-project(md4qt)
+project(md4qt VERSION "4.0.0")
 
-set(MD4QT_VERSION "4.0.0")
+set(MD4QT_VERSION ${PROJECT_VERSION})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -27,6 +27,7 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR})
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMSetupVersion)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release"
@@ -61,6 +62,14 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
+
+    ecm_setup_version(${PROJECT_VERSION}
+        VARIABLE_PREFIX MD4QT
+        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/config-md4qt.h"
+    )
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config-md4qt.h"
+            DESTINATION "${KDE_INSTALL_INCLUDEDIR}/md4qt")
 
     install(DIRECTORY md4qt
             DESTINATION ${KDE_INSTALL_INCLUDEDIR}
