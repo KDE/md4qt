@@ -22,6 +22,12 @@ SPDX-FileCopyrightText = "2014 John MacFarlane"
 SPDX-License-Identifier = "BSD-2-Clause"
 
 [[annotations]]
+path = "tests/auto/bench/data/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2014 Vitaly Puzrin, Alex Kocharin"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
 path = "3rdparty/doctest/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2016-2021 Viktor Kirilov"

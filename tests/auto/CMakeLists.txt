@@ -14,3 +14,7 @@ add_subdirectory(internal_string)
 add_subdirectory(algo)
 add_subdirectory(poscache)
 add_subdirectory(html)
+
+if(BUILD_TEST_BENCH)
+    add_subdirectory(bench)
+endif()

@@ -13,6 +13,7 @@ option(BUILD_MD4QT_BENCHMARK "Build benchmark? Default OFF." OFF)
 option(BUILD_MD4QT_QT_TESTS "Build tests with Qt support? Default ON." ON)
 option(BUILD_MD4QT_STL_TESTS "Build tests with STL support? Default OFF." OFF)
 option(BUILD_MD2HTML_APP "Build md2html utility? Default OFF." OFF)
+option(BUILD_TEST_BENCH "Build test benchmark? Default ON." ON)
 
 set(QT_MIN_VERSION "6.0")
 set(KF_MIN_VERSION "6.0")
