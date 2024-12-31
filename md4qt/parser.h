@@ -303,49 +303,6 @@ private:
     long long int m_pos;
 }; // class StringListStream
 
-inline bool
-checkStack(std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-           const std::pair<std::pair<long long int, bool>, int> &v,
-           size_t idx)
-{
-    int value = -v.first.first;
-
-    for (long long int i = s.size() - 1; i >= 0; --i) {
-        if (s[i].second == v.second && s[i].first.first > 0) {
-            // Check for rule of multiplies of 3. Look at CommonMark 0.30 example 411.
-            if (!((s[i].first.second || v.first.second) &&
-                (s[i].first.first + value) % 3 == 0 &&
-                !(s[i].first.first % 3 == 0 && value % 3 == 0))) {
-                if (s[i].first.first - value <= 0) {
-                    if (i == (long long int)idx) {
-                        return true;
-                    }
-
-                    value -= s[i].first.first;
-
-                    s.erase(s.cbegin() + i, s.cend());
-
-                    if (value == 0) {
-                        break;
-                    }
-                } else {
-                    s[i].first.first -= value;
-
-                    s.erase(s.cbegin() + i + 1, s.cend());
-
-                    break;
-                }
-            }
-        }
-
-        if (i == 0) {
-            break;
-        }
-    }
-
-    return false;
-}
-
 //! \return Is string a footnote?
 template<class Trait>
 inline bool
@@ -1000,7 +957,14 @@ struct TextParsingOpts {
     long long int m_lastTextPos = -1;
     int m_columnsCount = -1;
     int m_opts = TextWithoutFormat;
-    std::vector<std::pair<Style, long long int>> m_styles = {};
+
+    struct StyleInfo {
+        Style m_style;
+        long long int m_length;
+        bool m_bothFlanking;
+    };
+
+    std::vector<StyleInfo> m_styles = {};
     typename ItemWithOpts<Trait>::Styles m_openStyles = {};
     std::shared_ptr<ItemWithOpts<Trait>> m_lastItemWithStyle = nullptr;
 }; // struct TextParsingOpts
@@ -1803,6 +1767,7 @@ private:
         bool m_backslashed = false;
         bool m_leftFlanking = false;
         bool m_rightFlanking = false;
+        bool m_skip = false;
     }; // struct Delimiter
 
     using Delims = typename Trait::template Vector<Delimiter>;
@@ -1814,15 +1779,15 @@ private:
                         long long int startPos,
                         long long int lastLineForText,
                         long long int lastPosForText,
-                        typename Delims::const_iterator lastIt,
+                        typename Delims::iterator lastIt,
                         const typename MdBlock<Trait>::Data &linkText,
                         bool doNotCreateTextOnFail,
                         const WithPosition &textPos,
                         const WithPosition &linkTextPos);
 
-    typename Delims::const_iterator
-    checkForImage(typename Delims::const_iterator it,
-                  typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForImage(typename Delims::iterator it,
+                  typename Delims::iterator last,
                   TextParsingOpts<Trait> &po);
 
     bool
@@ -1832,125 +1797,125 @@ private:
                        long long int startPos,
                        long long int lastLineForText,
                        long long int lastPosForText,
-                       typename Delims::const_iterator lastIt,
+                       typename Delims::iterator lastIt,
                        const typename MdBlock<Trait>::Data &linkText,
                        bool doNotCreateTextOnFail,
                        const WithPosition &textPos,
                        const WithPosition &linkTextPos);
 
-    typename Delims::const_iterator
-    checkForLink(typename Delims::const_iterator it,
-                 typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForLink(typename Delims::iterator it,
+                 typename Delims::iterator last,
                  TextParsingOpts<Trait> &po);
 
     Delims
     collectDelimiters(const typename MdBlock<Trait>::Data &fr);
 
     std::pair<typename Trait::String, bool>
-    readHtmlTag(typename Delims::const_iterator it, TextParsingOpts<Trait> &po);
+    readHtmlTag(typename Delims::iterator it, TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    findIt(typename Delims::const_iterator it,
-           typename Delims::const_iterator last,
+    typename Delims::iterator
+    findIt(typename Delims::iterator it,
+           typename Delims::iterator last,
            TextParsingOpts<Trait> &po);
 
     void
-    finishRule1HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule1HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po,
                        bool skipFirst);
 
     void
-    finishRule2HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule2HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
     void
-    finishRule3HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule3HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
     void
-    finishRule4HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule4HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
     void
-    finishRule5HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule5HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
     void
-    finishRule6HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    finishRule6HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
-    typename Parser<Trait>::Delims::const_iterator
-    finishRule7HtmlTag(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    typename Parser<Trait>::Delims::iterator
+    finishRule7HtmlTag(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    finishRawHtmlTag(typename Delims::const_iterator it,
-                     typename Delims::const_iterator last,
+    typename Delims::iterator
+    finishRawHtmlTag(typename Delims::iterator it,
+                     typename Delims::iterator last,
                      TextParsingOpts<Trait> &po,
                      bool skipFirst);
 
     int
-    htmlTagRule(typename Delims::const_iterator it,
-                typename Delims::const_iterator last,
+    htmlTagRule(typename Delims::iterator it,
+                typename Delims::iterator last,
                 TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    checkForRawHtml(typename Delims::const_iterator it,
-                    typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForRawHtml(typename Delims::iterator it,
+                    typename Delims::iterator last,
                     TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    checkForMath(typename Delims::const_iterator it,
-                 typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForMath(typename Delims::iterator it,
+                 typename Delims::iterator last,
                  TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    checkForAutolinkHtml(typename Delims::const_iterator it,
-                         typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForAutolinkHtml(typename Delims::iterator it,
+                         typename Delims::iterator last,
                          TextParsingOpts<Trait> &po,
                          bool updatePos);
 
-    typename Delims::const_iterator
-    checkForInlineCode(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForInlineCode(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po);
 
-    std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
-    readTextBetweenSquareBrackets(typename Delims::const_iterator start,
-                                  typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+    std::pair<typename MdBlock<Trait>::Data, typename Delims::iterator>
+    readTextBetweenSquareBrackets(typename Delims::iterator start,
+                                  typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po,
                                   bool doNotCreateTextOnFail,
                                   WithPosition *pos = nullptr);
 
-    std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
-    checkForLinkText(typename Delims::const_iterator it,
-                     typename Delims::const_iterator last,
+    std::pair<typename MdBlock<Trait>::Data, typename Delims::iterator>
+    checkForLinkText(typename Delims::iterator it,
+                     typename Delims::iterator last,
                      TextParsingOpts<Trait> &po,
                      WithPosition *pos = nullptr);
 
-    std::pair<typename MdBlock<Trait>::Data, typename Delims::const_iterator>
-    checkForLinkLabel(typename Delims::const_iterator it,
-                      typename Delims::const_iterator last,
+    std::pair<typename MdBlock<Trait>::Data, typename Delims::iterator>
+    checkForLinkLabel(typename Delims::iterator it,
+                      typename Delims::iterator last,
                       TextParsingOpts<Trait> &po,
                       WithPosition *pos = nullptr);
 
-    std::tuple<typename Trait::String, typename Trait::String, typename Delims::const_iterator, bool>
-    checkForInlineLink(typename Delims::const_iterator it,
-                       typename Delims::const_iterator last,
+    std::tuple<typename Trait::String, typename Trait::String, typename Delims::iterator, bool>
+    checkForInlineLink(typename Delims::iterator it,
+                       typename Delims::iterator last,
                        TextParsingOpts<Trait> &po,
                        WithPosition *urlPos = nullptr);
 
-    inline std::tuple<typename Trait::String, typename Trait::String, typename Delims::const_iterator, bool>
-    checkForRefLink(typename Delims::const_iterator it,
-                    typename Delims::const_iterator last,
+    inline std::tuple<typename Trait::String, typename Trait::String, typename Delims::iterator, bool>
+    checkForRefLink(typename Delims::iterator it,
+                    typename Delims::iterator last,
                     TextParsingOpts<Trait> &po,
                     WithPosition *urlPos = nullptr);
 
@@ -1958,9 +1923,9 @@ private:
     toSingleLine(const typename MdBlock<Trait>::Data &d);
 
     template<class Func>
-    typename Delims::const_iterator
-    checkShortcut(typename Delims::const_iterator it,
-                  typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkShortcut(typename Delims::iterator it,
+                  typename Delims::iterator last,
                   TextParsingOpts<Trait> &po,
                   Func functor)
     {
@@ -1981,60 +1946,60 @@ private:
         return start;
     }
 
-    void
-    createStyles(std::vector<std::pair<Style, long long int>> &s,
-                 long long int l,
-                 typename Delimiter::DelimiterType t,
-                 long long int &count);
-
     bool
-    isSequence(typename Delims::const_iterator it,
+    isSequence(typename Delims::iterator it,
                long long int itLine,
                long long int itPos,
                typename Delimiter::DelimiterType t);
 
-    typename Delims::const_iterator
-    readSequence(typename Delims::const_iterator it,
-                 typename Delims::const_iterator last,
+    std::pair<typename Delims::iterator, typename Delims::iterator>
+    readSequence(typename Delims::iterator first,
+                 typename Delims::iterator it,
+                 typename Delims::iterator last,
+                 long long int &pos,
+                 long long int &length,
+                 long long int &itCount,
+                 long long int &lengthFromIt,
+                 long long int &itCountFromIt);
+
+    typename Delims::iterator
+    readSequence(typename Delims::iterator it,
+                 typename Delims::iterator last,
                  long long int &line,
                  long long int &pos,
                  long long int &len,
-                 typename Delims::const_iterator &current);
+                 long long int &itCount);
 
     int
     emphasisToInt(typename Delimiter::DelimiterType t);
 
-    std::pair<bool, size_t>
-    checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                          size_t idx);
-
-    std::vector<std::pair<std::pair<long long int, bool>, int>>
-    fixSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s);
-
-    std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>>
-    closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
-                    size_t idx);
+    void
+    createStyles(std::vector<std::pair<Style, long long int>> & styles,
+                 typename Delimiter::DelimiterType t,
+                 long long int style);
 
     std::vector<std::pair<Style, long long int>>
-    createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                 size_t i,
-                 typename Delimiter::DelimiterType t,
-                 long long int &count);
+    createStyles(typename Delimiter::DelimiterType t,
+                 const std::vector<long long int> &styles,
+                 long long int lastStyle);
 
     std::tuple<bool, std::vector<std::pair<Style, long long int>>, long long int, long long int>
-    isStyleClosed(typename Delims::const_iterator it,
-                  typename Delims::const_iterator last,
+    isStyleClosed(typename Delims::iterator first,
+                  typename Delims::iterator it,
+                  typename Delims::iterator last,
+                  typename Delims::iterator &stackBottom,
                   TextParsingOpts<Trait> &po);
 
-    typename Delims::const_iterator
-    incrementIterator(typename Delims::const_iterator it,
-                      typename Delims::const_iterator last,
+    typename Delims::iterator
+    incrementIterator(typename Delims::iterator it,
+                      typename Delims::iterator last,
                       long long int count);
 
-    typename Delims::const_iterator
-    checkForStyle(typename Delims::const_iterator first,
-                  typename Delims::const_iterator it,
-                  typename Delims::const_iterator last,
+    typename Delims::iterator
+    checkForStyle(typename Delims::iterator first,
+                  typename Delims::iterator it,
+                  typename Delims::iterator last,
+                  typename Delims::iterator &stackBottom,
                   TextParsingOpts<Trait> &po);
 
     bool
@@ -2060,8 +2025,8 @@ private:
                    long long int lastLine,
                    long long int lastPos,
                    TextParsingOpts<Trait> &po,
-                   typename Delims::const_iterator startDelimIt,
-                   typename Delims::const_iterator endDelimIt);
+                   typename Delims::iterator startDelimIt,
+                   typename Delims::iterator endDelimIt);
 
     OptimizeParagraphType
     defaultParagraphOptimization() const
@@ -4318,7 +4283,15 @@ template<class Trait>
 inline bool
 isLineBreak(const typename Trait::String &s)
 {
-    return (s.endsWith(Trait::latin1ToString("  ")) || s.endsWith(Trait::latin1ToString("\\")));
+    long long int count = 0, pos = s.length() - 1, end = s.length() - 1;
+
+    while ((pos = Trait::lastIndexOf(s, Trait::latin1ToString("\\"), pos)) != -1 && pos == end) {
+        --end;
+        --pos;
+        ++count;
+    }
+
+    return (s.endsWith(Trait::latin1ToString("  ")) || (count % 2 != 0));
 }
 
 //! \return Length of line break.
@@ -4539,10 +4512,11 @@ makeText(
 
     if (po.m_line != lastLine) {
         ++po.m_line;
-        startPos = 0;
-        startLine = po.m_line;
 
         for (; po.m_line < lastLine; ++po.m_line) {
+            startPos = 0;
+            startLine = po.m_line;
+
             lineBreak = (!po.m_ignoreLineBreak && po.m_line != (long long int)(po.m_fr.m_data.size() - 1) &&
                 isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.asString()));
 
@@ -5017,7 +4991,7 @@ isHtmlTag(long long int line,
 //! Read HTML tag.
 template<class Trait>
 inline std::pair<typename Trait::String, bool>
-Parser<Trait>::readHtmlTag(typename Delims::const_iterator it,
+Parser<Trait>::readHtmlTag(typename Delims::iterator it,
                            TextParsingOpts<Trait> &po)
 {
     long long int i = it->m_pos + 1;
@@ -5041,9 +5015,9 @@ Parser<Trait>::readHtmlTag(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::findIt(typename Delims::const_iterator it,
-                      typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::findIt(typename Delims::iterator it,
+                      typename Delims::iterator last,
                       TextParsingOpts<Trait> &po)
 {
     auto ret = it;
@@ -5194,8 +5168,8 @@ Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule1HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule1HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po,
                                   bool skipFirst)
 {
@@ -5251,8 +5225,8 @@ Parser<Trait>::finishRule1HtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule2HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     if (it != last) {
@@ -5314,8 +5288,8 @@ Parser<Trait>::finishRule2HtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule3HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule3HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     bool onLine = po.m_html.m_onLine;
@@ -5360,8 +5334,8 @@ Parser<Trait>::finishRule3HtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule4HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule4HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     if (it != last) {
@@ -5404,8 +5378,8 @@ Parser<Trait>::finishRule4HtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule5HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule5HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     if (it != last) {
@@ -5451,8 +5425,8 @@ Parser<Trait>::finishRule5HtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline void
-Parser<Trait>::finishRule6HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+Parser<Trait>::finishRule6HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     po.m_html.m_onLine = (it != last ?
@@ -5478,9 +5452,9 @@ Parser<Trait>::finishRule6HtmlTag(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it,
-                                typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::finishRawHtmlTag(typename Delims::iterator it,
+                                typename Delims::iterator last,
                                 TextParsingOpts<Trait> &po,
                                 bool skipFirst)
 {
@@ -5524,8 +5498,8 @@ Parser<Trait>::finishRawHtmlTag(typename Delims::const_iterator it,
 
 template<class Trait>
 inline int
-Parser<Trait>::htmlTagRule(typename Delims::const_iterator it,
-                           typename Delims::const_iterator last,
+Parser<Trait>::htmlTagRule(typename Delims::iterator it,
+                           typename Delims::iterator last,
                            TextParsingOpts<Trait> &po)
 {
     MD_UNUSED(last)
@@ -5622,9 +5596,9 @@ Parser<Trait>::htmlTagRule(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForRawHtml(typename Delims::const_iterator it,
-                               typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForRawHtml(typename Delims::iterator it,
+                               typename Delims::iterator last,
                                TextParsingOpts<Trait> &po)
 {
     const auto rule = htmlTagRule(it, last, po);
@@ -5646,9 +5620,9 @@ Parser<Trait>::checkForRawHtml(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::finishRule7HtmlTag(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     if (it != last) {
@@ -5704,9 +5678,9 @@ Parser<Trait>::finishRule7HtmlTag(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForMath(typename Delims::const_iterator it,
-                            typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForMath(typename Delims::iterator it,
+                            typename Delims::iterator last,
                             TextParsingOpts<Trait> &po)
 {
     po.m_wasRefLink = false;
@@ -5793,9 +5767,9 @@ Parser<Trait>::checkForMath(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForAutolinkHtml(typename Delims::const_iterator it,
-                                    typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForAutolinkHtml(typename Delims::iterator it,
+                                    typename Delims::iterator last,
                                     TextParsingOpts<Trait> &po,
                                     bool updatePos)
 {
@@ -5869,8 +5843,8 @@ Parser<Trait>::makeInlineCode(long long int startLine,
                               long long int lastLine,
                               long long int lastPos,
                               TextParsingOpts<Trait> &po,
-                              typename Delims::const_iterator startDelimIt,
-                              typename Delims::const_iterator endDelimIt)
+                              typename Delims::iterator startDelimIt,
+                              typename Delims::iterator endDelimIt)
 {
     typename Trait::String c;
 
@@ -5931,9 +5905,9 @@ Parser<Trait>::makeInlineCode(long long int startLine,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForInlineCode(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForInlineCode(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po)
 {
     const auto len = it->m_len;
@@ -5980,10 +5954,10 @@ Parser<Trait>::checkForInlineCode(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::const_iterator>
-Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::const_iterator start,
-                                             typename Delims::const_iterator it,
-                                             typename Delims::const_iterator last,
+inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::iterator>
+Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::iterator start,
+                                             typename Delims::iterator it,
+                                             typename Delims::iterator last,
                                              TextParsingOpts<Trait> &po,
                                              bool doNotCreateTextOnFail,
                                              WithPosition *pos)
@@ -6057,9 +6031,9 @@ Parser<Trait>::readTextBetweenSquareBrackets(typename Delims::const_iterator sta
 }
 
 template<class Trait>
-inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::const_iterator>
-Parser<Trait>::checkForLinkText(typename Delims::const_iterator it,
-                                typename Delims::const_iterator last,
+inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::iterator>
+Parser<Trait>::checkForLinkText(typename Delims::iterator it,
+                                typename Delims::iterator last,
                                 TextParsingOpts<Trait> &po,
                                 WithPosition *pos)
 {
@@ -6115,9 +6089,9 @@ Parser<Trait>::checkForLinkText(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::const_iterator>
-Parser<Trait>::checkForLinkLabel(typename Delims::const_iterator it,
-                                 typename Delims::const_iterator last,
+inline std::pair<typename MdBlock<Trait>::Data, typename Parser<Trait>::Delims::iterator>
+Parser<Trait>::checkForLinkLabel(typename Delims::iterator it,
+                                 typename Delims::iterator last,
                                  TextParsingOpts<Trait> &po,
                                  WithPosition *pos)
 {
@@ -6308,7 +6282,7 @@ Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
                                   long long int startPos,
                                   long long int lastLineForText,
                                   long long int lastPosForText,
-                                  typename Delims::const_iterator lastIt,
+                                  typename Delims::iterator lastIt,
                                   const typename MdBlock<Trait>::Data &linkText,
                                   bool doNotCreateTextOnFail,
                                   const WithPosition &textPos,
@@ -6433,7 +6407,7 @@ Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
                                    long long int startPos,
                                    long long int lastLineForText,
                                    long long int lastPosForText,
-                                   typename Delims::const_iterator lastIt,
+                                   typename Delims::iterator lastIt,
                                    const typename MdBlock<Trait>::Data &linkText,
                                    bool doNotCreateTextOnFail,
                                    const WithPosition &textPos,
@@ -6685,9 +6659,9 @@ readLinkTitle(long long int line,
 }
 
 template<class Trait>
-inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::const_iterator, bool>
-Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it,
-                                  typename Delims::const_iterator last,
+inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::iterator, bool>
+Parser<Trait>::checkForInlineLink(typename Delims::iterator it,
+                                  typename Delims::iterator last,
                                   TextParsingOpts<Trait> &po,
                                   WithPosition *urlPos)
 {
@@ -6724,9 +6698,9 @@ Parser<Trait>::checkForInlineLink(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::const_iterator, bool>
-Parser<Trait>::checkForRefLink(typename Delims::const_iterator it,
-                               typename Delims::const_iterator last,
+inline std::tuple<typename Trait::String, typename Trait::String, typename Parser<Trait>::Delims::iterator, bool>
+Parser<Trait>::checkForRefLink(typename Delims::iterator it,
+                               typename Delims::iterator last,
                                TextParsingOpts<Trait> &po,
                                WithPosition *urlPos)
 {
@@ -6775,9 +6749,9 @@ Parser<Trait>::checkForRefLink(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForImage(typename Delims::const_iterator it,
-                             typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForImage(typename Delims::iterator it,
+                             typename Delims::iterator last,
                              TextParsingOpts<Trait> &po)
 {
     const auto start = it;
@@ -6795,7 +6769,7 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it,
             // Inline -> (
             if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
                 typename Trait::String url, title;
-                typename Delims::const_iterator iit;
+                typename Delims::iterator iit;
                 bool ok;
 
                 WithPosition urlPos;
@@ -6820,7 +6794,7 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it,
             // Reference -> [
             else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
                 typename MdBlock<Trait>::Data label;
-                typename Delims::const_iterator lit;
+                typename Delims::iterator lit;
 
                 WithPosition labelPos;
                 std::tie(label, lit) = checkForLinkLabel(std::next(it), last, po, &labelPos);
@@ -6871,9 +6845,9 @@ Parser<Trait>::checkForImage(typename Delims::const_iterator it,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForLink(typename Delims::const_iterator it,
-                            typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForLink(typename Delims::iterator it,
+                            typename Delims::iterator last,
                             TextParsingOpts<Trait> &po)
 {
     const auto start = it;
@@ -6936,7 +6910,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
                 // Reference definitions allowed only at start of paragraph.
                 if ((po.m_line == 0 || wasRefLink || firstInParagraph) && ns < 4 && start->m_pos == ns) {
                     typename Trait::String url, title;
-                    typename Delims::const_iterator iit;
+                    typename Delims::iterator iit;
                     bool ok;
 
                     WithPosition labelPos;
@@ -7004,7 +6978,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
             // Inline -> (
             else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('(')) {
                 typename Trait::String url, title;
-                typename Delims::const_iterator iit;
+                typename Delims::iterator iit;
                 bool ok;
 
                 WithPosition urlPos;
@@ -7042,7 +7016,7 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
             // Reference -> [
             else if (po.m_fr.m_data.at(it->m_line).first[it->m_pos + it->m_len] == Trait::latin1ToChar('[')) {
                 typename MdBlock<Trait>::Data label;
-                typename Delims::const_iterator lit;
+                typename Delims::iterator lit;
 
                 WithPosition labelPos;
                 std::tie(label, lit) = checkForLinkLabel(std::next(it), last, po, &labelPos);
@@ -7092,25 +7066,14 @@ Parser<Trait>::checkForLink(typename Delims::const_iterator it,
     return start;
 }
 
-//! \return Is the given style close previous corresponding style?
-inline bool
-isClosingStyle(const std::vector<std::pair<Style, long long int>> &styles,
-               Style s)
-{
-    const auto it = std::find_if(styles.cbegin(), styles.cend(), [&](const auto &p) {
-        return (p.first == s);
-    });
-
-    return it != styles.cend();
-}
-
 //! Close style.
+template<class Trait>
 inline void
-closeStyle(std::vector<std::pair<Style, long long int>> &styles,
+closeStyle(std::vector<typename TextParsingOpts<Trait>::StyleInfo> &styles,
            Style s)
 {
     const auto it = std::find_if(styles.crbegin(), styles.crend(), [&](const auto &p) {
-        return (p.first == s);
+        return (p.m_style == s);
     });
 
     if (it != styles.crend()) {
@@ -7119,14 +7082,15 @@ closeStyle(std::vector<std::pair<Style, long long int>> &styles,
 }
 
 //! Apply styles.
+template<class Trait>
 inline void
 applyStyles(int &opts,
-            const std::vector<std::pair<Style, long long int>> &styles)
+            std::vector<typename TextParsingOpts<Trait>::StyleInfo> &styles)
 {
     opts = 0;
 
     for (const auto &s : styles) {
-        switch (s.first) {
+        switch (s.m_style) {
         case Style::Strikethrough:
             opts |= StrikethroughText;
             break;
@@ -7145,146 +7109,6 @@ applyStyles(int &opts,
             break;
         }
     }
-}
-
-//! Append possible emphasis.
-inline void
-appendPossibleDelimiter(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
-                        long long int len,
-                        int type,
-                        bool leftAndRight)
-{
-    for (auto &v : vars) {
-        v.push_back({{len, leftAndRight}, type});
-    }
-}
-
-//! \return Longest sequense of emphasis with more openings.
-inline std::vector<std::pair<std::pair<long long int, bool>, int>>
-longestSequenceWithMoreOpeningsAtStart(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars)
-{
-    size_t max = 0;
-
-    for (const auto &s : vars) {
-        if (s.size() > max) {
-            max = s.size();
-        }
-    }
-
-    std::vector<std::pair<std::pair<long long int, bool>, int>> ret;
-
-    size_t maxOp = 0;
-
-    for (const auto &s : vars) {
-        if (s.size() == max) {
-            size_t op = 0;
-
-            for (const auto &v : s) {
-                if (v.first.first > 0) {
-                    ++op;
-                } else {
-                    break;
-                }
-            }
-
-            if (op > maxOp) {
-                maxOp = op;
-                ret = s;
-            }
-        }
-    }
-
-    return ret;
-}
-
-//! Make variants of emphasies.
-inline void
-collectDelimiterVariants(std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
-                         long long int itLength,
-                         int type,
-                         bool leftFlanking,
-                         bool rightFlanking)
-{
-    {
-        auto vars1 = vars;
-        auto vars2 = vars;
-
-        vars.clear();
-
-        if (leftFlanking) {
-            appendPossibleDelimiter(vars1, itLength, type, leftFlanking && rightFlanking);
-            std::copy(vars1.cbegin(), vars1.cend(), std::back_inserter(vars));
-        }
-
-        if (rightFlanking) {
-            appendPossibleDelimiter(vars2, -itLength, type, leftFlanking && rightFlanking);
-            std::copy(vars2.cbegin(), vars2.cend(), std::back_inserter(vars));
-        }
-    }
-}
-
-template<class Trait>
-inline void
-Parser<Trait>::createStyles(std::vector<std::pair<Style, long long int>> &s,
-                            long long int l,
-                            typename Delimiter::DelimiterType t,
-                            long long int &count)
-{
-    if (t != Delimiter::Strikethrough) {
-        if (l % 2 == 1) {
-            s.push_back({t == Delimiter::Emphasis1 ? Style::Italic1 : Style::Italic2, 1});
-            ++count;
-        }
-
-        if (l >= 2) {
-            for (long long int i = 0; i < l / 2; ++i) {
-                s.push_back({t == Delimiter::Emphasis1 ? Style::Bold1 : Style::Bold2, 2});
-                count += 2;
-            }
-        }
-    } else {
-        s.push_back({Style::Strikethrough, l});
-        ++count;
-    }
-}
-
-template<class Trait>
-inline bool
-Parser<Trait>::isSequence(typename Delims::const_iterator it,
-                          long long int itLine,
-                          long long int itPos,
-                          typename Delimiter::DelimiterType t)
-{
-    return (itLine == it->m_line && itPos + it->m_len == it->m_pos && it->m_type == t);
-}
-
-template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::readSequence(typename Delims::const_iterator it,
-                            typename Delims::const_iterator last,
-                            long long int &line,
-                            long long int &pos,
-                            long long int &len,
-                            typename Delims::const_iterator &current)
-{
-    line = it->m_line;
-    pos = it->m_pos;
-    len = it->m_len;
-    current = it;
-    const auto t = it->m_type;
-
-    it = std::next(it);
-
-    while (it != last && isSequence(it, line, pos, t)) {
-        current = it;
-
-        pos += it->m_len;
-        len += it->m_len;
-
-        ++it;
-    }
-
-    return std::prev(it);
 }
 
 template<class Trait>
@@ -7307,228 +7131,263 @@ Parser<Trait>::emphasisToInt(typename Delimiter::DelimiterType t)
 }
 
 template<class Trait>
-inline std::pair<bool, size_t>
-Parser<Trait>::checkEmphasisSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                                     size_t idx)
+inline void
+Parser<Trait>::createStyles(std::vector<std::pair<Style, long long int>> & styles,
+             typename Delimiter::DelimiterType t,
+             long long int style)
 {
-    static const auto strikeType = emphasisToInt(Delimiter::Strikethrough);
-
-    if (s[idx].second == strikeType) {
-        if (s[idx].first.first > 0) {
-            const auto len = s[idx].first.first;
-
-            const auto it = std::find_if(s.cbegin() + idx + 1, s.cend(), [len](const auto &p) {
-                if (p.first.first == -len && p.second == strikeType) {
-                    return true;
-                } else {
-                    return false;
-                }
-            });
-
-            if (it != s.cend()) {
-                return {true, std::distance(s.cbegin(), it)};
-            } else {
-                return {false, 0};
-            }
-        } else {
-            return {false, 0};
+    if (t != Delimiter::Strikethrough) {
+        if (style % 2 == 1) {
+            styles.push_back({t == Delimiter::Emphasis1 ? Style::Italic1 : Style::Italic2, 1});
         }
-    }
 
-    std::vector<std::pair<std::pair<long long int, bool>, int>> st;
-
-    size_t i = 0;
-
-    for (; i <= idx; ++i) {
-        st.push_back(s[i]);
-    }
-
-    for (; i < s.size(); ++i) {
-        if (s[i].first.first < 0) {
-            if (checkStack(st, s[i], idx)) {
-                return {true, i};
-            } else if (st.size() <= idx) {
-                return {false, 0};
-            }
-        } else {
-            st.push_back(s[i]);
-        }
-    }
-
-    return {false, 0};
-}
-
-template<class Trait>
-inline std::vector<std::pair<std::pair<long long int, bool>, int>>
-Parser<Trait>::fixSequence(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s)
-{
-    std::vector<std::pair<std::pair<long long int, bool>, int>> tmp;
-    std::map<int, long long int> length;
-
-    for (const auto &p : s) {
-        if (p.first.first < 0 && length[p.second] + p.first.first < 0) {
-            tmp.push_back({{-length[p.second], p.first.second}, p.second});
-
-            length[p.second] = 0;
-        } else {
-            tmp.push_back(p);
-
-            length[p.second] += p.first.first;
-        }
-    }
-
-    return tmp;
-}
-
-template<class Trait>
-inline std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>>
-Parser<Trait>::closedSequences(const std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> &vars,
-                               size_t idx)
-{
-    std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> tmp;
-
-    const auto longest = longestSequenceWithMoreOpeningsAtStart(vars);
-
-    for (const auto &v : vars) {
-        if (longest.size() == v.size()) {
-            bool closed = false;
-            std::tie(closed, std::ignore) = checkEmphasisSequence(v, idx);
-
-            if (closed) {
-                tmp.push_back(fixSequence(v));
+        if (style >= 2) {
+            for (long long int i = 0; i < style / 2; ++i) {
+                styles.push_back({t == Delimiter::Emphasis1 ? Style::Bold1 : Style::Bold2, 2});
             }
         }
+    } else {
+        styles.push_back({Style::Strikethrough, style});
     }
-
-    return tmp;
 }
 
 template<class Trait>
 inline std::vector<std::pair<Style, long long int>>
-Parser<Trait>::createStyles(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                            size_t i,
-                            typename Delimiter::DelimiterType t,
-                            long long int &count)
+Parser<Trait>::createStyles(typename Delimiter::DelimiterType t,
+                            const std::vector<long long int> &styles,
+                            long long int lastStyle)
 {
-    std::vector<std::pair<Style, long long int>> styles;
+    std::vector<std::pair<Style, long long int>> ret;
 
-    const size_t idx = i;
-    long long int len = s[i].first.first;
+    createStyles(ret, t, lastStyle);
 
-    size_t closeIdx = 0;
-    std::tie(std::ignore, closeIdx) = checkEmphasisSequence(s, i);
-
-    for (i = closeIdx;; --i) {
-        if (s[i].second == s[idx].second && s[i].first.first < 0) {
-            auto l = std::abs(s[i].first.first);
-
-            createStyles(styles, std::min(l, len), t, count);
-
-            len -= std::min(l, len);
-
-            if (!len) {
-                break;
-            }
-        }
-
-        if (i == 0) {
-            break;
-        }
+    for (auto it = styles.crbegin(), last = styles.crend(); it != last; ++it) {
+        createStyles(ret, t, *it);
     }
 
-    return styles;
+    return ret;
 }
 
 template<class Trait>
 inline bool
-isSkipAllEmphasis(const std::vector<std::pair<std::pair<long long int, bool>, int>> &s,
-                  size_t idx)
+Parser<Trait>::isSequence(typename Delims::iterator it,
+                          long long int itLine,
+                          long long int itPos,
+                          typename Delimiter::DelimiterType t)
 {
-    if (s[idx].first.second) {
-        for (size_t i = idx + 1; i < s.size(); ++i) {
-            if (s[i].second == s[idx].second && s[i].first.first < 0) {
-                return ((s[idx].first.first - s[i].first.first) % 3 == 0 &&
-                    !(s[idx].first.first % 3 == 0 && s[i].first.first % 3 == 0));
-            }
-        }
+    return (itLine == it->m_line && itPos + it->m_len == it->m_pos && it->m_type == t);
+}
+
+template<class Trait>
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::readSequence(typename Delims::iterator it,
+                            typename Delims::iterator last,
+                            long long int &line,
+                            long long int &pos,
+                            long long int &len,
+                            long long int &itCount)
+{
+    line = it->m_line;
+    pos = it->m_pos;
+    len = it->m_len;
+    const auto t = it->m_type;
+    itCount = 1;
+
+    it = std::next(it);
+
+    while (it != last && isSequence(it, line, pos, t)) {
+        pos += it->m_len;
+        len += it->m_len;
+
+        ++it;
+        ++itCount;
     }
 
-    return false;
+    return std::prev(it);
+}
+
+inline bool
+isMult3(long long int i1, long long int i2)
+{
+    return ((((i1 + i2) % 3) == 0) && !((i1 % 3 == 0) && (i2 % 3 == 0)));
 }
 
 template<class Trait>
 inline std::tuple<bool, std::vector<std::pair<Style, long long int>>, long long int, long long int>
-Parser<Trait>::isStyleClosed(typename Delims::const_iterator it,
-                             typename Delims::const_iterator last,
+Parser<Trait>::isStyleClosed(typename Delims::iterator first,
+                             typename Delims::iterator it,
+                             typename Delims::iterator last,
+                             typename Delims::iterator &stackBottom,
                              TextParsingOpts<Trait> &po)
 {
     const auto open = it;
-    auto current = it;
+    long long int openPos, openLength, itCount, lengthFromIt, tmp;
 
-    std::vector<std::vector<std::pair<std::pair<long long int, bool>, int>>> vars, closed;
-    vars.push_back({});
+    it = std::next(readSequence(first, open, last, openPos, openLength, tmp, lengthFromIt, itCount).second);
 
-    long long int itLine = open->m_line, itPos = open->m_pos, itLength = open->m_len;
+    const auto length = lengthFromIt;
+    long long int itLine, itPos, itLength;
 
-    const long long int line = po.m_line, pos = po.m_pos;
-    const bool collectRefLinks = po.m_collectRefLinks;
+    struct RollbackValues {
+        RollbackValues(TextParsingOpts<Trait> &po,
+                       long long int line,
+                       long long int pos,
+                       bool collectRefLinks,
+                       typename Delims::iterator &stackBottom,
+                       typename Delims::iterator last)
+            : m_po(po)
+            , m_line(line)
+            , m_pos(pos)
+            , m_collectRefLinks(collectRefLinks)
+            , m_stackBottom(stackBottom)
+            , m_last(last)
+            , m_it(m_last)
+        {
+        }
+
+        void setIterator(typename Delims::iterator it)
+        {
+            m_it = it;
+        }
+
+        ~RollbackValues()
+        {
+            m_po.m_line = m_line;
+            m_po.m_pos = m_pos;
+            m_po.m_collectRefLinks = m_collectRefLinks;
+
+            if (m_it != m_last && (m_it > m_stackBottom || m_stackBottom == m_last)) {
+                m_stackBottom = m_it;
+            }
+        }
+
+        TextParsingOpts<Trait> &m_po;
+        long long int m_line;
+        long long int m_pos;
+        bool m_collectRefLinks;
+        typename Delims::iterator &m_stackBottom;
+        typename Delims::iterator m_last;
+        typename Delims::iterator m_it;
+    };
+
+    RollbackValues rollback(po, po.m_line, po.m_pos, po.m_collectRefLinks, stackBottom, last);
 
     po.m_collectRefLinks = true;
 
-    bool first = true;
+    std::vector<long long int> styles;
 
-    std::for_each(po.m_styles.cbegin(), po.m_styles.cend(), [&vars](const auto &p) {
-        if (p.first == Style::Strikethrough) {
-            vars.front().push_back({{p.second, false}, 0});
+    struct Opener {
+        std::vector<typename Delims::iterator> m_its;
+        long long int m_length;
+    };
+
+    std::vector<Opener> openers;
+
+    std::function<void(long long int, long long int)> dropOpeners;
+
+    dropOpeners = [&openers](long long int pos, long long int line) {
+        while (!openers.empty()) {
+            if (openers.back().m_its.front()->m_line > line || (openers.back().m_its.front()->m_line == line &&
+                                                        openers.back().m_its.front()->m_pos > pos)) {
+                std::for_each( openers.back().m_its.begin(), openers.back().m_its.end(),
+                               [](auto &i) { i->m_skip = true; });
+                openers.pop_back();
+            } else {
+                break;
+            }
         }
-    });
+    };
 
+    auto tryCloseEmphasis = [&dropOpeners, this, &openers, &open](typename Delims::iterator first,
+                               typename Delims::iterator it,
+                               typename Delims::iterator last) -> bool
     {
-        {
-            const auto c1 = std::count_if(po.m_styles.cbegin(), po.m_styles.cend(), [&](const auto &p) {
-                return (p.first == Style::Italic1);
-            });
+        const auto type = it->m_type;
+        const auto both = it->m_leftFlanking && it->m_rightFlanking;
+        long long int tmp1, tmp2, tmp3, tmp4;
+        long long int closeLength;
 
-            if (c1) {
-                vars.front().push_back({{c1, false}, 1});
+        it = this->readSequence(first, it, last, tmp1, closeLength, tmp2, tmp3, tmp4).first;
+        it = std::prev(it);
+
+        long long int tmpLength = closeLength;
+
+        for (;; --it) {
+            switch (it->m_type) {
+            case Delimiter::Strikethrough: {
+                if (it->m_leftFlanking && it->m_len == closeLength && type == it->m_type) {
+                    dropOpeners(it->m_pos, it->m_line);
+                    return true;
+                }
+            } break;
+
+            case Delimiter::Emphasis1:
+            case Delimiter::Emphasis2:
+            {
+                if (it->m_leftFlanking && type == it->m_type) {
+                    long long int pos, len;
+                    this->readSequence(first, it, last, pos, len, tmp1, tmp2, tmp3);
+
+                    if ((both || (it->m_leftFlanking && it->m_rightFlanking)) && isMult3(len, closeLength)) {
+                        continue;
+                    }
+
+                    dropOpeners(pos - len, it->m_line);
+
+                    if (tmpLength >= len) {
+                        tmpLength -= len;
+
+                        if (open->m_type == it->m_type) {
+                            openers.pop_back();
+                        }
+
+                        if (!tmpLength) {
+                            return true;
+                        }
+                    } else {
+                        if (open->m_type == it->m_type) {
+                            openers.back().m_length -= tmpLength;
+                        }
+
+                        return true;
+                    }
+                }
+            } break;
+
+            default:
+                break;
             }
 
-            const auto c2 = std::count_if(po.m_styles.cbegin(),
-                                          po.m_styles.cend(),
-                                          [&](const auto &p) {
-                                              return (p.first == Style::Bold1);
-                                          }) * 2;
-
-            if (c2) {
-                vars.front().push_back({{c2, false}, 1});
+            if (it == first) {
+                break;
             }
         }
 
-        {
-            const auto c1 = std::count_if(po.m_styles.cbegin(), po.m_styles.cend(), [&](const auto &p) {
-                return (p.first == Style::Italic2);
-            });
+        return false;
+    };
 
-            if (c1) {
-                vars.front().push_back({{c1, false}, 2});
-            }
+    auto fillIterators = [](typename Delims::iterator first,
+                            typename Delims::iterator last) -> std::vector<typename Delims::iterator>
+    {
+        std::vector<typename Delims::iterator> res;
 
-            const auto c2 = std::count_if(po.m_styles.cbegin(),
-                                          po.m_styles.cend(),
-                                          [&](const auto &p) {
-                                              return (p.first == Style::Bold2);
-                                          }) * 2;
-
-            if (c2) {
-                vars.front().push_back({{c2, false}, 2});
-            }
+        for (; first != last; ++first) {
+            res.push_back(first);
         }
-    }
 
-    const auto idx = vars.front().size();
+        res.push_back(last);
+
+        return res;
+    };
 
     for (; it != last; ++it) {
+        if (it > stackBottom) {
+            return {false, {{Style::Unknown, 0}}, open->m_len, 1};
+        }
+
         if (it->m_line <= po.m_lastTextLine) {
+            po.m_line = it->m_line;
+
             switch (it->m_type) {
             case Delimiter::SquareBracketsOpen:
                 it = checkForLink(it, last, po);
@@ -7542,18 +7401,86 @@ Parser<Trait>::isStyleClosed(typename Delims::const_iterator it,
                 it = checkForAutolinkHtml(it, last, po, false);
                 break;
 
-            case Delimiter::Strikethrough:
+            case Delimiter::Strikethrough: {
+                if (open->m_type == it->m_type && open->m_len == it->m_len && it->m_rightFlanking) {
+                    rollback.setIterator(it);
+                    return {true, createStyles(open->m_type, styles, open->m_len), open->m_len, 1};
+                } else if (it->m_rightFlanking && tryCloseEmphasis(open, it, last)) {
+                } else if (it->m_leftFlanking && open->m_type == it->m_type) {
+                    openers.push_back({{it}, it->m_len});
+                }
+            } break;
+
             case Delimiter::Emphasis1:
             case Delimiter::Emphasis2: {
-                it = readSequence(it, last, itLine, itPos, itLength, current);
+                if (open->m_type == it->m_type) {
+                    const auto itBoth = (it->m_leftFlanking && it->m_rightFlanking);
 
-                if (first) {
-                    vars.front().push_back({{itLength, it->m_leftFlanking && it->m_rightFlanking},
-                        emphasisToInt(open->m_type)});
-                    first = false;
-                } else {
-                    collectDelimiterVariants(vars, itLength, emphasisToInt(it->m_type),
-                        it->m_leftFlanking, it->m_rightFlanking);
+                    if (it->m_rightFlanking) {
+                        bool notCheck = (open->m_leftFlanking && open->m_rightFlanking) || itBoth;
+
+                        long long int count;
+                        auto firstIt = it;
+                        it = readSequence(it, last, itLine, itPos, itLength, count);
+
+                        if (notCheck) {
+                            notCheck = isMult3(openLength, itLength);
+                        }
+
+                        if (!openers.empty()) {
+                            long long int i = openers.size() - 1;
+                            auto &top = openers[i];
+
+                            while (!openers.empty()) {
+                                if (i >= 0) {
+                                    top = openers[i];
+                                } else {
+                                    break;
+                                }
+
+                                if ((itBoth || (top.m_its.front()->m_rightFlanking && top.m_its.front()->m_leftFlanking))
+                                    && isMult3(itLength, top.m_length)) {
+                                    --i;
+                                    continue;
+                                }
+
+                                if (top.m_length <= itLength) {
+                                    itLength -= top.m_length;
+                                    openers.erase(openers.begin() + i);
+                                } else {
+                                    top.m_length -= itLength;
+                                    itLength = 0;
+                                }
+
+                                --i;
+
+                                if (!itLength) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (itLength) {
+                            if (!notCheck) {
+                                if (itLength >= lengthFromIt) {
+                                    rollback.setIterator(it);
+                                    return {true, createStyles(open->m_type, styles, lengthFromIt), length, itCount};
+                                } else {
+                                    styles.push_back(itLength);
+                                    lengthFromIt -= itLength;
+                                }
+                            } else if (firstIt->m_leftFlanking) {
+                                openers.push_back({fillIterators(firstIt, it), itLength});
+                            }
+                        }
+                    } else {
+                        long long int count;
+                        auto firstIt = it;
+                        it = readSequence(it, last, itLine, itPos, itLength, count);
+                        openers.push_back({fillIterators(firstIt, it), itLength});
+                    }
+                } else if (it->m_rightFlanking) {
+                    tryCloseEmphasis(open, it, last);
                 }
             } break;
 
@@ -7569,27 +7496,13 @@ Parser<Trait>::isStyleClosed(typename Delims::const_iterator it,
         }
     }
 
-    po.m_line = line;
-    po.m_pos = pos;
-    po.m_collectRefLinks = collectRefLinks;
-
-    closed = closedSequences(vars, idx);
-
-    if (!closed.empty()) {
-        long long int itCount = 0;
-
-        return {true, createStyles(longestSequenceWithMoreOpeningsAtStart(closed), idx,
-            open->m_type, itCount), vars.front().at(idx).first.first, itCount};
-    } else {
-        return {false, {{Style::Unknown, 0}}, isSkipAllEmphasis<Trait>(vars.front(), idx) ?
-            vars.front().at(idx).first.first : open->m_len, 1};
-    }
+    return {false, {{Style::Unknown, 0}}, open->m_len, 1};
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::incrementIterator(typename Delims::const_iterator it,
-                                 typename Delims::const_iterator last,
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::incrementIterator(typename Delims::iterator it,
+                                 typename Delims::iterator last,
                                  long long int count)
 {
     const auto len = std::distance(it, last);
@@ -7613,10 +7526,71 @@ appendCloseStyle(TextParsingOpts<Trait> &po,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::Delims::const_iterator
-Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
-                             typename Delims::const_iterator it,
-                             typename Delims::const_iterator last,
+inline std::pair<typename Parser<Trait>::Delims::iterator, typename Parser<Trait>::Delims::iterator>
+Parser<Trait>::readSequence(typename Delims::iterator first,
+                            typename Delims::iterator it,
+                            typename Delims::iterator last,
+                            long long int &pos,
+                            long long int &length,
+                            long long int &itCount,
+                            long long int &lengthFromIt,
+                            long long int &itCountFromIt)
+{
+    long long int line = it->m_line;
+    pos = it->m_pos + it->m_len;
+    long long int ppos = it->m_pos;
+    const auto t = it->m_type;
+    lengthFromIt = it->m_len;
+    itCountFromIt = 1;
+
+    auto retItLast = std::next(it);
+
+    for (; retItLast != last; ++retItLast) {
+        if (retItLast->m_line == line && pos == retItLast->m_pos && retItLast->m_type == t) {
+            lengthFromIt += retItLast->m_len;
+            pos = retItLast->m_pos + retItLast->m_len;
+            ++itCountFromIt;
+        } else {
+            break;
+        }
+    }
+
+    length = lengthFromIt;
+    itCount = itCountFromIt;
+
+    auto retItFirst = it;
+    bool useNext = false;
+
+    if (retItFirst != first) {
+        retItFirst = std::prev(retItFirst);
+        useNext = true;
+
+        for (;; --retItFirst) {
+            if (retItFirst->m_line == line && ppos - retItFirst->m_len == retItFirst->m_pos && retItFirst->m_type == t) {
+                length += retItFirst->m_len;
+                ppos = retItFirst->m_pos;
+                ++itCount;
+                useNext = false;
+            } else {
+                useNext = true;
+                break;
+            }
+
+            if (retItFirst == first) {
+                break;
+            }
+        }
+    }
+
+    return {useNext ? std::next(retItFirst) : retItFirst, std::prev(retItLast)};
+}
+
+template<class Trait>
+inline typename Parser<Trait>::Delims::iterator
+Parser<Trait>::checkForStyle(typename Delims::iterator first,
+                             typename Delims::iterator it,
+                             typename Delims::iterator last,
+                             typename Delims::iterator &stackBottom,
                              TextParsingOpts<Trait> &po)
 {
     long long int count = 1;
@@ -7625,59 +7599,37 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
     po.m_firstInParagraph = false;
 
     if (it->m_rightFlanking) {
-        long long int line = it->m_line, pos = it->m_pos + it->m_len, ppos = it->m_pos;
+        long long int pos, len, tmp1, tmp2;
+        readSequence(first, it, last, pos, len, count, tmp1, tmp2);
         const auto t = it->m_type;
-        long long int len = it->m_len;
-
-        for (auto j = std::next(it); j != last; ++j) {
-            if (j->m_line == line && pos == j->m_pos && j->m_type == t) {
-                len += j->m_len;
-                pos = j->m_pos + j->m_len;
-                ++count;
-            } else {
-                break;
-            }
-        }
-
-        if (it != first) {
-            for (auto j = std::prev(it);; --j) {
-                if (j->m_line == line && ppos - j->m_len == j->m_pos && j->m_type == t) {
-                    len += j->m_len;
-                    ppos = j->m_pos;
-                    ++count;
-                } else {
-                    break;
-                }
-
-                if (j == first) {
-                    break;
-                }
-            }
-        }
 
         long long int opened = 0;
+        bool bothFlanking = false;
 
         for (auto it = po.m_styles.crbegin(), last = po.m_styles.crend(); it != last; ++it) {
             bool doBreak = false;
 
             switch (t) {
             case Delimiter::Emphasis1: {
-                if (it->first == Style::Italic1 || it->first == Style::Bold1) {
-                    opened = it->second;
+                if (it->m_style == Style::Italic1 || it->m_style == Style::Bold1) {
+                    opened = it->m_length;
+                    bothFlanking = it->m_bothFlanking;
                     doBreak = true;
                 }
             } break;
 
             case Delimiter::Emphasis2: {
-                if (it->first == Style::Italic2 || it->first == Style::Bold2) {
-                    opened = it->second;
+                if (it->m_style == Style::Italic2 || it->m_style == Style::Bold2) {
+                    opened = it->m_length;
+                    bothFlanking = it->m_bothFlanking;
                     doBreak = true;
                 }
             } break;
 
             case Delimiter::Strikethrough: {
-                if (it->first == Style::Strikethrough) {
-                    opened = it->second;
+                if (it->m_style == Style::Strikethrough) {
+                    opened = it->m_length;
+                    bothFlanking = it->m_bothFlanking;
                     doBreak = true;
                 }
             } break;
@@ -7690,9 +7642,9 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                 break;
         }
 
-        const bool sumMult3 = (it->m_leftFlanking ? ((opened + len) % 3 == 0) : false);
+        const bool sumMult3 = (it->m_leftFlanking || bothFlanking ? isMult3(opened, len) : false);
 
-        if (count && opened && (!sumMult3 || (count % 3 == 0 && opened % 3 == 0))) {
+        if (count && opened && !sumMult3) {
             if (count > opened) {
                 count = opened;
             }
@@ -7704,7 +7656,7 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                 const auto len = it->m_len;
 
                 for (auto i = 0; i < count; ++i) {
-                    closeStyle(po.m_styles, Style::Strikethrough);
+                    closeStyle<Trait>(po.m_styles, Style::Strikethrough);
                     appendCloseStyle(po, {StrikethroughText, pos, line, pos + len - 1, line});
                     pos += len;
                 }
@@ -7712,7 +7664,7 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                 if (count % 2 == 1) {
                     const auto st = (it->m_type == Delimiter::Emphasis1 ? Style::Italic1 : Style::Italic2);
 
-                    closeStyle(po.m_styles, st);
+                    closeStyle<Trait>(po.m_styles, st);
                     appendCloseStyle(po, {ItalicText, pos, line, pos, line});
                     ++pos;
                 }
@@ -7721,14 +7673,14 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                     const auto st = (it->m_type == Delimiter::Emphasis1 ? Style::Bold1 : Style::Bold2);
 
                     for (auto i = 0; i < count / 2; ++i) {
-                        closeStyle(po.m_styles, st);
+                        closeStyle<Trait>(po.m_styles, st);
                         appendCloseStyle(po, {BoldText, pos, line, pos + 1, line});
                         pos += 2;
                     }
                 }
             }
 
-            applyStyles(po.m_opts, po.m_styles);
+            applyStyles<Trait>(po.m_opts, po.m_styles);
 
             const auto j = incrementIterator(it, last, count - 1);
 
@@ -7750,14 +7702,24 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
             std::vector<std::pair<Style, long long int>> styles;
             long long int len = 0;
 
-            std::tie(closed, styles, len, count) = isStyleClosed(it, last, po);
+            if (it > stackBottom) {
+                stackBottom = last;
+            }
+
+            if (it->m_skip) {
+                closed = false;
+                long long int tmp1, tmp2, tmp3;
+                readSequence(it, last, tmp1, tmp2, len, tmp3);
+            } else {
+                std::tie(closed, styles, len, count) = isStyleClosed(first, it, last, stackBottom, po);
+            }
 
             if (closed) {
                 auto pos = po.m_fr.m_data.at(it->m_line).first.virginPos(it->m_pos);
                 const auto line = po.m_fr.m_data.at(it->m_line).second.m_lineNumber;
 
                 for (const auto &p : styles) {
-                    po.m_styles.push_back({p.first, p.second});
+                    po.m_styles.push_back({p.first, p.second, it->m_leftFlanking && it->m_rightFlanking});
 
                     if (!po.m_collectRefLinks) {
                         po.m_openStyles.push_back({styleToTextOption(p.first), pos, line,
@@ -7770,7 +7732,7 @@ Parser<Trait>::checkForStyle(typename Delims::const_iterator first,
                 po.m_pos = it->m_pos + len;
                 po.m_line = it->m_line;
 
-                applyStyles(po.m_opts, po.m_styles);
+                applyStyles<Trait>(po.m_opts, po.m_styles);
             } else if (!po.m_collectRefLinks) {
                 makeText(it->m_line, it->m_pos + len, po);
             }
@@ -8423,13 +8385,14 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
     p->setStartLine(fr.m_data.at(0).second.m_lineNumber);
     std::shared_ptr<Paragraph<Trait>> pt(new Paragraph<Trait>);
 
-    const auto delims = collectDelimiters(fr.m_data);
+    auto delims = collectDelimiters(fr.m_data);
 
     TextParsingOpts<Trait> po = {fr, p, nullptr, doc, linksToParse, workingPath, fileName,
         collectRefLinks, ignoreLineBreak, html, m_textPlugins};
+    typename Delims::iterator styleStackBottom = delims.end();
 
     if (!delims.empty()) {
-        for (auto it = delims.cbegin(), last = delims.cend(); it != last; ++it) {
+        for (auto it = delims.begin(), last = delims.end(); it != last; ++it) {
             if (html.m_html.get() && html.m_continueHtml) {
                 it = finishRawHtmlTag(it, last, po, false);
             } else {
@@ -8485,7 +8448,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                 case Delimiter::Emphasis1:
                 case Delimiter::Emphasis2: {
                     if (!collectRefLinks) {
-                        it = checkForStyle(delims.cbegin(), it, last, po);
+                        it = checkForStyle(delims.begin(), it, last, styleStackBottom, po);
                         p->setEndColumn(fr.m_data.at(it->m_line).first.virginPos(it->m_pos + it->m_len - 1));
                         p->setEndLine(fr.m_data.at(it->m_line).second.m_lineNumber);
                     }
@@ -8671,7 +8634,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
         }
     } else {
         if (html.m_html.get() && html.m_continueHtml) {
-            finishRawHtmlTag(delims.cend(), delims.cend(), po, false);
+            finishRawHtmlTag(delims.end(), delims.end(), po, false);
         }
     }
 
@@ -8767,7 +8730,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
         f->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
         f->setEndLine(fr.m_data.back().second.m_lineNumber);
 
-        const auto delims = collectDelimiters(fr.m_data);
+        auto delims = collectDelimiters(fr.m_data);
 
         RawHtmlBlock<Trait> html;
 
@@ -8779,12 +8742,12 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
         if (!delims.empty() && delims.cbegin()->m_type == Delimiter::SquareBracketsOpen &&
             !delims.cbegin()->m_isWordBefore) {
             typename MdBlock<Trait>::Data id;
-            typename Delims::const_iterator it = delims.cend();
+            typename Delims::iterator it = delims.end();
 
             po.m_line = delims.cbegin()->m_line;
             po.m_pos = delims.cbegin()->m_pos;
 
-            std::tie(id, it) = checkForLinkText(delims.cbegin(), delims.cend(), po);
+            std::tie(id, it) = checkForLinkText(delims.begin(), delims.end(), po);
 
             if (!toSingleLine(id).isEmpty() &&
                 id.front().first.asString().startsWith(Trait::latin1ToString("^")) &&
@@ -9480,9 +9443,25 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                             wasText = (wasEmptyLine ? false : wasText);
                         }
 
+                        wasText = false;
+                        long long int prevIndent = 0, tmp = 0;
+
                         for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it) {
-                            it->first = it->first.sliced(std::min(skipSpaces<Trait>(
-                                0, it->first.asString()), indent));
+                            const auto ns = skipSpaces<Trait>(0, it->first.asString());
+
+                            it->first = it->first.sliced(std::min(ns, indent));
+
+                            std::tie(ok, tmp, std::ignore, wasText) =
+                                listItemData<Trait>(it->first.asString(), wasText);
+
+                            wasText = (ns == it->first.length() ? false : wasText);
+
+                            if (ns < indent && prevIndent && ok) {
+                                it->first.insert(0, typename Trait::String(prevIndent + 4,
+                                                                           Trait::latin1ToChar(' ')));
+                            }
+
+                            prevIndent = tmp;
                         }
 
                         while (!nestedList.empty() &&

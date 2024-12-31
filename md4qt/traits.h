@@ -993,6 +993,16 @@ struct UnicodeStringTrait {
     {
         str.push_back(Char(ch));
     }
+
+    //! Search for last occurrence of string.
+    static long long int lastIndexOf(const String &where, const String &what, long long int from)
+    {
+        if (from < 0) {
+            return -1;
+        } else {
+            return where.lastIndexOf(what, 0, from + 1);
+        }
+    }
 }; // struct UnicodeStringTrait
 
 #endif // MD4QT_ICU_STL_SUPPORT
@@ -1086,6 +1096,16 @@ struct QStringTrait {
     static void appendUcs4(String &str, char32_t ch)
     {
         str += QChar::fromUcs4(ch);
+    }
+
+    //! Search for last occurrence of string.
+    static long long int lastIndexOf(const String &where, const String &what, long long int from)
+    {
+        if (from < 0) {
+            return -1;
+        } else {
+            return where.lastIndexOf(what, from);
+        }
     }
 }; // struct QStringTrait
 
