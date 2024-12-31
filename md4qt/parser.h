@@ -79,37 +79,30 @@ skipSpaces(long long int i, const typename Trait::String &line)
     return i;
 }
 
+//! \return Last non-space character position.
+template<class String>
+inline long long int
+lastNonSpacePos(const String &line)
+{
+    long long int i = line.length() - 1;
+
+    while (i >= 0 && line[i].isSpace()) {
+        --i;
+    }
+
+    return i;
+}
 
 //! Remove spaces at the end of string \p s.
 template<class String>
 inline void
 removeSpacesAtEnd(String &s)
 {
-    long long int i = s.length() - 1;
-
-    for (; i >= 0; --i) {
-        if (!s[i].isSpace()) {
-            break;
-        }
-    }
+    const auto i = lastNonSpacePos(s);
 
     if (i != s.length() - 1) {
         s.remove(i + 1, s.length() - i - 1);
     }
-}
-
-//! \return Last non-space character position.
-template<class Trait>
-inline long long int
-lastNonSpacePos(const typename Trait::String &line)
-{
-    long long int i = line.length() - 1;
-
-    while (i > 0 && line[i].isSpace()) {
-        --i;
-    }
-
-    return i;
 }
 
 //! \return Starting sequence of the same characters.
@@ -8510,7 +8503,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                                                 {po.m_fr.m_data[it->m_line].first.virginPos(pos),
                                                  fr.m_data[it->m_line].second.m_lineNumber,
                                                  po.m_fr.m_data[it->m_line].first.virginPos(
-                                                    lastNonSpacePos<Trait>(po.m_fr.m_data[it->m_line].first.asString())),
+                                                    lastNonSpacePos(po.m_fr.m_data[it->m_line].first.asString())),
                                                  fr.m_data[it->m_line].second.m_lineNumber},
                                                 po);
 
@@ -8573,7 +8566,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                                     {po.m_fr.m_data[it->m_line].first.virginPos(skipSpaces<Trait>(
                                         0, po.m_fr.m_data[it->m_line].first.asString())),
                                      fr.m_data[it->m_line].second.m_lineNumber,
-                                     po.m_fr.m_data[it->m_line].first.virginPos(lastNonSpacePos<Trait>(
+                                     po.m_fr.m_data[it->m_line].first.virginPos(lastNonSpacePos(
                                         po.m_fr.m_data[it->m_line].first.asString())),
                                      fr.m_data[it->m_line].second.m_lineNumber},
                                     po);

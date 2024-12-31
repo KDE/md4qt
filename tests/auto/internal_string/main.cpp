@@ -14,6 +14,7 @@ TEST_CASE("replace_remove_1")
 {
     TRAIT::InternalString s(TRAIT::latin1ToString("abcde"));
 
+    REQUIRE(s.virginPos(-1) == -1);
     REQUIRE(s.virginPos(0) == 0);
     REQUIRE(s.virginPos(1) == 1);
     REQUIRE(s.virginPos(2) == 2);
