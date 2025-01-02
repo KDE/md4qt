@@ -11,7 +11,7 @@
 #include <md4qt/html.h>
 
 #include <QFile>
-#include <QtTest>
+#include <QTest>
 #include <QObject>
 
 #include <cmark-gfm-core-extensions.h>

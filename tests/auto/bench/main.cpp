@@ -6,7 +6,7 @@
 
 // Qt include.
 #include <QObject>
-#include <QtTest/QtTest>
+#include <QTest>
 
 // md4qt include.
 #include <md4qt/parser.h>
