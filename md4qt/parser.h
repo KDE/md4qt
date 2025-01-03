@@ -238,6 +238,8 @@ struct MdLineData {
     using CommentDataMap = std::map<long long int, CommentData>;
     // std::pair< closed, valid >
     CommentDataMap m_htmlCommentData = {};
+    // May this line break a list?
+    bool m_mayBreakList = false;
 }; // struct MdLineData
 
 //
@@ -274,9 +276,14 @@ public:
     {
         return (m_pos >= (long long int)m_stream.size());
     }
-    typename Trait::InternalString readLine()
+    std::pair<typename Trait::InternalString, bool> readLine()
     {
-        return m_stream.at(m_pos++).first;
+        const std::pair<typename Trait::InternalString, bool> ret =
+            {m_stream.at(m_pos).first, m_stream.at(m_pos).second.m_mayBreakList};
+
+        ++m_pos;
+
+        return ret;
     }
     long long int currentLineNumber() const
     {
@@ -1535,10 +1542,12 @@ private:
               bool collectRefLinks,
               RawHtmlBlock<Trait> &html);
 
-    void
-    parseCode(MdBlock<Trait> &fr, std::shared_ptr<Block<Trait>> parent, bool collectRefLinks);
+    long long int
+    parseCode(MdBlock<Trait> &fr,
+              std::shared_ptr<Block<Trait>> parent,
+              bool collectRefLinks);
 
-    void
+    long long int
     parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
                               std::shared_ptr<Block<Trait>> parent,
                               bool collectRefLinks,
@@ -1693,7 +1702,7 @@ private:
     bool
     isListType(BlockType t);
 
-    typename Trait::InternalString
+    std::pair<typename Trait::InternalString, bool>
     readLine(ParserContext &ctx, StringListStream<Trait> &stream);
 
     std::shared_ptr<Image<Trait>>
@@ -2383,6 +2392,11 @@ Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
                 block.m_data.clear();
                 std::copy(it, ctx.m_fragment.cend(), std::back_inserter(block.m_data));
                 block.m_emptyLinesBefore = 0;
+
+                if (block.m_data.front().second.m_mayBreakList) {
+                    block.m_data.front().second.m_mayBreakList = false;
+                    parent = ctx.m_html.m_topParent;
+                }
             }
         }
 
@@ -2440,7 +2454,10 @@ Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
     while (!stream.atEnd()) {
         const auto currentLineNumber = stream.currentLineNumber();
 
-        auto line = readLine(ctx, stream);
+        typename Trait::InternalString line;
+        bool mayBreak;
+
+        std::tie(line, mayBreak) = readLine(ctx, stream);
 
         replaceTabs<Trait>(line);
 
@@ -2454,7 +2471,7 @@ Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
                 emptyLinesCount = 0;
             }
 
-            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
         } else if (!wasEmptyLine) {
             if (isFootnote<Trait>(line.sliced(ns).asString())) {
                 parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
@@ -2465,7 +2482,7 @@ Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
 
                 continue;
             } else {
-                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
             }
         } else {
             parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
@@ -2605,7 +2622,7 @@ Parser<Trait>::isListType(BlockType t)
 }
 
 template<class Trait>
-typename Trait::InternalString
+std::pair<typename Trait::InternalString, bool>
 Parser<Trait>::readLine(typename Parser<Trait>::ParserContext &ctx,
                         StringListStream<Trait> &stream)
 {
@@ -2615,9 +2632,9 @@ Parser<Trait>::readLine(typename Parser<Trait>::ParserContext &ctx,
 
     static const char16_t c_zeroReplaceWith[2] = {0xFFFD, 0};
 
-    line.replace(typename Trait::Char(0), Trait::utf16ToString(&c_zeroReplaceWith[0]));
+    line.first.replace(typename Trait::Char(0), Trait::utf16ToString(&c_zeroReplaceWith[0]));
 
-    checkForHtmlComments(line, stream, ctx.m_htmlCommentData);
+    checkForHtmlComments(line.first, stream, ctx.m_htmlCommentData);
 
     return line;
 }
@@ -2639,7 +2656,10 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
     while (!stream.atEnd()) {
         const auto currentLineNumber = stream.currentLineNumber();
 
-        auto line = readLine(ctx, stream);
+        typename Trait::InternalString line;
+        bool mayBreak;
+
+        std::tie(line, mayBreak) = readLine(ctx, stream);
 
         if (ctx.m_lineType != BlockType::Unknown) {
             ctx.m_prevLineType = ctx.m_lineType;
@@ -2750,7 +2770,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
                 break;
 
             case BlockType::Code: {
-                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
                 ctx.m_emptyLinesCount = 0;
 
                 continue;
@@ -2772,10 +2792,10 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
             if (indentInListValue || isListType(ctx.m_lineType) || ctx.m_lineType == BlockType::SomethingInList) {
                 for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
                     ctx.m_fragment.push_back({typename Trait::String(),
-                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}}});
+                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}, false}});
                 }
 
-                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
                 ctx.m_emptyLineInList = false;
                 ctx.m_emptyLinesCount = 0;
@@ -2800,10 +2820,10 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
 
                 for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
                     ctx.m_fragment.push_back({typename Trait::String(indent, Trait::latin1ToChar(' ')),
-                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}}});
+                        {currentLineNumber - ctx.m_emptyLinesCount + i, {}, false}});
                 }
 
-                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
                 ctx.m_emptyLinesCount = 0;
             } else {
                 parseFragmentAndMakeNextLineMain(ctx,
@@ -2826,7 +2846,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
         if (ctx.m_type != ctx.m_lineType && ctx.m_type != BlockType::Code &&
             !isListType(ctx.m_type) && ctx.m_type != BlockType::Blockquote) {
             if (ctx.m_type == BlockType::Text && ctx.m_lineType == BlockType::CodeIndentedBySpaces) {
-                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
             }
             else {
                 if (ctx.m_type == BlockType::Text && isListType(ctx.m_lineType)) {
@@ -2835,13 +2855,13 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
 
                         if (isOrderedList<Trait>(line.asString(), &num)) {
                             if (num != 1) {
-                                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
                                 continue;
                             }
                         }
                     } else {
-                        ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+                        ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
                         continue;
                     }
@@ -2865,7 +2885,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
                  !ctx.m_startOfCode.isEmpty() &&
                  startSequence<Trait>(line.asString()).contains(ctx.m_startOfCode) &&
                  isCodeFences<Trait>(line.asString(), true)) {
-            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
             parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
         }
@@ -2897,7 +2917,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
                                              ns,
                                              currentLineNumber);
         } else {
-            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData}});
+            ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
         }
 
         ctx.m_emptyLinesCount = 0;
@@ -2905,7 +2925,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
 
     if (!ctx.m_fragment.empty()) {
         if (ctx.m_type == BlockType::Code) {
-            ctx.m_fragment.push_back({ctx.m_startOfCode, {-1, {}}});
+            ctx.m_fragment.push_back({ctx.m_startOfCode, {-1, {}, false}});
         }
 
         parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
@@ -3364,7 +3384,7 @@ Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
             break;
 
         case BlockType::Code:
-            parseCode(fr, parent, collectRefLinks);
+            return parseCode(fr, parent, collectRefLinks);
             break;
 
         case BlockType::CodeIndentedBySpaces: {
@@ -3374,7 +3394,7 @@ Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
                 indent = 4;
             }
 
-            parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, {}, -1, -1, false);
+            return parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, {}, -1, -1, false);
         } break;
 
         case BlockType::Heading:
@@ -9150,7 +9170,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
 
                 continue;
             } else if (isListItemAndNotNested<Trait>(it->first.asString(), indent) &&
-                !listItem.empty()) {
+                !listItem.empty() && !it->second.m_mayBreakList) {
                 typename Trait::Char tmpMarker;
                 std::tie(std::ignore, indent, tmpMarker, std::ignore) =
                     listItemData<Trait>(it->first.asString(), false);
@@ -9393,7 +9413,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                         it->first.asString().sliced(indent) : it->first.asString(),
                     wasText);
 
-                if (ok) {
+                if (ok && !it->second.m_mayBreakList) {
                     StringListStream<Trait> stream(data);
 
                     parseStream(stream);
@@ -9436,25 +9456,14 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                             wasText = (wasEmptyLine ? false : wasText);
                         }
 
-                        wasText = false;
-                        long long int prevIndent = 0, tmp = 0;
-
                         for (auto it = nestedList.begin(), last = nestedList.end(); it != last; ++it) {
                             const auto ns = skipSpaces<Trait>(0, it->first.asString());
 
-                            it->first = it->first.sliced(std::min(ns, indent));
-
-                            std::tie(ok, tmp, std::ignore, wasText) =
-                                listItemData<Trait>(it->first.asString(), wasText);
-
-                            wasText = (ns == it->first.length() ? false : wasText);
-
-                            if (ns < indent && prevIndent && ok) {
-                                it->first.insert(0, typename Trait::String(prevIndent + 4,
-                                                                           Trait::latin1ToChar(' ')));
+                            if (ns < indent && ns != it->first.length()) {
+                                it->second.m_mayBreakList = true;
+                            } else {
+                                it->first = it->first.sliced(std::min(ns, indent));
                             }
-
-                            prevIndent = tmp;
                         }
 
                         while (!nestedList.empty() &&
@@ -9483,9 +9492,10 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                         break;
                     }
                 } else {
-                    if (it->first.asString().startsWith(typename Trait::String(
-                        indent, Trait::latin1ToChar(' ')))) {
-                        it->first = it->first.sliced(indent);
+                    if (!it->second.m_mayBreakList &&
+                        it->first.asString().startsWith(typename Trait::String(
+                            indent, Trait::latin1ToChar(' ')))) {
+                            it->first = it->first.sliced(indent);
                     }
 
                     data.push_back(*it);
@@ -9495,9 +9505,10 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                     wasText = !wasEmptyLine;
                 }
             } else {
-                if (it->first.asString().startsWith(typename Trait::String(
-                    indent, Trait::latin1ToChar(' ')))) {
-                    it->first = it->first.sliced(indent);
+                if (!it->second.m_mayBreakList &&
+                    it->first.asString().startsWith(typename Trait::String(
+                        indent, Trait::latin1ToChar(' ')))) {
+                        it->first = it->first.sliced(indent);
                 }
 
                 data.push_back(*it);
@@ -9581,7 +9592,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 }
 
 template<class Trait>
-inline void
+inline long long int
 Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                          std::shared_ptr<Block<Trait>> parent,
                          bool collectRefLinks)
@@ -9674,14 +9685,16 @@ Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                 }
             } else {
                 parseCodeIndentedBySpaces(fr, parent, collectRefLinks, indent, syntax, emptyColumn,
-                    startLine, true, startDelim, endDelim, syntaxPos);
+                                          startLine, true, startDelim, endDelim, syntaxPos);
             }
         }
     }
+
+    return -1;
 }
 
 template<class Trait>
-inline void
+inline long long int
 Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
                                          std::shared_ptr<Block<Trait>> parent,
                                          bool collectRefLinks,
@@ -9699,16 +9712,23 @@ Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
         long long int startPos = 0;
         bool first = true;
 
-        for (const auto &l : std::as_const(fr.m_data)) {
-            const auto ns = skipSpaces<Trait>(0, l.first.asString());
+        auto lastIt = std::prev(fr.m_data.end());
+
+        for (auto it = fr.m_data.begin(), last = fr.m_data.end(); it != last; ++it) {
+            if (it->second.m_mayBreakList) {
+                lastIt = std::prev(it);
+                break;
+            }
+
+            const auto ns = skipSpaces<Trait>(0, it->first.asString());
             if (first) {
                 startPos = ns;
             }
             first = false;
 
-            code.push_back((indent > 0 ? l.first.virginSubString(ns < indent ? ns : indent) +
+            code.push_back((indent > 0 ? it->first.virginSubString(ns < indent ? ns : indent) +
                     typename Trait::String(Trait::latin1ToChar('\n')) :
-                typename Trait::String(l.first.virginSubString()) +
+                typename Trait::String(it->first.virginSubString()) +
                     typename Trait::String(Trait::latin1ToChar('\n'))));
         }
 
@@ -9725,8 +9745,8 @@ Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
         if (!fr.m_data.empty()) {
             codeItem->setStartColumn(fr.m_data.front().first.virginPos(startPos));
             codeItem->setStartLine(fr.m_data.front().second.m_lineNumber);
-            codeItem->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
-            codeItem->setEndLine(fr.m_data.back().second.m_lineNumber);
+            codeItem->setEndColumn(lastIt->first.virginPos(fr.m_data.back().first.length() - 1));
+            codeItem->setEndLine(lastIt->second.m_lineNumber);
         } else {
             codeItem->setStartColumn(emptyColumn);
             codeItem->setStartLine(startLine);
@@ -9757,7 +9777,13 @@ Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
         } else {
             parent->appendItem(codeItem);
         }
+
+        if (lastIt != std::prev(fr.m_data.end())) {
+            return std::next(lastIt)->second.m_lineNumber;
+        }
     }
+
+    return -1;
 }
 
 } /* namespace MD */

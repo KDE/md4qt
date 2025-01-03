@@ -54,3 +54,50 @@ TEST_CASE("281")
         REQUIRE(l->items().size() == 3);
     }
 }
+
+/*
+ - 1
+  - 2
+   - 3
+    - 4
+     - 5
+      - 6
+       - 7
+      - 6
+     -     code
+    - 4
+   - 3
+  - 2
+ - 1
+
+*/
+TEST_CASE("282")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/282.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 4);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(l->items().size() == 3);
+    REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
+
+    {
+        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        REQUIRE(li->items().size() == 2);
+
+        REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
+        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        REQUIRE(l->items().size() == 5);
+    }
+
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Code);
+
+    {
+        REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
+        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        REQUIRE(l->items().size() == 3);
+    }
+}
