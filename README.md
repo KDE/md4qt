@@ -10,7 +10,7 @@
 `md4qt` is a header-only C++ library for parsing Markdown.
 
 `md4qt` supports CommonMark 0.31.2 Spec, and some GitHub extensions, such as
-tables, footnotes, tasks lists, strikethroughs, LaTeX Math injections, GitHub's autolinks.
+tables, footnotes, tasks lists, strikethroughs, LaTeX Maths injections, GitHub's auto-links.
 
 `md4qt` can be built with Qt6 or with ICU.
 
@@ -167,9 +167,9 @@ What should I know about links in the document?
 ---
 
  * In some cases in Markdown link's URL is something document related. So, when
-you got a `MD::Link` in the document check if the labeled links of the
+you got a `MD::Link` in the document check if the labelled links of the
 document contains key with URL in the link, and if so, use URL from
-labeled links, look:
+labelled links, look:
 
    ```cpp
    MD::Link<MD::QStringTrait> *item = ...;
@@ -409,7 +409,7 @@ that can be handy for plugin implementation.
 
 ### Could you show an example of a plugin?
 
-* In `md4qt` already exists one text plugin for handling GitHub's autolink. A
+* In `md4qt` already exists one text plugin for handling GitHub's auto-link. A
   plugin function is quite simple, look.
 
   ```cpp
@@ -438,9 +438,9 @@ that can be handy for plugin implementation.
 ### I didn't understand how raw text data correlates with a paragraph.
 
 * Let I will show you on example how raw text data correlate with paragraph. Just two
-  diagrams and you won't have anymore questions. Look.
+  diagrams and you won't have any more questions. Look.
 
-  Consider we want to replace any occurence of `@X` by some kind of a link. Before
+  Consider we want to replace any occurrence of `@X` by some kind of a link. Before
   modifications we had.
 
   ![](./docs/pics/paragraph_before.svg)
