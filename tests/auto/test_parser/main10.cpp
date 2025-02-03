@@ -250,3 +250,60 @@ TEST_CASE("285")
         REQUIRE(l->items().size() == 3);
     }
 }
+
+/*
+
+* <!--
+-->
+
+In CommonMark will be.
+
+*/
+TEST_CASE("286")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/286.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
+}
+
+/*
+* <div>
+
+text
+
+*/
+TEST_CASE("287")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/287.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
+}
+
+/*
+* <?
+?>
+
+text
+
+*/
+TEST_CASE("288")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/288.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
+}

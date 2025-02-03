@@ -289,7 +289,13 @@ public:
 
     long long int currentLineNumber() const
     {
-        return (m_pos < size() ? m_stream.at(m_pos).second.m_lineNumber : size());
+        return (m_pos < size() ? m_stream.at(m_pos).second.m_lineNumber :
+                                 (size() > 0 ? m_stream.at(0).second.m_lineNumber + size() : -1));
+    }
+
+    long long int currentStreamPos() const
+    {
+        return m_pos;
     }
 
     typename Trait::InternalString lineAt(long long int pos)
@@ -2334,7 +2340,7 @@ checkForHtmlComments(const typename Trait::InternalString &line,
                      StringListStream<Trait> &stream,
                      MdLineData::CommentDataMap &res)
 {
-    long long int p = 0, l = stream.currentLineNumber();
+    long long int p = 0, l = stream.currentStreamPos();
 
     const auto &str = line.asString();
 
