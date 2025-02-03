@@ -7513,6 +7513,7 @@ Parser<Trait>::isStyleClosed(typename Delims::iterator first,
 
         if (it->m_line <= po.m_lastTextLine) {
             po.m_line = it->m_line;
+            po.m_pos = it->m_pos;
 
             switch (it->m_type) {
             case Delimiter::SquareBracketsOpen:
