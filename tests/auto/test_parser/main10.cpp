@@ -307,3 +307,23 @@ TEST_CASE("288")
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
 }
+
+/*
+<!--
+```
+``` -->
+
+# Head
+
+*/
+TEST_CASE("289")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/289.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::RawHtml);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Heading);
+}
