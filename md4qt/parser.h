@@ -3700,7 +3700,7 @@ stringToLabel(const typename Trait::String &s)
 
         if (c.isLetter() || c.isDigit() || c == Trait::latin1ToChar('-') ||
             c == Trait::latin1ToChar('_')) {
-            res.push_back(c.toLower());
+            res.push_back(c);
         } else if (c.isSpace()) {
             res.push_back(Trait::latin1ToString("-"));
         }
@@ -3900,17 +3900,24 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
 
         if (h->isLabeled()) {
             doc->insertLabeledHeading(h->label(), h);
+            h->labelVariants().push_back(h->label());
         } else {
             typename Trait::String label = Trait::latin1ToString("#") +
                 paragraphToLabel(h->text().get());
 
-            label += Trait::latin1ToString("/") +
+            const auto path = Trait::latin1ToString("/") +
                 (!workingPath.isEmpty() ? workingPath + Trait::latin1ToString("/") :
                     Trait::latin1ToString("")) + fileName;
 
-            h->setLabel(label);
+            h->setLabel(label + path);
+            h->labelVariants().push_back(h->label());
 
-            doc->insertLabeledHeading(label, h);
+            doc->insertLabeledHeading(label + path, h);
+
+            if (label != label.toLower()) {
+                doc->insertLabeledHeading(label.toLower() + path, h);
+                h->labelVariants().push_back(label.toLower() + path);
+            }
         }
 
         parent->appendItem(h);
@@ -8436,12 +8443,18 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
         }
 
         if (!label.first.isEmpty()) {
-            label.first += Trait::latin1ToString("/") + (!workingPath.isEmpty() ?
+            const auto path = Trait::latin1ToString("/") + (!workingPath.isEmpty() ?
                 workingPath + Trait::latin1ToString("/") : typename Trait::String()) + fileName;
 
-            h->setLabel(label.first);
+            h->setLabel(label.first + path);
 
-            doc->insertLabeledHeading(label.first, h);
+            doc->insertLabeledHeading(label.first + path, h);
+            h->labelVariants().push_back(h->label());
+
+            if (label.first != label.first.toLower()) {
+                doc->insertLabeledHeading(label.first.toLower() + path, h);
+                h->labelVariants().push_back(label.first.toLower() + path);
+            }
         }
 
         parent->appendItem(h);
