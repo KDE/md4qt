@@ -6485,7 +6485,7 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
         link->p()->appendItem(html.m_html);
     }
 
-    link->setText(toSingleLine(text));
+    link->setText(toSingleLine(removeBackslashes<Trait>(text)));
     link->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
     link->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
     link->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
@@ -6525,7 +6525,7 @@ Parser<Trait>::createShortcutLink(const typename MdBlock<Trait>::Data &text,
             const auto isLinkTextEmpty = toSingleLine(linkText).isEmpty();
 
             const auto link = makeLink(u,
-                                       removeBackslashes<Trait>(isLinkTextEmpty ? text : linkText),
+                                       (isLinkTextEmpty ? text : linkText),
                                        po,
                                        doNotCreateTextOnFail,
                                        startLine,
@@ -7215,7 +7215,7 @@ Parser<Trait>::checkForLink(typename Delims::iterator it,
 
                 if (ok) {
                     const auto link = makeLink(url,
-                                               removeBackslashes<Trait>(text),
+                                               text,
                                                po,
                                                false,
                                                start->m_line,
