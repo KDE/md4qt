@@ -816,7 +816,7 @@ public:
     }
 
     //! Type of a vector of labels.
-    using LabelsVector = typename Trait::Vector<typename Trait::String>;
+    using LabelsVector = typename Trait::template Vector<typename Trait::String>;
 
     //! \return Label variants.
     const LabelsVector &labelVariants() const
