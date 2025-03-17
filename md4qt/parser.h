@@ -9450,7 +9450,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         item->setChecked(checked);
     }
 
-    bool fensedCode = false;
+    bool fencedCode = false;
     typename Trait::String startOfCode;
     bool wasEmptyLine = false;
 
@@ -9514,23 +9514,23 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
 
     if (processHtml(std::prev(it)) == -2) {
         for (auto last = fr.m_data.end(); it != last; ++it, ++pos) {
-            if (!fensedCode) {
-                fensedCode = isCodeFences<Trait>(it->first.asString().startsWith(
+            if (!fencedCode) {
+                fencedCode = isCodeFences<Trait>(it->first.asString().startsWith(
                     typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
                         it->first.asString().sliced(indent) : it->first.asString());
 
-                if (fensedCode) {
+                if (fencedCode) {
                     startOfCode = startSequence<Trait>(it->first.asString());
                 }
-            } else if (fensedCode &&
+            } else if (fencedCode &&
                        isCodeFences<Trait>(it->first.asString().startsWith(
                             typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
                                 it->first.asString().sliced(indent) : it->first.asString(),
                             true) && startSequence<Trait>(it->first.asString()).contains(startOfCode)) {
-                fensedCode = false;
+                fencedCode = false;
             }
 
-            if (!fensedCode) {
+            if (!fencedCode) {
                 long long int newIndent = 0;
                 bool ok = false;
 
@@ -9586,7 +9586,11 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                                 wasEmptyLine = false;
                             }
 
-                            if (ok || ns >= indent + newIndent || ns == it->first.length() || !wasEmptyLine) {
+                            const auto fenced = isCodeFences<Trait>(it->first.asString().startsWith(
+                                typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
+                                    it->first.asString().sliced(indent) : it->first.asString());
+
+                            if (ok || ns >= indent + newIndent || ns == it->first.length() || (!wasEmptyLine && !fenced)) {
                                 nestedList.push_back(*it);
                             } else {
                                 break;
