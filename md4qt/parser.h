@@ -9586,11 +9586,26 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                                 wasEmptyLine = false;
                             }
 
-                            const auto fenced = isCodeFences<Trait>(it->first.asString().startsWith(
+                            auto currentStr = it->first.asString().startsWith(
                                 typename Trait::String(indent, Trait::latin1ToChar(' '))) ?
-                                    it->first.asString().sliced(indent) : it->first.asString());
+                                    it->first.sliced(indent) : it->first;
 
-                            if (ok || ns >= indent + newIndent || ns == it->first.length() || (!wasEmptyLine && !fenced)) {
+                            const auto type = whatIsTheLine(currentStr);
+
+                            bool mayBreak = false;
+
+                            switch (type) {
+                            case BlockType::Code:
+                            case BlockType::Blockquote:
+                            case BlockType::Heading:
+                                mayBreak = true;
+                                break;
+
+                            default:
+                                break;
+                            }
+
+                            if (ok || ns >= indent + newIndent || ns == it->first.length() || (!wasEmptyLine && !mayBreak)) {
                                 nestedList.push_back(*it);
                             } else {
                                 break;
