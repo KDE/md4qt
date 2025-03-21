@@ -618,3 +618,24 @@ TEST_CASE("301")
         REQUIRE(li->items().at(2)->type() == MD::ItemType::Blockquote);
     }
 }
+
+/*
+<p> some HTML </p>
+- list with some `inline code`
+
+*/
+TEST_CASE("302")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/302.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::RawHtml);
+    auto h = static_cast<MD::RawHtml<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(h->startColumn() == 0);
+    REQUIRE(h->startLine() == 0);
+    REQUIRE(h->endColumn() == 29);
+    REQUIRE(h->endLine() == 1);
+}
