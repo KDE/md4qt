@@ -639,3 +639,33 @@ TEST_CASE("302")
     REQUIRE(h->endColumn() == 29);
     REQUIRE(h->endLine() == 1);
 }
+
+/*
+[![You sir are my hero. You've pretty much summed up and described my experiences of late, much better than I could have. Cursor and Windsurf both had me frustrated to the point where I was almost yelling at my computer screen. Out of whimsy, I thought to myself why not just ask Claude directly, and haven't looked back since.
+Claude first to keep my sanity in check, then if necessary, engage with other IDEs, frameworks, etc. I thought I was the only one, glad to see I'm not lol.
+33
+1](testemonials/img_4.png)
+https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e](https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e)
+
+*/
+TEST_CASE("303")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/303.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 1);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
+    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+    REQUIRE(l->startColumn() == 0);
+    REQUIRE(l->startLine() == 0);
+    REQUIRE(l->endColumn() == 120);
+    REQUIRE(l->endLine() == 4);
+    REQUIRE(l->p()->items().size() == 2);
+    REQUIRE(l->p()->items().at(0)->type() == MD::ItemType::Image);
+    REQUIRE(l->p()->items().at(1)->type() == MD::ItemType::Text);
+}
