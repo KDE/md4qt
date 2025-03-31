@@ -669,3 +669,62 @@ TEST_CASE("303")
     REQUIRE(l->p()->items().at(0)->type() == MD::ItemType::Image);
     REQUIRE(l->p()->items().at(1)->type() == MD::ItemType::Text);
 }
+
+/*
+![](./data/a.png)
+
+[](./data/304-1.md)
+
+*/
+TEST_CASE("304")
+{
+    typename TRAIT::String wd =
+#ifdef MD4QT_QT_SUPPORT
+        QDir().absolutePath()
+#else
+        typename TRAIT::String(std::filesystem::canonical(std::filesystem::current_path()).u8string())
+#endif
+        + TRAIT::latin1ToString("/tests/parser/");
+
+#ifndef MD4QT_QT_SUPPORT
+    std::string tmp;
+    wd.toUTF8String(tmp);
+    std::replace(tmp.begin(), tmp.end(), '\\', '/');
+    wd = icu::UnicodeString::fromUTF8(tmp);
+#endif
+
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/304.md"), wd);
+
+    REQUIRE(doc->items().size() == 6);
+
+    {
+        REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+        REQUIRE(p->items().size() == 1);
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Image);
+        auto i = static_cast<MD::Image<TRAIT>*>(p->items().at(0).get());
+        REQUIRE(i->url() == wd + TRAIT::latin1ToString("./data/a.png"));
+    }
+
+    {
+        REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
+        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(2).get());
+        REQUIRE(p->items().size() == 1);
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
+        auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+        REQUIRE(l->url() == wd + TRAIT::latin1ToString("data/304-1.md"));
+    }
+
+    REQUIRE(doc->items().at(3)->type() == MD::ItemType::PageBreak);
+
+    {
+        REQUIRE(doc->items().at(5)->type() == MD::ItemType::Paragraph);
+        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(5).get());
+        REQUIRE(p->items().size() == 1);
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Image);
+        auto i = static_cast<MD::Image<TRAIT>*>(p->items().at(0).get());
+        REQUIRE(i->url() == wd + TRAIT::latin1ToString("./data/b.png"));
+    }
+}

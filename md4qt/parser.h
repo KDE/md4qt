@@ -1474,6 +1474,27 @@ public:
         //! style delimiters, but one closing delimiter is in the middle.
         bool fullyOptimizeParagraphs = true);
 
+    //! \return Parsed Markdown document.
+    std::shared_ptr<Document<Trait>>
+    parse(
+        //! File name of the Markdown document (full path).
+        const typename Trait::String &fileName,
+        //! Absolute path to the working directory for the document.
+        //! This path will be used to resolve local links.
+        const typename Trait::String &workingDirectory,
+        //! Should parsing be recursive? If recursive all links to existing Markdown
+        //! files will be parsed and presented in the returned document.
+        bool recursive = true,
+        //! Allowed extensions for Markdonw document files. If Markdown file doesn't
+        //! have given extension it will be ignored.
+        const typename Trait::StringList &ext = {Trait::latin1ToString("md"), Trait::latin1ToString("markdown")},
+        //! Make full optimization, or just semi one. In full optimization
+        //! text items with one style but with some closing delimiters
+        //! in the middle will be concatenated in one, like in **text* text*,
+        //! here in full optimization will be "text text" with 2 open/close
+        //! style delimiters, but one closing delimiter is in the middle.
+        bool fullyOptimizeParagraphs = true);
+
     //! Add text plugin.
     void
     addTextPlugin(
@@ -1504,7 +1525,8 @@ private:
               bool recursive,
               std::shared_ptr<Document<Trait>> doc,
               const typename Trait::StringList &ext,
-              typename Trait::StringList *parentLinks = nullptr);
+              typename Trait::StringList *parentLinks = nullptr,
+              const typename Trait::String &workingDirectory = {});
 
     void
     parseStream(typename Trait::TextStream &stream,
@@ -1513,7 +1535,8 @@ private:
                 bool recursive,
                 std::shared_ptr<Document<Trait>> doc,
                 const typename Trait::StringList &ext,
-                typename Trait::StringList *parentLinks = nullptr);
+                typename Trait::StringList *parentLinks = nullptr,
+                const typename Trait::String &workingDirectory = {});
 
     void
     clearCache();
@@ -2150,6 +2173,43 @@ Parser<Trait>::parse(typename Trait::TextStream &stream,
     std::shared_ptr<Document<Trait>> doc(new Document<Trait>);
 
     parseStream(stream, path, fileName, false, doc, typename Trait::StringList());
+
+    clearCache();
+
+    return doc;
+}
+
+template<class Trait>
+inline std::shared_ptr<Document<Trait>>
+Parser<Trait>::parse(const typename Trait::String &fileName,
+                     const typename Trait::String &workingDirectory,
+                     bool recursive,
+                     const typename Trait::StringList &ext,
+                     bool fullyOptimizeParagraphs)
+{
+    m_fullyOptimizeParagraphs = fullyOptimizeParagraphs;
+
+    std::shared_ptr<Document<Trait>> doc(new Document<Trait>);
+
+    typename Trait::String wd;
+    auto i = workingDirectory.length() - 1;
+
+    while (i > 0) {
+        if (workingDirectory[i] != Trait::latin1ToChar('\\') &&
+            workingDirectory[i] != Trait::latin1ToChar('/')) {
+            break;
+        } else {
+            --i;
+        }
+    }
+
+    if (i == 0 && workingDirectory[i] == Trait::latin1ToChar('/')) {
+        wd = Trait::latin1ToString("/");
+    } else if (i > 0) {
+        wd = workingDirectory.sliced(0, i + 1);
+    }
+
+    parseFile(fileName, recursive, doc, ext, nullptr, wd);
 
     clearCache();
 
@@ -3159,7 +3219,8 @@ Parser<QStringTrait>::parseFile(const QString &fileName,
                                 bool recursive,
                                 std::shared_ptr<Document<QStringTrait>> doc,
                                 const QStringList &ext,
-                                QStringList *parentLinks)
+                                QStringList *parentLinks,
+                                const QString &workingDirectory)
 {
     QFileInfo fi(fileName);
 
@@ -3170,7 +3231,17 @@ Parser<QStringTrait>::parseFile(const QString &fileName,
             QTextStream s(f.readAll());
             f.close();
 
-            parseStream(s, fi.absolutePath(), fi.fileName(), recursive, doc, ext, parentLinks);
+            auto wd = fi.absolutePath();
+
+            if (!workingDirectory.isEmpty()) {
+                QFileInfo folder(workingDirectory);
+
+                if (folder.exists() && folder.isDir()) {
+                    wd = folder.absoluteFilePath();
+                }
+            }
+
+            parseStream(s, wd, fi.fileName(), recursive, doc, ext, parentLinks, workingDirectory);
         }
     }
 }
@@ -3185,7 +3256,8 @@ Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
                                       bool recursive,
                                       std::shared_ptr<Document<UnicodeStringTrait>> doc,
                                       const std::vector<UnicodeString> &ext,
-                                      std::vector<UnicodeString> *parentLinks)
+                                      std::vector<UnicodeString> *parentLinks,
+                                      const UnicodeString &workingDirectory)
 {
     if (UnicodeStringTrait::fileExists(fileName)) {
         std::string fn;
@@ -3204,16 +3276,27 @@ Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
 
                 if (file.good()) {
                     const auto fileNameS = path.filename().u8string();
-                    auto workingDirectory = path.remove_filename().u8string();
+                    auto wd = path.remove_filename().u8string();
 
-                    if (!workingDirectory.empty()) {
-                        workingDirectory.erase(workingDirectory.size() - 1, 1);
+                    if (!wd.empty()) {
+                        wd.erase(wd.size() - 1, 1);
                     }
 
-                    std::replace(workingDirectory.begin(), workingDirectory.end(), '\\', '/');
+                    if (!workingDirectory.isEmpty()) {
+                        std::string folderPath;
+                        workingDirectory.toUTF8String(folderPath);
+                        auto folder = std::filesystem::directory_entry(folderPath);
 
-                    parseStream(file, UnicodeString::fromUTF8(workingDirectory),
-                        UnicodeString::fromUTF8(fileNameS), recursive, doc, ext, parentLinks);
+                        if (folder.exists() && folder.is_directory()) {
+                            path = std::filesystem::canonical(folder.path());
+                            wd = path.u8string();
+                        }
+                    }
+
+                    std::replace(wd.begin(), wd.end(), '\\', '/');
+
+                    parseStream(file, UnicodeString::fromUTF8(wd),
+                        UnicodeString::fromUTF8(fileNameS), recursive, doc, ext, parentLinks, workingDirectory);
 
                     file.close();
                 }
@@ -3258,7 +3341,8 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
                            bool recursive,
                            std::shared_ptr<Document<Trait>> doc,
                            const typename Trait::StringList &ext,
-                           typename Trait::StringList *parentLinks)
+                           typename Trait::StringList *parentLinks,
+                           const typename Trait::String &workingDirectory)
 {
     typename Trait::StringList linksToParse;
 
@@ -3315,7 +3399,7 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
                     doc->appendItem(std::shared_ptr<PageBreak<Trait>>(new PageBreak<Trait>));
                 }
 
-                parseFile(nextFileName, recursive, doc, ext, &linksToParse);
+                parseFile(nextFileName, recursive, doc, ext, &linksToParse, workingDirectory);
             }
         }
 
