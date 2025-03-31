@@ -1481,6 +1481,7 @@ public:
         const typename Trait::String &fileName,
         //! Absolute path to the working directory for the document.
         //! This path will be used to resolve local links.
+        //! \warning This path should be in \p fileName path.
         const typename Trait::String &workingDirectory,
         //! Should parsing be recursive? If recursive all links to existing Markdown
         //! files will be parsed and presented in the returned document.
@@ -3232,16 +3233,21 @@ Parser<QStringTrait>::parseFile(const QString &fileName,
             f.close();
 
             auto wd = fi.absolutePath();
+            auto fn = fi.fileName();
 
-            if (!workingDirectory.isEmpty()) {
+            if (!workingDirectory.isEmpty() && wd.contains(workingDirectory)) {
                 QFileInfo folder(workingDirectory);
 
                 if (folder.exists() && folder.isDir()) {
                     wd = folder.absoluteFilePath();
+
+                    auto tmp = fi.absoluteFilePath();
+                    fn = tmp.remove(wd);
+                    fn.removeAt(0);
                 }
             }
 
-            parseStream(s, wd, fi.fileName(), recursive, doc, ext, parentLinks, workingDirectory);
+            parseStream(s, wd, fn, recursive, doc, ext, parentLinks, workingDirectory);
         }
     }
 }
@@ -3277,26 +3283,33 @@ Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
                 if (file.good()) {
                     const auto fileNameS = path.filename().u8string();
                     auto wd = path.remove_filename().u8string();
+                    auto ufn = UnicodeString::fromUTF8(fileNameS);
 
                     if (!wd.empty()) {
                         wd.erase(wd.size() - 1, 1);
                     }
 
-                    if (!workingDirectory.isEmpty()) {
+                    if (!workingDirectory.isEmpty() &&
+                        UnicodeStringTrait::String(UnicodeString::fromUTF8(wd)).contains(workingDirectory)) {
                         std::string folderPath;
                         workingDirectory.toUTF8String(folderPath);
                         auto folder = std::filesystem::directory_entry(folderPath);
 
                         if (folder.exists() && folder.is_directory()) {
+                            auto tmp = UnicodeString::fromUTF8(
+                                        std::filesystem::canonical(std::filesystem::u8path(fn)).u8string());
                             path = std::filesystem::canonical(folder.path());
                             wd = path.u8string();
+
+                            ufn = tmp.findAndReplace(UnicodeString::fromUTF8(wd), {});
+                            ufn.remove(0, 1);
                         }
                     }
 
                     std::replace(wd.begin(), wd.end(), '\\', '/');
 
-                    parseStream(file, UnicodeString::fromUTF8(wd),
-                        UnicodeString::fromUTF8(fileNameS), recursive, doc, ext, parentLinks, workingDirectory);
+                    parseStream(file, UnicodeString::fromUTF8(wd), ufn,
+                                recursive, doc, ext, parentLinks, workingDirectory);
 
                     file.close();
                 }

@@ -700,6 +700,12 @@ TEST_CASE("304")
     REQUIRE(doc->items().size() == 6);
 
     {
+        REQUIRE(doc->items().at(0)->type() == MD::ItemType::Anchor);
+        auto a = static_cast<MD::Anchor<TRAIT>*>(doc->items().at(0).get());
+        REQUIRE(a->label() == wd + TRAIT::latin1ToString("data/304.md"));
+    }
+
+    {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
         auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
         REQUIRE(p->items().size() == 1);
@@ -718,6 +724,12 @@ TEST_CASE("304")
     }
 
     REQUIRE(doc->items().at(3)->type() == MD::ItemType::PageBreak);
+
+    {
+        REQUIRE(doc->items().at(4)->type() == MD::ItemType::Anchor);
+        auto a = static_cast<MD::Anchor<TRAIT>*>(doc->items().at(4).get());
+        REQUIRE(a->label() == wd + TRAIT::latin1ToString("data/304-1.md"));
+    }
 
     {
         REQUIRE(doc->items().at(5)->type() == MD::ItemType::Paragraph);
