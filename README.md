@@ -141,6 +141,33 @@ whereas `md4qt` does so. For example.
   will provide compelling reasons to do exactly as in CommonMark in this case, I will
   work with this question.
 
+* GitHub treats everything after task list item as paragraph. I.e.
+
+  ```md
+  * [ ] > text
+  ```
+
+  Will be.
+
+  ```html
+  <ul>
+  <li class="task-list-item"><input type="checkbox" id="" disabled=""> &gt; text</li>
+  </ul>
+  ```
+
+  Whereas in `md4qt` it will be.
+
+  ```html
+  <ul>
+  <li class="task-list-item"><input type="checkbox" id="" disabled="">
+
+  <blockquote><p>text</p></blockquote>
+  </li>
+  </ul>
+  ```
+
+  Interesting question. And I decided to keep it as is now.
+
 # Q/A
 
 Why another AST Markdown parser?
