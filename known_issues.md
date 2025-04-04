@@ -1,3 +1,8 @@
+<!--
+	SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+	SPDX-License-Identifier: MIT
+-->
+
 # Known issues
 
 ## 1. Lazy HTML
