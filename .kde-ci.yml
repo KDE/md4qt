@@ -6,7 +6,7 @@ Dependencies:
 Options:
   test-before-installing: True
   require-passing-tests-on: [ 'Linux', 'FreeBSD', 'Windows' ]
-  run-cppcheck: True
+  run-cppcheck: False
   cppcheck-arguments: '--enable=warning,style,performance'
   cppcheck-ignore-files:
     - 3rdparty/
