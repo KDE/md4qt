@@ -20,59 +20,71 @@ namespace MD
 // ItemType
 //
 
-//! Enumeration of item types.
+/*!
+ * \enum MD::ItemType
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Enumeration of item types.
+ *
+ * \value Heading Heading.
+ * \value Text Text.
+ * \value Paragraph Paragraph.
+ * \value LineBreak Line break.
+ * \value Blockquote Blockquote.
+ * \value ListItem List item.
+ * \value List List.
+ * \value Link Link.
+ * \value Image Image.
+ * \value Code Code.
+ * \value TableCell Table cell.
+ * \value TableRow Table row.
+ * \value Table Table.
+ * \value FootnoteRef Footnote ref.
+ * \value Footnote Footnote.
+ * \value Document Document.
+ * \value PageBreak Page break.
+ * \value Anchor Anchor.
+ * \value HorizontalLine Horizontal line.
+ * \value RawHtml Raw HTML.
+ * \value Math Math expression.
+ * \value UserDefined Start item for user-defined types.
+ */
 enum class ItemType : int {
-    //! Heading.
     Heading = 0,
-    //! Text.
     Text,
-    //! Paragraph.
     Paragraph,
-    //! Line break.
     LineBreak,
-    //! Blockquote.
     Blockquote,
-    //! List item.
     ListItem,
-    //! List.
     List,
-    //! Link.
     Link,
-    //! Image.
     Image,
-    //! Code.
     Code,
-    //! Table cell.
     TableCell,
-    //! Table row.
     TableRow,
-    //! Table.
     Table,
-    //! Footnote ref.
     FootnoteRef,
-    //! Footnote.
     Footnote,
-    //! Document.
     Document,
-    //! Page break.
     PageBreak,
-    //! Anchor.
     Anchor,
-    //! Horizontal line.
     HorizontalLine,
-    //! Raw HTML.
     RawHtml,
-    //! Math expression.
     Math,
-    //! Start item for user-defined types.
     UserDefined = 255
 }; // enum class ItemType
 
 //
 // WithPosition
 //
-
-//! Base for any thing with start and end position.
+/*!
+ * \class MD::WithPosition
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Base for any thing with start and end position.
+ */
 class WithPosition
 {
 public:
@@ -90,7 +102,9 @@ public:
     {
     }
 
-    //! Apply positions to this from other.
+    /*!
+     * Apply positions to this from other.
+     */
     void applyPositions(const WithPosition &other)
     {
         if (this != &other) {
@@ -98,65 +112,95 @@ public:
         }
     }
 
-    //! \return Start column.
+    /*!
+     * Returns start column.
+     */
     long long int startColumn() const
     {
         return m_startColumn;
     }
 
-    //! \return Start line.
+    /*!
+     * Returns start line.
+     */
     long long int startLine() const
     {
         return m_startLine;
     }
 
-    //! \return End column.
+    /*!
+     * Returns end column.
+     */
     long long int endColumn() const
     {
         return m_endColumn;
     }
 
-    //! \return End line.
+    /*!
+     * Returns end line.
+     */
     long long int endLine() const
     {
         return m_endLine;
     }
 
-    //! Set start column.
+    /*!
+     * Set start column.
+     */
     void setStartColumn(long long int c)
     {
         m_startColumn = c;
     }
 
-    //! Set start line.
+    /*!
+     * Set start line.
+     */
     void setStartLine(long long int l)
     {
         m_startLine = l;
     }
 
-    //! Set end column.
+    /*!
+     * Set end column.
+     */
     void setEndColumn(long long int c)
     {
         m_endColumn = c;
     }
 
-    //! Set end line.
+    /*!
+     * Set end line.
+     */
     void setEndLine(long long int l)
     {
         m_endLine = l;
     }
 
 private:
-    //! Start column
+    /*!
+     * Start column
+     */
     long long int m_startColumn = -1;
-    //! Start line.
+    /*!
+     * Start line.
+     */
     long long int m_startLine = -1;
-    //! End column.
+    /*!
+     * End column.
+     */
     long long int m_endColumn = -1;
-    //! End line.
+    /*!
+     * End line.
+     */
     long long int m_endLine = -1;
 }; // class WithPosition
 
+/*!
+ * \relates MD::WithPosition
+ * \inheaderfile md4qt/doc.h
+ *
+ * Returns whether both are equal.
+ */
 inline bool operator==(const WithPosition &l, const WithPosition &r)
 {
     return (l.startColumn() == r.startColumn() &&
@@ -172,7 +216,13 @@ class Document;
 // Item
 //
 
-//! Base class for item in Markdown document.
+/*!
+ * \class MD::Item
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Base class for item in Markdown document.
+ */
 template<class Trait>
 class Item : public WithPosition
 {
@@ -182,10 +232,14 @@ protected:
 public:
     ~Item() override = default;
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     virtual ItemType type() const = 0;
 
-    //! Clone this item.
+    /*!
+     * Clone this item.
+     */
     virtual std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const = 0;
 
 private:
@@ -196,15 +250,21 @@ private:
 // TextOption
 //
 
-//! Text option.
+/*!
+ * \enum MD::TextOption
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Text option.
+ * \value TextWithoutFormat No format.
+ * \value BoldText Bold text.
+ * \value ItalicText Italic text.
+ * \value StrikethroughText Strikethrough.
+ */
 enum TextOption {
-    //! No format.
     TextWithoutFormat = 0,
-    //! Bold text.
     BoldText = 1,
-    //! Italic text.
     ItalicText = 2,
-    //! Strikethrough.
     StrikethroughText = 4
 }; // enum TextOption
 
@@ -212,7 +272,13 @@ enum TextOption {
 // StyleDelim
 //
 
-//! Emphasis in the Markdown document.
+/*!
+ * \class MD::StyleDelim
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Emphasis in the Markdown document.
+ */
 class StyleDelim final : public WithPosition
 {
 public:
@@ -228,13 +294,17 @@ public:
 
     ~StyleDelim() override = default;
 
-    //! \return Style.
+    /*!
+     * Returns style.
+     */
     int style() const
     {
         return m_style;
     }
 
-    //! Set style.
+    /*!
+     * Set style.
+     */
     void setStyle(int t)
     {
         m_style = t;
@@ -244,6 +314,12 @@ private:
     int m_style = TextWithoutFormat;
 }; // class StyleDelim
 
+/*!
+ * \relates MD::StyleDelim
+ * \inheaderfile md4qt/doc.h
+ *
+ * Returns whether both are equal.
+ */
 inline bool operator==(const StyleDelim &l, const StyleDelim &r)
 {
     return (static_cast<WithPosition>(l) == static_cast<WithPosition>(r) && l.style() == r.style());
@@ -253,8 +329,14 @@ inline bool operator==(const StyleDelim &l, const StyleDelim &r)
 // ItemWithOpts
 //
 
-//! Base class for items that can have style options.
-//! These are all items in Paragraph.
+/*!
+ * \class MD::ItemWithOpts
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Base class for items that can have style options.
+ * These are all items in Paragraph.
+ */
 template<class Trait>
 class ItemWithOpts : public Item<Trait>
 {
@@ -264,7 +346,9 @@ protected:
 public:
     ~ItemWithOpts() override = default;
 
-    //! Apply other item with options to this.
+    /*!
+     * Apply other item with options to this.
+     */
     void applyItemWithOpts(const ItemWithOpts<Trait> &other)
     {
         if (this != &other) {
@@ -275,51 +359,73 @@ public:
         }
     }
 
-    //! Type of list of emphasis.
+    /*!
+     * \typealias MD::ItemWithOpts::Styles
+     *
+     * Type of list of emphasis.
+     */
     using Styles = typename Trait::template Vector<StyleDelim>;
 
-    //! \return Style options.
+    /*!
+     * Returns style options.
+     */
     int opts() const
     {
         return m_opts;
     }
 
-    //! Set style options.
+    /*!
+     * Set style options.
+     */
     void setOpts(int o)
     {
         m_opts = o;
     }
 
-    //! \return List of all opening emphasises.
+    /*!
+     * Returns list of all opening emphasises.
+     */
     const Styles &openStyles() const
     {
         return m_openStyles;
     }
 
-    //! \return List of all opening emphasises.
+    /*!
+     * Returns list of all opening emphasises.
+     */
     Styles &openStyles()
     {
         return m_openStyles;
     }
 
-    //! \return List of all closing emphasises.
+    /*!
+     * Returns list of all closing emphasises.
+     */
     const Styles &closeStyles() const
     {
         return m_closeStyles;
     }
 
-    //! \return List of all closing emphasises.
+    /*!
+     * Returns list of all closing emphasises.
+     */
     Styles &closeStyles()
     {
         return m_closeStyles;
     }
 
 private:
-    //! Style options.
+    /*!
+     * Style options.
+     */
     int m_opts = 0;
-    //! List of opening emphasises.
+    /*!
+     * List of opening emphasises.
+     */
     Styles m_openStyles;
-    //! List of closing emphasises.
+    /*!
+     * List of closing emphasises.
+     */
     Styles m_closeStyles;
 
     MD_DISABLE_COPY(ItemWithOpts)
@@ -329,7 +435,13 @@ private:
 // PageBreak
 //
 
-//! Page break.
+/*!
+ * \class MD::PageBreak
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Page break.
+ */
 template<class Trait>
 class PageBreak final : public Item<Trait>
 {
@@ -337,13 +449,17 @@ public:
     PageBreak() = default;
     ~PageBreak() override = default;
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::PageBreak;
     }
 
-    //! Clone this page break.
+    /*!
+     * Clone this page break.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -359,7 +475,13 @@ private:
 // HorizontalLine
 //
 
-//! Horizontal line.
+/*!
+ * \class MD::HorizontalLine
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Horizontal line.
+ */
 template<class Trait>
 class HorizontalLine final : public Item<Trait>
 {
@@ -367,13 +489,17 @@ public:
     HorizontalLine() = default;
     ~HorizontalLine() override = default;
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::HorizontalLine;
     }
 
-    //! Clone this horizontal line.
+    /*!
+     * Clone this horizontal line.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -392,7 +518,13 @@ private:
 // Anchor
 //
 
-//! Just an anchor.
+/*!
+ * \class MD::Anchor
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Just an anchor.
+ */
 template<class Trait>
 class Anchor final : public Item<Trait>
 {
@@ -404,7 +536,9 @@ public:
 
     ~Anchor() override = default;
 
-    //! Clone this anchor.
+    /*!
+     * Clone this anchor.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -412,13 +546,17 @@ public:
         return std::make_shared<Anchor<Trait>>(m_label);
     }
 
-    //! \return item type.
+    /*!
+     * Returns item type.
+     */
     ItemType type() const override
     {
         return ItemType::Anchor;
     }
 
-    //! \return Label of this anchor.
+    /*!
+     * Returns label of this anchor.
+     */
     const typename Trait::String &label() const
     {
         return m_label;
@@ -427,7 +565,9 @@ public:
 private:
     MD_DISABLE_COPY(Anchor)
 
-    //! Label
+    /*!
+     * Label
+     */
     typename Trait::String m_label;
 }; // class Anchor
 
@@ -435,7 +575,13 @@ private:
 // RawHtml
 //
 
-//! Raw HTML.
+/*!
+ * \class MD::RawHtml
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Raw HTML.
+ */
 template<class Trait>
 class RawHtml final : public ItemWithOpts<Trait>
 {
@@ -443,7 +589,9 @@ public:
     RawHtml() = default;
     ~RawHtml() override = default;
 
-    //! Clone this raw HTML.
+    /*!
+     * Clone this raw HTML.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -456,19 +604,25 @@ public:
         return h;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::RawHtml;
     }
 
-    //! \return HTML content.
+    /*!
+     * Returns HTML content.
+     */
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
-    //! Set HTML content.
+    /*!
+     * Set HTML content.
+     */
     void setText(const typename Trait::String &t)
     {
         m_text = t;
@@ -481,24 +635,34 @@ protected:
     template<class T>
     friend struct UnprotectedDocsMethods;
 
-    //! \return Is this HTML a free tag, not inline one.
-    //! \note This method is for internal use only.
+    /*!
+     * Returns whether this HTML a free tag, not inline one.
+     *
+     * \note This method is for internal use only.
+     */
     bool isFreeTag() const
     {
         return m_isFreeTag;
     }
 
-    //! Set that this HTML is a free, not inline one.
-    //! \note This method is for internal use only.
+    /*!
+     * Set that this HTML is a free, not inline one.
+     *
+     * \note This method is for internal use only.
+     */
     void setFreeTag(bool on = true)
     {
         m_isFreeTag = on;
     }
 
 private:
-    //! HTML content.
+    /*!
+     * HTML content.
+     */
     typename Trait::String m_text;
-    //! Is this HTML a free tag, not inline one.
+    /*!
+     * Is this HTML a free tag, not inline one.
+     */
     bool m_isFreeTag = true;
 
     MD_DISABLE_COPY(RawHtml)
@@ -508,7 +672,13 @@ private:
 // Text
 //
 
-//! Text item in Paragraph.
+/*!
+ * \class MD::Text
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Text item in Paragraph.
+ */
 template<typename Trait>
 class Text : public ItemWithOpts<Trait>
 {
@@ -525,7 +695,9 @@ public:
         }
     }
 
-    //! Clone this text item.
+    /*!
+     * Clone this text item.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -536,26 +708,34 @@ public:
         return t;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Text;
     }
 
-    //! \return Text content.
+    /*!
+     * Returns text content.
+     */
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
-    //! Set text content.
+    /*!
+     * Set text content.
+     */
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
 private:
-    //! Text content.
+    /*!
+     * Text content.
+     */
     typename Trait::String m_text;
 
     MD_DISABLE_COPY(Text)
@@ -565,7 +745,13 @@ private:
 // LineBreak
 //
 
-//! Line break.
+/*!
+ * \class MD::LineBreak
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Line break.
+ */
 template<class Trait>
 class LineBreak final : public Text<Trait>
 {
@@ -573,7 +759,9 @@ public:
     LineBreak() = default;
     ~LineBreak() override = default;
 
-    //! Clone this line break.
+    /*!
+     * Clone this line break.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -584,7 +772,9 @@ public:
         return b;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::LineBreak;
@@ -598,7 +788,13 @@ private:
 // Block
 //
 
-//! Abstract block (storage of child items).
+/*!
+ * \class MD::Block
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Abstract block (storage of child items).
+ */
 template<class Trait>
 class Block : public Item<Trait>
 {
@@ -608,12 +804,22 @@ protected:
 public:
     ~Block() override = default;
 
-    //! Type of pointer to child item.
+    /*!
+     * \typealias MD::Block::ItemSharedPointer
+     *
+     * Type of pointer to child item.
+     */
     using ItemSharedPointer = std::shared_ptr<Item<Trait>>;
-    //! Type of list of children.
+    /*!
+     * \typealias MD::Block::Items
+     *
+     * Type of list of children.
+     */
     using Items = typename Trait::template Vector<ItemSharedPointer>;
 
-    //! Apply other block to this.
+    /*!
+     * Apply other block to this.
+     */
     void applyBlock(const Block<Trait> &other, Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
@@ -626,45 +832,59 @@ public:
         }
     }
 
-    //! \return List of child items.
+    /*!
+     * Returns list of child items.
+     */
     const Items &items() const
     {
         return m_items;
     }
 
-    //! Insert child item at give position.
+    /*!
+     * Insert child item at give position.
+     */
     void insertItem(long long int idx, ItemSharedPointer i)
     {
         m_items.insert(m_items.cbegin() + idx, i);
     }
 
-    //! Append child item.
+    /*!
+     * Append child item.
+     */
     void appendItem(ItemSharedPointer i)
     {
         m_items.push_back(i);
     }
 
-    //! Remove child item at the given position.
+    /*!
+     * Remove child item at the given position.
+     */
     void removeItemAt(long long int idx)
     {
         if (idx >= 0 && idx < static_cast<long long int>(m_items.size()))
             m_items.erase(m_items.cbegin() + idx);
     }
 
-    //! \return Child item at the given position.
+    /*!
+     * Returns child item at the given position.
+     */
     ItemSharedPointer getItemAt(long long int idx) const
     {
         return m_items.at(idx);
     }
 
-    //! \return Is there no children.
+    /*!
+     * Returns whether there are no children.
+     */
     bool isEmpty() const
     {
         return m_items.empty();
     }
 
 private:
-    //! Child items.
+    /*!
+     * Child items.
+     */
     Items m_items;
 
     MD_DISABLE_COPY(Block)
@@ -674,7 +894,13 @@ private:
 // Paragraph
 //
 
-//! Paragraph.
+/*!
+ * \class MD::Paragraph
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Paragraph.
+ */
 template<class Trait>
 class Paragraph final : public Block<Trait>
 {
@@ -682,7 +908,9 @@ public:
     Paragraph() = default;
     ~Paragraph() override = default;
 
-    //! Clone this paragraph.
+    /*!
+     * Clone this paragraph.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto p = std::make_shared<Paragraph<Trait>>();
@@ -691,7 +919,9 @@ public:
         return p;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Paragraph;
@@ -705,7 +935,13 @@ private:
 // Heading
 //
 
-//! Heading.
+/*!
+ * \class MD::Heading
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Heading.
+ */
 template<class Trait>
 class Heading final : public Item<Trait>
 {
@@ -717,10 +953,16 @@ public:
 
     ~Heading() override = default;
 
-    //! Type of list of service chanracters.
+    /*!
+     * \typealias MD::Heading::Delims
+     *
+     * Type of list of service chanracters.
+     */
     using Delims = typename Trait::template Vector<WithPosition>;
 
-    //! Clone this heading.
+    /*!
+     * Clone this heading.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto h = std::make_shared<Heading<Trait>>();
@@ -740,114 +982,164 @@ public:
         return h;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Heading;
     }
 
-    //! Type of smart pointer to paragraph.
+    /*!
+     * \typealias MD::Heading::ParagraphSharedPointer
+     *
+     * Type of smart pointer to paragraph.
+     */
     using ParagraphSharedPointer = std::shared_ptr<Paragraph<Trait>>;
 
-    //! \return Content of the heading.
+    /*!
+     * Returns content of the heading.
+     */
     ParagraphSharedPointer text() const
     {
         return m_text;
     }
 
-    //! Set content of the heading.
+    /*!
+     * Set content of the heading.
+     */
     void setText(ParagraphSharedPointer t)
     {
         m_text = t;
     }
 
-    //! \return Level of the heading.
+    /*!
+     * Returns level of the heading.
+     */
     int level() const
     {
         return m_level;
     }
 
-    //! Set level of the heading.
+    /*!
+     * Set level of the heading.
+     */
     void setLevel(int l)
     {
         m_level = l;
     }
 
-    //! \return Is this heading has label?
+    /*!
+     * Returns whether this heading has label?
+     */
     bool isLabeled() const
     {
         return m_label.size() > 0;
     }
 
-    //! \return Label of the heading.
+    /*!
+     * Returns label of the heading.
+     */
     const typename Trait::String &label() const
     {
         return m_label;
     }
 
-    //! Set label of the heading.
+    /*!
+     * Set label of the heading.
+     */
     void setLabel(const typename Trait::String &l)
     {
         m_label = l;
     }
 
-    //! \return List of service characters.
+    /*!
+     * Returns list of service characters.
+     */
     const Delims &delims() const
     {
         return m_delims;
     }
 
-    //! Set list of service characters.
+    /*!
+     * Set list of service characters.
+     */
     void setDelims(const Delims &d)
     {
         m_delims = d;
     }
 
-    //! \return Position of a label in the heading.
+    /*!
+     * Returns position of a label in the heading.
+     */
     const WithPosition &labelPos() const
     {
         return m_labelPos;
     }
 
-    //! Set position of a label in the heading.
+    /*!
+     * Set position of a label in the heading.
+     */
     void setLabelPos(const WithPosition &p)
     {
         m_labelPos = p;
     }
 
-    //! Type of a vector of labels.
+    /*!
+     * \typealias MD::Heading::LabelsVector
+     *
+     * Type of a vector of labels.
+     */
     using LabelsVector = typename Trait::template Vector<typename Trait::String>;
 
-    //! \return Label variants.
+    /*!
+     * Returns label variants.
+     */
     const LabelsVector &labelVariants() const
     {
         return m_labelVariants;
     }
 
-    //! \return Label variants.
+    /*!
+     * Returns label variants.
+     */
     LabelsVector &labelVariants()
     {
         return m_labelVariants;
     }
 
-    //! Set label variants.
+    /*!
+     * Set label variants.
+     */
     void setLabelVariants(const LabelsVector &vars)
     {
         m_labelVariants = vars;
     }
 
 private:
-    //! Content of the heading.
+    /*!
+     * Content of the heading.
+     */
     ParagraphSharedPointer m_text;
-    //! Level of the heading.
+    /*!
+     * Level of the heading.
+     */
     int m_level = 0;
-    //! Label of the heading.
+    /*!
+     * Label of the heading.
+     */
     typename Trait::String m_label;
-    //! List of service characters.
+    /*!
+     * List of service characters.
+     */
     Delims m_delims;
-    //! Position of the label.
+    /*!
+     * Position of the label.
+     */
     WithPosition m_labelPos;
-    //! Label variants.
+    /*!
+     * Label variants.
+     */
     LabelsVector m_labelVariants;
 
     MD_DISABLE_COPY(Heading)
@@ -857,7 +1149,13 @@ private:
 // Blockquote
 //
 
-//! Blockquote.
+/*!
+ * \class MD::Blockquote
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Blockquote.
+ */
 template<class Trait>
 class Blockquote final : public Block<Trait>
 {
@@ -865,7 +1163,9 @@ public:
     Blockquote() = default;
     ~Blockquote() override = default;
 
-    //! Clone this blockquote.
+    /*!
+     * Clone this blockquote.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto b = std::make_shared<Blockquote<Trait>>();
@@ -875,29 +1175,41 @@ public:
         return b;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Blockquote;
     }
 
-    //! Type of a list of service characters.
+    /*!
+     * \typealias MD::Blockquote::Delims
+     *
+     * Type of a list of service characters.
+     */
     using Delims = typename Trait::template Vector<WithPosition>;
 
-    //! \return List of service characters.
+    /*!
+     * Returns list of service characters.
+     */
     const Delims &delims() const
     {
         return m_delims;
     }
 
-    //! \return List of service characters.
+    /*!
+     * Returns list of service characters.
+     */
     Delims &delims()
     {
         return m_delims;
     }
 
 private:
-    //! List of service characters.
+    /*!
+     * List of service characters.
+     */
     Delims m_delims;
 
     MD_DISABLE_COPY(Blockquote)
@@ -907,7 +1219,13 @@ private:
 // ListItem
 //
 
-//! List item in a list.
+/*!
+ * \class MD::ListItem
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * List item in a list.
+ */
 template<class Trait>
 class ListItem final : public Block<Trait>
 {
@@ -915,7 +1233,9 @@ public:
     ListItem() = default;
     ~ListItem() override = default;
 
-    //! Clone this list item.
+    /*!
+     * Clone this list item.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<ListItem<Trait>>();
@@ -931,126 +1251,180 @@ public:
         return l;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::ListItem;
     }
 
-    //! Type of the list.
+    /*!
+     * \enum MD::ListItem::ListType
+     *
+     * Type of the list.
+     *
+     * \value Ordered Ordered.
+     * \value Unordered Unordered.
+     */
     enum ListType {
-        //! Ordered.
         Ordered,
-        //! Unordered
         Unordered
     }; // enum ListType
 
-    //! Preliminary state of the ordered list.
+    /*!
+     * \enum MD::ListItem::OrderedListPreState
+     *
+     * Preliminary state of the ordered list.
+     *
+     * \value Start Start item.
+     * \value Continue Continue of the list.
+     */
     enum OrderedListPreState {
-        //! Start item.
         Start,
-        //! Continue of the list
         Continue
     }; // enum OrderedListPreState
 
-    //! \return Type of the list.
+    /*!
+     * Returns type of the list.
+     */
     ListType listType() const
     {
         return m_listType;
     }
 
-    //! Set type of the list.
+    /*!
+     * Set type of the list.
+     */
     void setListType(ListType t)
     {
         m_listType = t;
     }
 
-    //! \return Preliminary state of the ordered list.
+    /*!
+     * Returns preliminary state of the ordered list.
+     */
     OrderedListPreState orderedListPreState() const
     {
         return m_orderedListState;
     }
 
-    //! Set preliminary state of the ordered list.
+    /*!
+     * Set preliminary state of the ordered list.
+     */
     void setOrderedListPreState(OrderedListPreState s)
     {
         m_orderedListState = s;
     }
 
-    //! \return Start number of the ordered list
+    /*!
+     * Returns start number of the ordered list.
+     */
     int startNumber() const
     {
         return m_startNumber;
     }
 
-    //! Set start number of the ordered list.
+    /*!
+     * Set start number of the ordered list.
+     */
     void setStartNumber(int n)
     {
         m_startNumber = n;
     }
 
-    //! \return Is this list item a task list item?
+    /*!
+     * Returns whether this list item a task list item?
+     */
     bool isTaskList() const
     {
         return m_isTaskList;
     }
 
-    //! Set this list item to be a tsk list item.
+    /*!
+     * Set this list item to be a tsk list item.
+     */
     void setTaskList(bool on = true)
     {
         m_isTaskList = on;
     }
 
-    //! \return Is this task list item checked?
+    /*!
+     * Returns whether this task list item checked?
+     */
     bool isChecked() const
     {
         return m_isChecked;
     }
 
-    //! Set this task list item to be checked.
+    /*!
+     * Set this task list item to be checked.
+     */
     void setChecked(bool on = true)
     {
         m_isChecked = on;
     }
 
-    //! \return Service character position.
+    /*!
+     * Returns service character position.
+     */
     const WithPosition &delim() const
     {
         return m_delim;
     }
 
-    //! Set service character position.
+    /*!
+     * Set service character position.
+     */
     void setDelim(const WithPosition &d)
     {
         m_delim = d;
     }
 
-    //! \return Position of the task list "checkbox" in Markdown.
+    /*!
+     * Returns position of the task list "checkbox" in Markdown.
+     */
     const WithPosition &taskDelim() const
     {
         return m_taskDelim;
     }
 
-    //! Set position of the task list "checkbox" in Markdown.
+    /*!
+     * Set position of the task list "checkbox" in Markdown.
+     */
     void setTaskDelim(const WithPosition &d)
     {
         m_taskDelim = d;
     }
 
 private:
-    //! Type of the list.
+    /*!
+     * Type of the list.
+     */
     ListType m_listType = Unordered;
-    //! Preliminary state of the ordered list.
+    /*!
+     * Preliminary state of the ordered list.
+     */
     OrderedListPreState m_orderedListState = Start;
-    //! Start number of the ordered list.
+    /*!
+     * Start number of the ordered list.
+     */
     int m_startNumber = 1;
-    //! Is this list item a task list item?
+    /*!
+     * Is this list item a task list item?
+     */
     bool m_isTaskList = false;
-    //! Is this task list item checked?
+    /*!
+     * Is this task list item checked?
+     */
     bool m_isChecked = false;
-    //! Service character position.
+    /*!
+     * Service character position.
+     */
     WithPosition m_delim = {};
-    //! Task list "checkbox" position.
+    /*!
+     * Task list "checkbox" position.
+     */
     WithPosition m_taskDelim = {};
 
     MD_DISABLE_COPY(ListItem)
@@ -1060,7 +1434,13 @@ private:
 // List
 //
 
-//! List.
+/*!
+ * \class MD::List
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * List.
+ */
 template<class Trait>
 class List final : public Block<Trait>
 {
@@ -1068,7 +1448,9 @@ public:
     List() = default;
     ~List() override = default;
 
-    //! Clone this list.
+    /*!
+     * Clone this list.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<List<Trait>>();
@@ -1077,7 +1459,9 @@ public:
         return l;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::List;
@@ -1091,7 +1475,13 @@ private:
 // LinkBase
 //
 
-//! Base class for links.
+/*!
+ * \class MD::LinkBase
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Base class for links.
+ */
 template<class Trait>
 class LinkBase : public ItemWithOpts<Trait>
 {
@@ -1103,7 +1493,9 @@ public:
 
     ~LinkBase() override = default;
 
-    //! Apply other base of link to this.
+    /*!
+     * Apply other base of link to this.
+     */
     void applyLinkBase(const LinkBase<Trait> &other, Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
@@ -1116,85 +1508,121 @@ public:
         }
     }
 
-    //! Type of a smart pointer to link's description.
+    /*!
+     * \typealias MD::LinkBase::ParagraphSharedPointer
+     *
+     * Type of a smart pointer to link's description.
+     */
     using ParagraphSharedPointer = std::shared_ptr<Paragraph<Trait>>;
 
-    //! \return URL of the link.
+    /*!
+     * Returns URL of the link.
+     */
     const typename Trait::String &url() const
     {
         return m_url;
     }
 
-    //! Set URL of the link.
+    /*!
+     * Set URL of the link.
+     */
     void setUrl(const typename Trait::String &u)
     {
         m_url = u;
     }
 
-    //! Not parsed text of link's description.
+    /*!
+     * Returns not parsed text of link's description.
+     */
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
-    //! Set not parsed text of link's description.
+    /*!
+     * Set not parsed text of link's description.
+     */
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
-    //! \return Is this link empty?
+    /*!
+     * Returns whether this link empty?
+     */
     bool isEmpty() const
     {
         return m_url.size() <= 0;
     }
 
-    //! \return Pointer to parsed text of link's description.
+    /*!
+     * Returns pointer to parsed text of link's description.
+     */
     ParagraphSharedPointer p() const
     {
         return m_p;
     }
 
-    //! Set pointer to parsed text of link's description.
+    /*!
+     * Set pointer to parsed text of link's description.
+     */
     void setP(ParagraphSharedPointer v)
     {
         m_p = v;
     }
 
-    //! \return Position of link's desciption.
+    /*!
+     * Returns position of link's desciption.
+     */
     const WithPosition &textPos() const
     {
         return m_textPos;
     }
 
-    //! Set position of link's description.
+    /*!
+     * Set position of link's description.
+     */
     void setTextPos(const WithPosition &pos)
     {
         m_textPos = pos;
     }
 
-    //! \return Position of URL.
+    /*!
+     * Returns position of URL.
+     */
     const WithPosition &urlPos() const
     {
         return m_urlPos;
     }
 
-    //! Set position of URL.
+    /*!
+     * Set position of URL.
+     */
     void setUrlPos(const WithPosition &pos)
     {
         m_urlPos = pos;
     }
 
 private:
-    //! URL.
+    /*!
+     * URL.
+     */
     typename Trait::String m_url;
-    //! Not parsed content of link's description.
+    /*!
+     * Not parsed content of link's description.
+     */
     typename Trait::String m_text;
-    //! Parsed content of link's description.
+    /*!
+     * Parsed content of link's description.
+     */
     ParagraphSharedPointer m_p;
-    //! Position of link's description.
+    /*!
+     * Position of link's description.
+     */
     WithPosition m_textPos = {};
-    //! URL position.
+    /*!
+     * URL position.
+     */
     WithPosition m_urlPos = {};
 
     MD_DISABLE_COPY(LinkBase)
@@ -1204,7 +1632,13 @@ private:
 // Image
 //
 
-//! Image.
+/*!
+ * \class MD::Image
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Image.
+ */
 template<class Trait>
 class Image final : public LinkBase<Trait>
 {
@@ -1212,7 +1646,9 @@ public:
     Image() = default;
     ~Image() override = default;
 
-    //! Clone this image.
+    /*!
+     * Clone this image.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto i = std::make_shared<Image<Trait>>();
@@ -1221,7 +1657,9 @@ public:
         return i;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Image;
@@ -1235,7 +1673,13 @@ private:
 // Link
 //
 
-//! Link.
+/*!
+ * \class MD::Link
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Link.
+ */
 template<class Trait>
 class Link final : public LinkBase<Trait>
 {
@@ -1246,7 +1690,9 @@ public:
     {
     }
 
-    //! Clone this link.
+    /*!
+     * Clone this link.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto l = std::make_shared<Link<Trait>>();
@@ -1258,29 +1704,41 @@ public:
 
     ~Link() override = default;
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Link;
     }
 
-    //! Type of a smart pointer to image.
+    /*!
+     * \typealias MD::Link::ImageSharedPointer
+     *
+     * Type of a smart pointer to image.
+     */
     using ImageSharedPointer = std::shared_ptr<Image<Trait>>;
 
-    //! \return Image of the link.
+    /*!
+     * Returns image of the link.
+     */
     ImageSharedPointer img() const
     {
         return m_img;
     }
 
-    //! Set image of the link.
+    /*!
+     * Set image of the link.
+     */
     void setImg(ImageSharedPointer i)
     {
         m_img = i;
     }
 
 private:
-    //! Image of the link.
+    /*!
+     * Image of the link.
+     */
     ImageSharedPointer m_img;
 
     MD_DISABLE_COPY(Link)
@@ -1290,7 +1748,13 @@ private:
 // Code
 //
 
-//! Code.
+/*!
+ * \class MD::Code
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Code.
+ */
 template<class Trait>
 class Code : public ItemWithOpts<Trait>
 {
@@ -1305,7 +1769,9 @@ public:
 
     ~Code() override = default;
 
-    //! Apply other code to this.
+    /*!
+     * Apply other code to this.
+     */
     void applyCode(const Code<Trait> &other)
     {
         if (this != &other) {
@@ -1320,7 +1786,9 @@ public:
         }
     }
 
-    //! Clone this code.
+    /*!
+     * Clone this code.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1331,110 +1799,154 @@ public:
         return c;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Code;
     }
 
-    //! \return Content of the code.
+    /*!
+     * Returns content of the code.
+     */
     const typename Trait::String &text() const
     {
         return m_text;
     }
 
-    //! Set content of the code.
+    /*!
+     * Set content of the code.
+     */
     void setText(const typename Trait::String &t)
     {
         m_text = t;
     }
 
-    //! \return Is this code inline?
+    /*!
+     * Returns whether this code inline?
+     */
     bool isInline() const
     {
         return m_inlined;
     }
 
-    //! Set this code to be inline.
+    /*!
+     * Set this code to be inline.
+     */
     void setInline(bool on = true)
     {
         m_inlined = on;
     }
 
-    //! \return Syntax of the fensed code block.
+    /*!
+     * Returns syntax of the fensed code block.
+     */
     const typename Trait::String &syntax() const
     {
         return m_syntax;
     }
 
-    //! Set syntax of the fensed code block.
+    /*!
+     * Set syntax of the fensed code block.
+     */
     void setSyntax(const typename Trait::String &s)
     {
         m_syntax = s;
     }
 
-    //! \return Position of the syntax of the fensed code block.
+    /*!
+     * Returns position of the syntax of the fensed code block.
+     */
     const WithPosition &syntaxPos() const
     {
         return m_syntaxPos;
     }
 
-    //! Set position of the syntax of the fensed code block.
+    /*!
+     * Set position of the syntax of the fensed code block.
+     */
     void setSyntaxPos(const WithPosition &p)
     {
         m_syntaxPos = p;
     }
 
-    //! \return Position of the start service characters.
+    /*!
+     * Returns position of the start service characters.
+     */
     const WithPosition &startDelim() const
     {
         return m_startDelim;
     }
 
-    //! Set position of the start service characters.
+    /*!
+     * Set position of the start service characters.
+     */
     void setStartDelim(const WithPosition &d)
     {
         m_startDelim = d;
     }
 
-    //! \return Position of the ending service characters.
+    /*!
+     * Returns position of the ending service characters.
+     */
     const WithPosition &endDelim() const
     {
         return m_endDelim;
     }
 
-    //! Set position of the ending service characters.
+    /*!
+     * Set position of the ending service characters.
+     */
     void setEndDelim(const WithPosition &d)
     {
         m_endDelim = d;
     }
 
-    //! \return Is this a fensed code block?
+    /*!
+     * Returns whether this a fensed code block?
+     */
     bool isFensedCode() const
     {
         return m_fensed;
     }
 
-    //! Set this code block to be a fensed code block.
+    /*!
+     * Set this code block to be a fensed code block.
+     */
     void setFensedCode(bool on = true)
     {
         m_fensed = on;
     }
 
 private:
-    //! Content of the code.
+    /*!
+     * Content of the code.
+     */
     typename Trait::String m_text;
-    //! Is this code inline?
+    /*!
+     * Is this code inline?
+     */
     bool m_inlined = true;
-    //! Is this code a fensed code block.
+    /*!
+     * Is this code a fensed code block.
+     */
     bool m_fensed = false;
-    //! Syntax of the fensed code lock.
+    /*!
+     * Syntax of the fensed code lock.
+     */
     typename Trait::String m_syntax;
-    //! Position of start service characters.
+    /*!
+     * Position of start service characters.
+     */
     WithPosition m_startDelim = {};
-    //! Position of ending service characters.
+    /*!
+     * Position of ending service characters.
+     */
     WithPosition m_endDelim = {};
-    //! Position of syntax of fensed code block.
+    /*!
+     * Position of syntax of fensed code block.
+     */
     WithPosition m_syntaxPos = {};
 
     MD_DISABLE_COPY(Code)
@@ -1444,7 +1956,13 @@ private:
 // Math
 //
 
-//! LaTeX math expression.
+/*!
+ * \class MD::Math
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * LaTeX math expression.
+ */
 template<class Trait>
 class Math final : public Code<Trait>
 {
@@ -1456,7 +1974,9 @@ public:
 
     ~Math() override = default;
 
-    //! Clone this LaTeX math expression.
+    /*!
+     * Clone this LaTeX math expression.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1467,19 +1987,25 @@ public:
         return m;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Math;
     }
 
-    //! \return Content.
+    /*!
+     * Returns content.
+     */
     const typename Trait::String &expr() const
     {
         return Code<Trait>::text();
     }
 
-    //! Set content.
+    /*!
+     * Set content.
+     */
     void setExpr(const typename Trait::String &e)
     {
         Code<Trait>::setText(e);
@@ -1493,7 +2019,13 @@ private:
 // TableCell
 //
 
-//! Table cell.
+/*!
+ * \class MD::TableCell
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Table cell.
+ */
 template<class Trait>
 class TableCell final : public Block<Trait>
 {
@@ -1501,7 +2033,9 @@ public:
     TableCell() = default;
     ~TableCell() override = default;
 
-    //! Clone this table cell.
+    /*!
+     * Clone this table cell.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto c = std::make_shared<TableCell<Trait>>();
@@ -1510,7 +2044,9 @@ public:
         return c;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::TableCell;
@@ -1524,7 +2060,13 @@ private:
 // TableRow
 //
 
-//! Table row.
+/*!
+ * \class MD::TableRow
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Table row.
+ */
 template<class Trait>
 class TableRow final : public Item<Trait>
 {
@@ -1532,7 +2074,9 @@ public:
     TableRow() = default;
     ~TableRow() override = default;
 
-    //! Clone this table row.
+    /*!
+     * Clone this table row.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto t = std::make_shared<TableRow<Trait>>();
@@ -1545,37 +2089,55 @@ public:
         return t;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::TableRow;
     }
 
-    //! Type of a smart pointer to table cell.
+    /*!
+     * \typealias MD::TableRow::TableCellSharedPointer
+     *
+     * Type of a smart pointer to table cell.
+     */
     using TableCellSharedPointer = std::shared_ptr<TableCell<Trait>>;
-    //! Type of a list of table cells.
+    /*!
+     * \typealias MD::TableRow::Cells
+     *
+     * Type of a list of table cells.
+     */
     using Cells = typename Trait::template Vector<TableCellSharedPointer>;
 
-    //! \return List of cells.
+    /*!
+     * Returns list of cells.
+     */
     const Cells &cells() const
     {
         return m_cells;
     }
 
-    //! Append cell.
+    /*!
+     * Append cell.
+     */
     void appendCell(TableCellSharedPointer c)
     {
         m_cells.push_back(c);
     }
 
-    //! \return Is this row empty?
+    /*!
+     * Returns whether this row empty?
+     */
     bool isEmpty() const
     {
         return m_cells.empty();
     }
 
 private:
-    //! List of cells.
+    /*!
+     * List of cells.
+     */
     Cells m_cells;
 
     MD_DISABLE_COPY(TableRow)
@@ -1585,7 +2147,13 @@ private:
 // Table
 //
 
-//! Table.
+/*!
+ * \class MD::Table
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Table.
+ */
 template<class Trait>
 class Table final : public Item<Trait>
 {
@@ -1593,7 +2161,9 @@ public:
     Table() = default;
     ~Table() override = default;
 
-    //! Clone this table.
+    /*!
+     * Clone this table.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto t = std::make_shared<Table<Trait>>();
@@ -1610,49 +2180,77 @@ public:
         return t;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Table;
     }
 
-    //! Type of a smart pointer to table row.
+    /*!
+     * \typealias MD::Table::TableRowSharedPointer
+     *
+     * Type of a smart pointer to table row.
+     */
     using TableRowSharedPointer = std::shared_ptr<TableRow<Trait>>;
-    //! Type of list of rows.
+    /*!
+     * \typealias MD::Table::Rows
+     *
+     * Type of list of rows.
+     */
     using Rows = typename Trait::template Vector<TableRowSharedPointer>;
 
-    //! \return List of rows.
+    /*!
+     * Returns list of rows.
+     */
     const Rows &rows() const
     {
         return m_rows;
     }
 
-    //! Append row.
+    /*!
+     * Append row.
+     */
     void appendRow(TableRowSharedPointer r)
     {
         m_rows.push_back(r);
     }
 
-    //! Alignment.
+    /*!
+     * \enum MD::Table::Alignment
+     * \inmodule md4qt
+     *
+     * Alignment.
+     *
+     * \value AlignLeft Left.
+     * \value AlignRight Right.
+     * \value AlignCenter Center.
+     */
     enum Alignment {
-        //! Left.
         AlignLeft,
-        //! Right.
         AlignRight,
-        //! Center.
         AlignCenter
     }; // enum Alignmnet.
 
-    //! Type of list alignments.
+    /*!
+     * \typealias MD::Table::ColumnsAlignments
+     *
+     * Type of list alignments.
+     */
     using ColumnsAlignments = typename Trait::template Vector<Alignment>;
 
-    //! \return Alignment of the given column.
+    /*!
+     * Returns alignment of the given column.
+     */
     Alignment columnAlignment(int idx) const
     {
         return m_aligns.at(idx);
     }
 
-    //! Set alignment of the given column.
+    /*!
+     * Set alignment of the given column.
+     */
     void setColumnAlignment(int idx, Alignment a)
     {
         if (idx + 1 > columnsCount()) {
@@ -1662,22 +2260,30 @@ public:
         }
     }
 
-    //! \return Count of columns.
+    /*!
+     * Returns count of columns.
+     */
     int columnsCount() const
     {
         return m_aligns.size();
     }
 
-    //! \return Is this table empty?
+    /*!
+     * Returns whether this table empty?
+     */
     bool isEmpty() const
     {
         return (m_aligns.empty() || m_rows.empty());
     }
 
 private:
-    //! Rows.
+    /*!
+     * Rows.
+     */
     Rows m_rows;
-    //! Columns' alignments.
+    /*!
+     * Columns' alignments.
+     */
     ColumnsAlignments m_aligns;
 
     MD_DISABLE_COPY(Table)
@@ -1687,7 +2293,13 @@ private:
 // FootnoteRef
 //
 
-//! Footnote reference.
+/*!
+ * \class MD::FootnoteRef
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Footnote reference.
+ */
 template<class Trait>
 class FootnoteRef final : public Text<Trait>
 {
@@ -1699,7 +2311,9 @@ public:
 
     ~FootnoteRef() override = default;
 
-    //! Clone this footnote reference.
+    /*!
+     * Clone this footnote reference.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1711,34 +2325,46 @@ public:
         return f;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::FootnoteRef;
     }
 
-    //! \return ID of footnote reference.
+    /*!
+     * Returns ID of footnote reference.
+     */
     const typename Trait::String &id() const
     {
         return m_id;
     }
 
-    //! \return Position of ID.
+    /*!
+     * Returns position of ID.
+     */
     const WithPosition &idPos() const
     {
         return m_idPos;
     }
 
-    //! Set position of ID.
+    /*!
+     * Set position of ID.
+     */
     void setIdPos(const WithPosition &pos)
     {
         m_idPos = pos;
     }
 
 private:
-    //! ID.
+    /*!
+     * ID.
+     */
     typename Trait::String m_id;
-    //! Position of ID.
+    /*!
+     * Position of ID.
+     */
     WithPosition m_idPos;
 
     MD_DISABLE_COPY(FootnoteRef)
@@ -1748,7 +2374,13 @@ private:
 // Footnote
 //
 
-//! Footnote.
+/*!
+ * \class MD::Footnote
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Footnote.
+ */
 template<class Trait>
 class Footnote final : public Block<Trait>
 {
@@ -1756,7 +2388,9 @@ public:
     Footnote() = default;
     ~Footnote() override = default;
 
-    //! Clone this footnote.
+    /*!
+     * Clone this footnote.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         auto f = std::make_shared<Footnote<Trait>>();
@@ -1766,26 +2400,34 @@ public:
         return f;
     }
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Footnote;
     }
 
-    //! \return Position of ID.
+    /*!
+     * Returns position of ID.
+     */
     const WithPosition &idPos() const
     {
         return m_idPos;
     }
 
-    //! Set position of ID.
+    /*!
+     * Set position of ID.
+     */
     void setIdPos(const WithPosition &pos)
     {
         m_idPos = pos;
     }
 
 private:
-    //! Position of ID.
+    /*!
+     * Position of ID.
+     */
     WithPosition m_idPos = {};
 
     MD_DISABLE_COPY(Footnote)
@@ -1795,7 +2437,13 @@ private:
 // Document
 //
 
-//! Document.
+/*!
+ * \class MD::Document
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * Document.
+ */
 template<class Trait>
 class Document final : public Block<Trait>
 {
@@ -1803,13 +2451,17 @@ public:
     Document() = default;
     ~Document() override = default;
 
-    //! \return Type of the item.
+    /*!
+     * Returns type of the item.
+     */
     ItemType type() const override
     {
         return ItemType::Document;
     }
 
-    //! Clone this document.
+    /*!
+     * Clone this document.
+     */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
         MD_UNUSED(doc)
@@ -1830,63 +2482,105 @@ public:
         return d;
     }
 
-    //! Type of a smart pointer to footnote.
+    /*!
+     * \typealias MD::Document::FootnoteSharedPointer
+     *
+     * Type of a smart pointer to footnote.
+     */
     using FootnoteSharedPointer = std::shared_ptr<Footnote<Trait>>;
-    //! Type of a map of footnotes.
+    /*!
+     * \typealias MD::Document::Footnotes
+     *
+     * Type of a map of footnotes.
+     */
     using Footnotes = typename Trait::template Map<typename Trait::String, FootnoteSharedPointer>;
 
-    //! \return Map of footnotes.
+    /*!
+     * Returns map of footnotes.
+     */
     const Footnotes &footnotesMap() const
     {
         return m_footnotes;
     }
 
-    //! Insert footnote with the give ID.
+    /*!
+     * Insert footnote with the give ID.
+     */
     void insertFootnote(const typename Trait::String &id, FootnoteSharedPointer fn)
     {
         m_footnotes.insert({id, fn});
     }
 
-    //! Type of a smart pointer to link.
+    /*!
+     * \typealias MD::Document::LinkSharedPointer
+     *
+     * Type of a smart pointer to link.
+     */
     using LinkSharedPointer = std::shared_ptr<Link<Trait>>;
-    //! Type of a map of shortcut links.
+    /*!
+     * \typealias MD::Document::LabeledLinks
+     *
+     * Type of a map of shortcut links.
+     */
     using LabeledLinks = typename Trait::template Map<typename Trait::String, LinkSharedPointer>;
 
-    //! \return Map of shortcut links.
+    /*!
+     * Returns map of shortcut links.
+     */
     const LabeledLinks &labeledLinks() const
     {
         return m_labeledLinks;
     }
 
-    //! Insert shortcut link with the given label.
+    /*!
+     * Insert shortcut link with the given label.
+     */
     void insertLabeledLink(const typename Trait::String &label, LinkSharedPointer lnk)
     {
         m_labeledLinks.insert({label, lnk});
     }
 
-    //! Type of a smart pointer to heading.
+    /*!
+     * \typealias MD::Document::HeadingSharedPointer
+     *
+     * Type of a smart pointer to heading.
+     */
     using HeadingSharedPointer = std::shared_ptr<Heading<Trait>>;
-    //! Type of a map of headings.
+    /*!
+     * \typealias MD::Document::LabeledHeadings
+     *
+     * Type of a map of headings.
+     */
     using LabeledHeadings = typename Trait::template Map<typename Trait::String, HeadingSharedPointer>;
 
-    //! \return Map of headings.
+    /*!
+     * Returns map of headings.
+     */
     const LabeledHeadings &labeledHeadings() const
     {
         return m_labeledHeadings;
     }
 
-    //! Insert heading with the given label.
+    /*!
+     * Insert heading with the given label.
+     */
     void insertLabeledHeading(const typename Trait::String &label, HeadingSharedPointer h)
     {
         m_labeledHeadings.insert({label, h});
     }
 
 private:
-    //! Map of footnotes.
+    /*!
+     * Map of footnotes.
+     */
     Footnotes m_footnotes;
-    //! Map of shortcut links.
+    /*!
+     * Map of shortcut links.
+     */
     LabeledLinks m_labeledLinks;
-    //! Map of headings.
+    /*!
+     * Map of headings.
+     */
     LabeledHeadings m_labeledHeadings;
 
     MD_DISABLE_COPY(Document)

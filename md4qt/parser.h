@@ -40,13 +40,26 @@
 #include <unordered_map>
 #include <vector>
 
+/*!
+ * \namespace MD
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ */
 namespace MD
 {
 
-//! Starting HTML comment string.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Starting HTML comment string.
+ */
 static const char *s_startComment = "<!--";
 
-//! \return Is \p indent indent belongs to list with previous \p indents indents.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether \a indent indent belongs to list with previous \a indents indents.
+ */
 inline bool
 indentInList(const std::vector<long long int> *indents,
              long long int indent,
@@ -65,7 +78,11 @@ indentInList(const std::vector<long long int> *indents,
     }
 }
 
-//! Skip spaces in line from position \p i.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Skip spaces in line from position \a i.
+ */
 template<class Trait>
 inline long long int
 skipSpaces(long long int i, const typename Trait::String &line)
@@ -79,7 +96,11 @@ skipSpaces(long long int i, const typename Trait::String &line)
     return i;
 }
 
-//! \return Last non-space character position.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns last non-space character position.
+ */
 template<class String>
 inline long long int
 lastNonSpacePos(const String &line)
@@ -93,7 +114,11 @@ lastNonSpacePos(const String &line)
     return i;
 }
 
-//! Remove spaces at the end of string \p s.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Remove spaces at the end of string \a s.
+ */
 template<class String>
 inline void
 removeSpacesAtEnd(String &s)
@@ -105,7 +130,11 @@ removeSpacesAtEnd(String &s)
     }
 }
 
-//! \return Starting sequence of the same characters.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns starting sequence of the same characters.
+ */
 template<class Trait>
 inline typename Trait::String
 startSequence(const typename Trait::String &line)
@@ -128,7 +157,11 @@ startSequence(const typename Trait::String &line)
     return line.sliced(start, pos - start);
 }
 
-//! \return Is string an ordered list.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string an ordered list.
+ */
 template<class Trait>
 inline bool
 isOrderedList(const typename Trait::String &s,
@@ -190,7 +223,13 @@ isOrderedList(const typename Trait::String &s,
 // RawHtmlBlock
 //
 
-//! Internal structure for pre-storing HTML.
+/*!
+ * \class MD::RawHtmlBlock
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Internal structure for pre-storing HTML.
+ */
 template<class Trait>
 struct RawHtmlBlock {
     std::shared_ptr<RawHtml<Trait>> m_html = {};
@@ -220,7 +259,13 @@ struct RawHtmlBlock {
 // MdLineData
 //
 
-//! Internal structure for auxiliary information about a line in Markdown.
+/*!
+ * \class MD::MdLineData
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Internal structure for auxiliary information about a line in Markdown.
+ */
 struct MdLineData {
     long long int m_lineNumber = -1;
     using CommentData = std::pair<char, bool>;
@@ -235,7 +280,13 @@ struct MdLineData {
 // MdBlock
 //
 
-//! Internal structure for block of text in Markdown.
+/*!
+ * \class MD::MdBlock
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Internal structure for block of text in Markdown.
+ */
 template<class Trait>
 struct MdBlock {
     using Line = std::pair<typename Trait::InternalString, MdLineData>;
@@ -272,7 +323,13 @@ emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
 // StringListStream
 //
 
-//! Wrapper for typename Trait::StringList to be behaved like a stream.
+/*!
+ * \class MD::StringListStream
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Wrapper for typename Trait::StringList to be behaved like a stream.
+ */
 template<class Trait>
 class StringListStream final
 {
@@ -331,7 +388,11 @@ private:
     long long int m_pos;
 }; // class StringListStream
 
-//! \return Is string a footnote?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string a footnote?
+ */
 template<class Trait>
 inline bool
 isFootnote(const typename Trait::String &s)
@@ -371,7 +432,11 @@ isFootnote(const typename Trait::String &s)
     }
 }
 
-//! \return Is string a code fences?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string a code fences?
+ */
 template<class Trait>
 inline bool
 isCodeFences(const typename Trait::String &s, bool closing = false)
@@ -426,7 +491,11 @@ isCodeFences(const typename Trait::String &s, bool closing = false)
     return true;
 }
 
-//! Skip escaped sequence of characters till first space.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Skip escaped sequence of characters till first space.
+ */
 template<class Trait>
 inline typename Trait::String
 readEscapedSequence(long long int i,
@@ -464,12 +533,15 @@ readEscapedSequence(long long int i,
     return str.sliced(start, i - start);
 }
 
-//! Characters that can be escaped.
 template<class Trait>
 static const typename Trait::String s_canBeEscaped =
     Trait::latin1ToString("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
 
-//! Remove backslashes from the string.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Remove backslashes from the string.
+ */
 template<class String, class Trait>
 inline String
 removeBackslashes(const String &s)
@@ -497,7 +569,11 @@ removeBackslashes(const String &s)
     return r;
 }
 
-//! \return Is string a start of code?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string a start of code?
+ */
 template<class Trait>
 inline bool
 isStartOfCode(const typename Trait::String &str,
@@ -564,7 +640,11 @@ isStartOfCode(const typename Trait::String &str,
     return false;
 }
 
-//! \return Is string a horizontal line?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string a horizontal line?
+ */
 template<class Trait>
 inline bool
 isHorizontalLine(const typename Trait::String &s)
@@ -607,7 +687,11 @@ isHorizontalLine(const typename Trait::String &s)
     return false;
 }
 
-//! \return Is string a column alignment?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether string a column alignment?
+ */
 template<class Trait>
 inline bool
 isColumnAlignment(const typename Trait::String &s)
@@ -653,7 +737,11 @@ isColumnAlignment(const typename Trait::String &s)
     return true;
 }
 
-//! Split string.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Split string.
+ */
 template<class Trait>
 typename Trait::StringList
 splitString(const typename Trait::String &str, const typename Trait::Char &ch);
@@ -680,7 +768,11 @@ splitString<QStringTrait>(const QString &str, const QChar &ch)
 
 #endif
 
-//! \return Number of columns?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns number of columns?
+ */
 template<class Trait>
 inline int
 isTableAlignment(const typename Trait::String &s)
@@ -696,7 +788,11 @@ isTableAlignment(const typename Trait::String &s)
     return columns.size();
 }
 
-//! \return Is given string a HTML comment.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether given string a HTML comment.
+ */
 template<class Trait>
 inline bool
 isHtmlComment(const typename Trait::String &s)
@@ -729,7 +825,11 @@ isHtmlComment(const typename Trait::String &s)
     return endFound;
 }
 
-//! Replace entities in the string with corresponding character.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Replace entities in the string with corresponding character.
+ */
 template<class Trait>
 inline typename Trait::String
 replaceEntity(const typename Trait::String &s)
@@ -812,7 +912,11 @@ replaceEntity(const typename Trait::String &s)
     return res;
 }
 
-//! Remove backslashes in block.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Remove backslashes in block.
+ */
 template<class Trait>
 inline typename MdBlock<Trait>::Data
 removeBackslashes(const typename MdBlock<Trait>::Data &d)
@@ -826,30 +930,44 @@ removeBackslashes(const typename MdBlock<Trait>::Data &d)
     return tmp;
 }
 
-//! Type of the paragraph's optimization.
+/*!
+ * \enum MD::OptimizeParagraphType
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Type of the paragraph's optimization.
+ *
+ * \value Full Full optimization.
+ * \value Semi Semi optimization, optimization won't concatenate text
+ *        items if style delimiters will be in the middle.
+ * \value FullWithoutRawData Full optimization, but raw text data won't be concatenated (will be untouched).
+ * \value SemiWithoutRawData Semi optimization, but raw text data won't be concatenated (will be untouched).
+ */
 enum class OptimizeParagraphType {
-    //! Full optimization.
     Full,
-    //! Semi optimization, optimization won't concatenate text
-    //! items if style delimiters will be in the middle.
     Semi,
-    //! Full optimization, but raw text data won't be concatenated (will be untouched).
     FullWithoutRawData,
-    //! Semi optimization, but raw text data won't be concatenated (will be untouched).
     SemiWithoutRawData
-};
+}; // enum class OptimizeParagraphType
 
 //
 // TextPlugin
 //
 
-//! ID of text plugin.
+/*!
+ * \enum MD::TextPlugin
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * ID of text plugin.
+ *
+ * \value UnknownPluginID Unknown plugin.
+ * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
+ * \value UserDefinedPluginID First user defined plugin ID.
+ */
 enum TextPlugin : int {
-    //! Unknown plugin.
     UnknownPluginID = 0,
-    //! GitHub's autolinks plugin.
     GitHubAutoLinkPluginID = 1,
-    //! First user defined plugin ID.
     UserDefinedPluginID = 255
 }; // enum TextPlugin
 
@@ -857,23 +975,34 @@ enum TextPlugin : int {
 // Style
 //
 
-//! Emphasis type.
+/*!
+ * \enum MD::Style
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Emphasis type.
+ *
+ * \value Italic1 "*".
+ * \value Italic2 "_".
+ * \value Bold1 "**".
+ * \value Bold2 "__".
+ * \value Strikethrough "~".
+ * \value Unknown Unknown.
+ */
 enum class Style {
-    //! "*"
     Italic1,
-    //! "_"
     Italic2,
-    //! "**"
     Bold1,
-    //! "__"
     Bold2,
-    //! "~"
     Strikethrough,
-    //! Unknown.
     Unknown
-};
+}; // enum class Style
 
-//! \return Text option from style.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns text option from style.
+ */
 inline TextOption
 styleToTextOption(Style s)
 {
@@ -901,7 +1030,13 @@ styleToTextOption(Style s)
 template<class Trait>
 struct TextParsingOpts;
 
-//! Functor type for text plugin.
+/*!
+ * \typealias MD::TextPluginFunc
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Functor type for text plugin.
+ */
 template<class Trait>
 using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
                                           TextParsingOpts<Trait> &,
@@ -911,7 +1046,13 @@ using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
 // TextPluginsMap
 //
 
-//! Type of the map of text plugins.
+/*!
+ * \typealias MD::TextPluginsMap
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Type of the map of text plugins.
+ */
 template<class Trait>
 using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
                                                 bool,
@@ -921,7 +1062,13 @@ using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
 // TextParsingOpts
 //
 
-//! Internal structure for auxiliary options for parser.
+/*!
+ * \class MD::TextParsingOpts
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Internal structure for auxiliary options for parser.
+ */
 template<class Trait>
 struct TextParsingOpts {
     MdBlock<Trait> &m_fr;
@@ -1001,7 +1148,11 @@ struct TextParsingOpts {
     std::shared_ptr<ItemWithOpts<Trait>> m_lastItemWithStyle = nullptr;
 }; // struct TextParsingOpts
 
-//! Reset pre-stored HTML.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Reset pre-stored HTML.
+ */
 template<class Trait>
 inline void resetHtmlTag(RawHtmlBlock<Trait> &html, TextParsingOpts<Trait> *po = nullptr)
 {
@@ -1020,7 +1171,11 @@ inline void resetHtmlTag(RawHtmlBlock<Trait> &html, TextParsingOpts<Trait> *po =
 // virginSubstr
 //
 
-//! \return Substring from fragment with given virgin positions.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns substring from fragment with given virgin positions.
+ */
 template<class Trait>
 inline typename Trait::String
 virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
@@ -1086,8 +1241,12 @@ virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
 // localPosFromVirgin
 //
 
-//! \return Local position ( { column, line } ) in fragment for given virgin position if exists.
-//! \return { -1, -1 } if there is no given position.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns local position ( { column, line } ) in fragment for given virgin position if exists.
+ * Returns { -1, -1 } if there is no given position.
+ */
 template<class Trait>
 inline std::pair<long long int, long long int>
 localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine)
@@ -1124,7 +1283,11 @@ localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long lo
     "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
     "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 */
-//! \return Is the given string a valid email?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a valid email?
+ */
 template<class Trait>
 inline bool
 isEmail(const typename Trait::String &url)
@@ -1213,12 +1376,20 @@ isEmail(const typename Trait::String &url)
     return false;
 }
 
-//! \return Is the fiven string a valid URL?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the fiven string a valid URL?
+ */
 template<class Trait>
 inline bool
 isValidUrl(const typename Trait::String &url);
 
-//! \return Is the given string a GitHub autolink?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a GitHub autolink?
+ */
 template<class Trait>
 inline bool
 isGitHubAutolink(const typename Trait::String &url);
@@ -1273,7 +1444,11 @@ isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
 
 #endif
 
-//! Process GitHub autolinks for the text with index \p idx.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Process GitHub autolinks for the text with index \a idx.
+ */
 template<class Trait>
 inline long long int
 processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
@@ -1405,7 +1580,11 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
     return ret;
 }
 
-//! GitHub autolinks plugin.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * GitHub autolinks plugin.
+ */
 template<class Trait>
 inline void
 githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
@@ -1427,7 +1606,13 @@ githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
 // Parser
 //
 
-//! Markdown parser.
+/*!
+ * \class MD::Parser
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * Markdown parser.
+ */
 template<class Trait>
 class Parser final
 {
@@ -1439,83 +1624,106 @@ public:
 
     ~Parser() = default;
 
-    //! \return Parsed Markdown document.
+    /*!
+     * Returns Parsed Markdown document.
+     *
+     * \a fileName File name of the Markdown document.
+     *
+     * \a recursive Should parsing be recursive? If recursive all links to existing Markdown
+     *              files will be parsed and presented in the returned document.
+     *
+     * \a ext Allowed extensions for Markdonw document files. If Markdown file doesn't
+     *        have given extension it will be ignored.
+     *
+     * \a fullyOptimizeParagraphs Make full optimization, or just semi one. In full optimization
+     *                            text items with one style but with some closing delimiters
+     *                            in the middle will be concatenated in one, like in **text* text*,
+     *                            here in full optimization will be "text text" with 2 open/close
+     *                            style delimiters, but one closing delimiter is in the middle.
+     */
     std::shared_ptr<Document<Trait>>
-    parse(
-        //! File name of the Markdown document.
-        const typename Trait::String &fileName,
-        //! Should parsing be recursive? If recursive all links to existing Markdown
-        //! files will be parsed and presented in the returned document.
-        bool recursive = true,
-        //! Allowed extensions for Markdonw document files. If Markdown file doesn't
-        //! have given extension it will be ignored.
-        const typename Trait::StringList &ext = {Trait::latin1ToString("md"), Trait::latin1ToString("markdown")},
-        //! Make full optimization, or just semi one. In full optimization
-        //! text items with one style but with some closing delimiters
-        //! in the middle will be concatenated in one, like in **text* text*,
-        //! here in full optimization will be "text text" with 2 open/close
-        //! style delimiters, but one closing delimiter is in the middle.
-        bool fullyOptimizeParagraphs = true);
+    parse(const typename Trait::String &fileName,
+          bool recursive = true,
+          const typename Trait::StringList &ext = {Trait::latin1ToString("md"), Trait::latin1ToString("markdown")},
+          bool fullyOptimizeParagraphs = true);
 
-    //! \return Parsed Markdown document.
+    /*!
+     * Returns parsed Markdown document.
+     *
+     * \a stream Stream to parse.
+     *
+     * \a path Absolute path to the root folder for the document.
+     *         This path will be used to resolve local links.
+     *
+     * \a fileName This argument needed only for anchor.
+     *
+     * \a fullyOptimizeParagraphs Make full optimization, or just semi one. In full optimization
+     *                            text items with one style but with some closing delimiters
+     *                            in the middle will be concatenated in one, like in **text* text*,
+     *                            here in full optimization will be "text text" with 2 open/close
+     *                            style delimiters, but one closing delimiter is in the middle.
+     */
     std::shared_ptr<Document<Trait>>
-    parse(
-        //! Stream to parse.
-        typename Trait::TextStream &stream,
-        //! Absolute path to the root folder for the document.
-        //! This path will be used to resolve local links.
-        const typename Trait::String &path,
-        //! This argument needed only for anchor.
-        const typename Trait::String &fileName,
-        //! Make full optimization, or just semi one. In full optimization
-        //! text items with one style but with some closing delimiters
-        //! in the middle will be concatenated in one, like in **text* text*,
-        //! here in full optimization will be "text text" with 2 open/close
-        //! style delimiters, but one closing delimiter is in the middle.
-        bool fullyOptimizeParagraphs = true);
+    parse(typename Trait::TextStream &stream,
+          const typename Trait::String &path,
+          const typename Trait::String &fileName,
+          bool fullyOptimizeParagraphs = true);
 
-    //! \return Parsed Markdown document.
+    /*!
+     * Returns parsed Markdown document.
+     *
+     * \a fileName File name of the Markdown document (full path).
+     *
+     * \a workingDirectory Absolute path to the working directory for the document.
+     *                     This path will be used to resolve local links.
+     *                     \warning This path should be in \a fileName path.
+     *
+     * \a recursive Should parsing be recursive? If recursive all links to existing Markdown
+     *              files will be parsed and presented in the returned document.
+     *
+     * \a ext Allowed extensions for Markdonw document files. If Markdown file doesn't
+     *        have given extension it will be ignored.
+     *
+     * \a fullyOptimizeParagraphs Make full optimization, or just semi one. In full optimization
+     *                            text items with one style but with some closing delimiters
+     *                            in the middle will be concatenated in one, like in **text* text*,
+     *                            here in full optimization will be "text text" with 2 open/close
+     *                            style delimiters, but one closing delimiter is in the middle.
+     */
     std::shared_ptr<Document<Trait>>
-    parse(
-        //! File name of the Markdown document (full path).
-        const typename Trait::String &fileName,
-        //! Absolute path to the working directory for the document.
-        //! This path will be used to resolve local links.
-        //! \warning This path should be in \p fileName path.
-        const typename Trait::String &workingDirectory,
-        //! Should parsing be recursive? If recursive all links to existing Markdown
-        //! files will be parsed and presented in the returned document.
-        bool recursive = true,
-        //! Allowed extensions for Markdonw document files. If Markdown file doesn't
-        //! have given extension it will be ignored.
-        const typename Trait::StringList &ext = {Trait::latin1ToString("md"), Trait::latin1ToString("markdown")},
-        //! Make full optimization, or just semi one. In full optimization
-        //! text items with one style but with some closing delimiters
-        //! in the middle will be concatenated in one, like in **text* text*,
-        //! here in full optimization will be "text text" with 2 open/close
-        //! style delimiters, but one closing delimiter is in the middle.
-        bool fullyOptimizeParagraphs = true);
+    parse(const typename Trait::String &fileName,
+          const typename Trait::String &workingDirectory,
+          bool recursive = true,
+          const typename Trait::StringList &ext = {Trait::latin1ToString("md"), Trait::latin1ToString("markdown")},
+          bool fullyOptimizeParagraphs = true);
 
-    //! Add text plugin.
+    /*!
+     * Add text plugin.
+     *
+     * \a id ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
+     *
+     * \a plugin Function of a plugin, that will be invoked to processs raw text.
+     *
+     * \a processInLinks Should this plugin be used in parsing of internals of links?
+     *
+     * \a userData User data that will be passed to plugin function.
+     */
     void
-    addTextPlugin(
-        //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
-        int id,
-        //! Function of a plugin, that will be invoked to processs raw text.
-        TextPluginFunc<Trait> plugin,
-        //! Should this plugin be used in parsing of internals of links?
-        bool processInLinks,
-        //! User data that will be passed to plugin function.
-        const typename Trait::StringList &userData)
+    addTextPlugin(int id,
+                  TextPluginFunc<Trait> plugin,
+                  bool processInLinks,
+                  const typename Trait::StringList &userData)
     {
         m_textPlugins.insert({id, {plugin, processInLinks, userData}});
     }
 
-    //! Remove text plugin.
+    /*!
+     * Remove text plugin.
+     *
+     * \a id ID of plugin that should be removed.
+     */
     void
-    removeTextPlugin(
-        //! ID of plugin that should be removed.
-        int id)
+    removeTextPlugin(int id)
     {
         m_textPlugins.erase(id);
     }
@@ -2129,7 +2337,6 @@ private:
     }
 
 private:
-    //! Used in tests.
     friend struct PrivateAccess;
 
 private:
@@ -2222,7 +2429,6 @@ class TextStream;
 
 #ifdef MD4QT_QT_SUPPORT
 
-//! Wrapper for QTextStream.
 template<>
 class TextStream<QStringTrait>
 {
@@ -2309,7 +2515,6 @@ private:
 
 #ifdef MD4QT_ICU_STL_SUPPORT
 
-//! Wrapper for std::istream.
 template<>
 class TextStream<UnicodeStringTrait>
 {
@@ -2407,7 +2612,11 @@ private:
 
 #endif
 
-//! \return Is HTML comment closed?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether HTML comment closed?
+ */
 template<class Trait>
 inline bool
 checkForEndHtmlComments(const typename Trait::String &line,
@@ -2422,7 +2631,11 @@ checkForEndHtmlComments(const typename Trait::String &line,
     return false;
 }
 
-//! Collect information about HTML comments.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Collect information about HTML comments.
+ */
 template<class Trait>
 inline void
 checkForHtmlComments(const typename Trait::InternalString &line,
@@ -2554,7 +2767,11 @@ Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
     return {-1, false};
 }
 
-//! Replace tabs with spaces (just for internal simpler use).
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Replace tabs with spaces (just for internal simpler use).
+ */
 template<class Trait>
 inline void
 replaceTabs(typename Trait::InternalString &s)
@@ -3329,7 +3546,11 @@ Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
 
 #endif
 
-//! Resolve links in the document.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Resolve links in the document.
+ */
 template<class Trait>
 void
 resolveLinks(typename Trait::StringList &linksToParse,
@@ -3430,7 +3651,11 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
     }
 }
 
-//! \return Position of first character in list item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns position of first character in list item.
+ */
 template<class Trait>
 inline long long int
 posOfListItem(const typename Trait::String &s,
@@ -3473,7 +3698,11 @@ posOfListItem(const typename Trait::String &s,
     return p;
 }
 
-//! \return Level in indents for the given position.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns level in indents for the given position.
+ */
 inline long long int
 listLevel(const std::vector<long long int> &indents,
           long long int pos)
@@ -3698,7 +3927,11 @@ Parser<Trait>::clearCache()
     m_parsedFiles.clear();
 }
 
-//! \return Number of columns in table, if the given string is a table header.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns number of columns in table, if the given string is a table header.
+ */
 template<class Trait>
 inline int
 isTableHeader(const typename Trait::String &s)
@@ -3763,7 +3996,11 @@ Parser<Trait>::parseText(MdBlock<Trait> &fr,
     }
 }
 
-//! Find and remove heading label.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Find and remove heading label.
+ */
 template<class Trait>
 inline std::pair<typename Trait::String, WithPosition>
 findAndRemoveHeaderLabel(typename Trait::InternalString &s)
@@ -3793,7 +4030,11 @@ findAndRemoveHeaderLabel(typename Trait::InternalString &s)
     return {};
 }
 
-//! Convert string to label.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Convert string to label.
+ */
 template<class Trait>
 inline typename Trait::String
 stringToLabel(const typename Trait::String &s)
@@ -3814,7 +4055,11 @@ stringToLabel(const typename Trait::String &s)
     return res;
 }
 
-//! Convert Paragraph to label.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Convert MD::Paragraph to label.
+ */
 template<class Trait>
 inline typename Trait::String
 paragraphToLabel(Paragraph<Trait> *p)
@@ -3869,7 +4114,11 @@ paragraphToLabel(Paragraph<Trait> *p)
     return l;
 }
 
-//! Find and remove closing sequence of "#" in heading.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Find and remove closing sequence of "#" in heading.
+ */
 template<class Trait>
 inline WithPosition
 findAndRemoveClosingSequence(typename Trait::InternalString &s)
@@ -4029,7 +4278,11 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
     }
 }
 
-//! Prepare data in table cell for parsing.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Prepare data in table cell for parsing.
+ */
 template<class Trait>
 inline typename Trait::InternalString
 prepareTableData(typename Trait::InternalString s)
@@ -4039,7 +4292,11 @@ prepareTableData(typename Trait::InternalString s)
     return s;
 }
 
-//! Split table's row on cells.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Split table's row on cells.
+ */
 template<class Trait>
 inline std::pair<typename Trait::InternalStringList, std::vector<long long int>>
 splitTableRow(const typename Trait::InternalString &s)
@@ -4237,7 +4494,11 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
     }
 }
 
-//! \return Is the given string a heading's service sequence?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a heading's service sequence?
+ */
 template<class Trait>
 inline bool
 isH(const typename Trait::String &s,
@@ -4270,7 +4531,11 @@ isH(const typename Trait::String &s,
     return true;
 }
 
-//! \return Is the given string a heading's service sequence of level 1?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a heading's service sequence of level 1?
+ */
 template<class Trait>
 inline bool
 isH1(const typename Trait::String &s)
@@ -4278,7 +4543,11 @@ isH1(const typename Trait::String &s)
     return isH<Trait>(s, Trait::latin1ToChar('='));
 }
 
-//! \return Is the given string a heading's service sequence of level 2?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a heading's service sequence of level 2?
+ */
 template<class Trait>
 inline bool
 isH2(const typename Trait::String &s)
@@ -4286,7 +4555,11 @@ isH2(const typename Trait::String &s)
     return isH<Trait>(s, Trait::latin1ToChar('-'));
 }
 
-//! \return Previous position in the block.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns previous position in the block.
+ */
 template<class Trait>
 inline std::pair<long long int, long long int>
 prevPosition(const MdBlock<Trait> &fr,
@@ -4309,7 +4582,11 @@ prevPosition(const MdBlock<Trait> &fr,
     return {pos, line};
 }
 
-//! \return Next position in the block.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns next position in the block.
+ */
 template<class Trait>
 inline std::pair<long long int, long long int>
 nextPosition(const MdBlock<Trait> &fr,
@@ -4576,7 +4853,11 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
     return d;
 }
 
-//! \return Is the given string a line break.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a line break.
+ */
 template<class Trait>
 inline bool
 isLineBreak(const typename Trait::String &s)
@@ -4592,7 +4873,11 @@ isLineBreak(const typename Trait::String &s)
     return (s.endsWith(Trait::latin1ToString("  ")) || (count % 2 != 0));
 }
 
-//! \return Length of line break.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns length of line break.
+ */
 template<class Trait>
 inline long long int
 lineBreakLength(const typename Trait::String &s)
@@ -4600,7 +4885,11 @@ lineBreakLength(const typename Trait::String &s)
     return (s.endsWith(Trait::latin1ToString("  ")) ? 2 : 1);
 }
 
-//! Remove line break from the end of string.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Remove line break from the end of string.
+ */
 template<class Trait>
 inline typename Trait::String
 removeLineBreak(const typename Trait::String &s)
@@ -4612,7 +4901,11 @@ removeLineBreak(const typename Trait::String &s)
     }
 }
 
-//! Initialize item with style information and set it as last item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Initialize item with style information and set it as last item.
+ */
 template<class Trait>
 inline void
 initLastItemWithOpts(TextParsingOpts<Trait> &po,
@@ -4623,7 +4916,11 @@ initLastItemWithOpts(TextParsingOpts<Trait> &po,
     po.m_lastItemWithStyle = item;
 }
 
-//! Make text item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make text item.
+ */
 template<class Trait>
 inline void
 makeTextObject(const typename Trait::String &text,
@@ -4693,7 +4990,11 @@ makeTextObject(const typename Trait::String &text,
     }
 }
 
-//! Make text item with line break.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make text item with line break.
+ */
 template<class Trait>
 inline void
 makeTextObjectWithLineBreak(const typename Trait::String &text,
@@ -4726,7 +5027,11 @@ makeTextObjectWithLineBreak(const typename Trait::String &text,
     }
 }
 
-//! Check for table in paragraph.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Check for table in paragraph.
+ */
 template<class Trait>
 inline void
 checkForTableInParagraph(TextParsingOpts<Trait> &po,
@@ -4756,7 +5061,11 @@ checkForTableInParagraph(TextParsingOpts<Trait> &po,
     po.m_lastTextPos = po.m_fr.m_data.back().first.length();
 }
 
-//! Make text item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make text item.
+ */
 template<class Trait>
 inline void
 makeText(
@@ -4869,7 +5178,11 @@ makeText(
     }
 }
 
-//! Skip spaces.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Skip spaces.
+ */
 template<class Trait>
 inline void
 skipSpacesInHtml(long long int &l,
@@ -4888,7 +5201,11 @@ skipSpacesInHtml(long long int &l,
     }
 }
 
-//! Read HTML attribute value.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read HTML attribute value.
+ */
 template<class Trait>
 inline std::pair<bool, bool>
 readUnquotedHtmlAttrValue(long long int &l,
@@ -4912,7 +5229,11 @@ readUnquotedHtmlAttrValue(long long int &l,
     return {p - start > 0, p - start > 0};
 }
 
-//! Read HTML attribute value.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read HTML attribute value.
+ */
 template<class Trait>
 inline std::pair<bool, bool>
 readHtmlAttrValue(long long int &l,
@@ -4969,7 +5290,11 @@ readHtmlAttrValue(long long int &l,
     return {true, true};
 }
 
-//! Read HTML attribute.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read HTML attribute.
+ */
 template<class Trait>
 inline std::pair<bool, bool>
 readHtmlAttr(long long int &l,
@@ -5064,12 +5389,15 @@ readHtmlAttr(long long int &l,
     return readHtmlAttrValue<Trait>(l, p, fr);
 }
 
-//! \return Is HTML tag at the given position?
 template<class Trait>
 inline std::tuple<bool, long long int, long long int, bool, typename Trait::String>
 isHtmlTag(long long int line, long long int pos, TextParsingOpts<Trait> &po, int rule);
 
-//! \return Is after the given position only HTML tags?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether after the given position only HTML tags?
+ */
 template<class Trait>
 inline bool
 isOnlyHtmlTagsAfterOrClosedRule1(long long int line,
@@ -5122,7 +5450,11 @@ isOnlyHtmlTagsAfterOrClosedRule1(long long int line,
     return false;
 }
 
-//! \return Is setext heading in the lines?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether setext heading in the lines?
+ */
 template<class Trait>
 inline bool
 isSetextHeadingBetween(const TextParsingOpts<Trait> &po,
@@ -5141,7 +5473,11 @@ isSetextHeadingBetween(const TextParsingOpts<Trait> &po,
     return false;
 }
 
-//! \return Is HTML tag at the given position?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether HTML tag at the given position?
+ */
 template<class Trait>
 inline std::tuple<bool, long long int, long long int, bool, typename Trait::String>
 isHtmlTag(long long int line,
@@ -5302,7 +5638,6 @@ isHtmlTag(long long int line,
     return {false, line, pos, first, {}};
 }
 
-//! Read HTML tag.
 template<class Trait>
 inline std::pair<typename Trait::String, bool>
 Parser<Trait>::readHtmlTag(typename Delims::iterator it,
@@ -5347,7 +5682,11 @@ Parser<Trait>::findIt(typename Delims::iterator it,
     return ret;
 }
 
-//! Read HTML data.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read HTML data.
+ */
 template<class Trait>
 inline void
 eatRawHtml(long long int line,
@@ -6783,7 +7122,11 @@ Parser<Trait>::createShortcutImage(const typename MdBlock<Trait>::Data &text,
     return false;
 }
 
-//! Skip space in the block up to 1 new line.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Skip space in the block up to 1 new line.
+ */
 template<class Trait>
 inline void
 skipSpacesUpTo1Line(long long int &line,
@@ -6798,7 +7141,11 @@ skipSpacesUpTo1Line(long long int &line,
     }
 }
 
-//! Read link's destination.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read link's destination.
+ */
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
 readLinkDestination(long long int line,
@@ -6915,7 +7262,11 @@ readLinkDestination(long long int line,
     }
 }
 
-//! Read link's title.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Read link's title.
+ */
 template<class Trait>
 inline std::tuple<long long int, long long int, bool, typename Trait::String, long long int>
 readLinkTitle(long long int line,
@@ -7401,7 +7752,11 @@ Parser<Trait>::checkForLink(typename Delims::iterator it,
     return start;
 }
 
-//! Close style.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Close style.
+ */
 template<class Trait>
 inline void
 closeStyle(std::vector<typename TextParsingOpts<Trait>::StyleInfo> &styles,
@@ -7416,7 +7771,11 @@ closeStyle(std::vector<typename TextParsingOpts<Trait>::StyleInfo> &styles,
     }
 }
 
-//! Apply styles.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Apply styles.
+ */
 template<class Trait>
 inline void
 applyStyles(int &opts,
@@ -7850,7 +8209,11 @@ Parser<Trait>::incrementIterator(typename Delims::iterator it,
     }
 }
 
-//! Append close style.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Append close style.
+ */
 template<class Trait>
 inline void
 appendCloseStyle(TextParsingOpts<Trait> &po,
@@ -8089,7 +8452,11 @@ Parser<Trait>::checkForStyle(typename Delims::iterator first,
     return incrementIterator(it, last, count - 1);
 }
 
-//! Concatenate texts in block.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Concatenate texts in block.
+ */
 template<class Trait>
 inline std::shared_ptr<Text<Trait>>
 concatenateText(typename Block<Trait>::Items::const_iterator it,
@@ -8130,7 +8497,11 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
     return t;
 }
 
-//! \return Is optimization type a semi one.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether optimization type a semi one.
+ */
 inline bool
 isSemiOptimization(OptimizeParagraphType t)
 {
@@ -8144,7 +8515,11 @@ isSemiOptimization(OptimizeParagraphType t)
     }
 }
 
-//! \return Is optimization type without raw data optimization?
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether optimization type without raw data optimization?
+ */
 inline bool
 isWithoutRawDataOptimization(OptimizeParagraphType t)
 {
@@ -8158,7 +8533,11 @@ isWithoutRawDataOptimization(OptimizeParagraphType t)
     }
 }
 
-//! Optimize Paragraph.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Optimize Paragraph.
+ */
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p,
@@ -8239,7 +8618,11 @@ optimizeParagraph(std::shared_ptr<Paragraph<Trait>> &p,
     return p;
 }
 
-//! Normalize position.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Normalize position.
+ */
 inline void
 normalizePos(long long int &pos,
              long long int &line,
@@ -8252,7 +8635,11 @@ normalizePos(long long int &pos,
     }
 }
 
-//! Make Paragraph.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make Paragraph.
+ */
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 makeParagraph(typename Block<Trait>::Items::const_iterator first,
@@ -8272,7 +8659,11 @@ makeParagraph(typename Block<Trait>::Items::const_iterator first,
     return p;
 }
 
-//! Split Paragraph and free HTML.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Split Paragraph and free HTML.
+ */
 template<class Trait>
 inline std::shared_ptr<Paragraph<Trait>>
 splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
@@ -8328,7 +8719,11 @@ splitParagraphsAndFreeHtml(std::shared_ptr<Block<Trait>> parent,
     }
 }
 
-//! \return Last virgin position of the item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns last virgin position of the item.
+ */
 template<class Trait>
 inline long long int
 lastVirginPositionInParagraph(Item<Trait> *item)
@@ -8368,7 +8763,11 @@ lastVirginPositionInParagraph(Item<Trait> *item)
     }
 }
 
-//! Make heading.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make heading.
+ */
 template<class Trait>
 inline void
 makeHeading(std::shared_ptr<Block<Trait>> parent,
@@ -8560,7 +8959,11 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
     }
 }
 
-//! \return Index of text item for the given index in raw text data.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns index of text item for the given index in raw text data.
+ */
 template<class Trait>
 inline long long int
 textAtIdx(std::shared_ptr<Paragraph<Trait>> p,
@@ -8581,7 +8984,11 @@ textAtIdx(std::shared_ptr<Paragraph<Trait>> p,
     return -1;
 }
 
-//! Process text plugins.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Process text plugins.
+ */
 template<class Trait>
 inline void
 checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p,
@@ -8599,7 +9006,11 @@ checkForTextPlugins(std::shared_ptr<Paragraph<Trait>> p,
     }
 }
 
-//! Make horizontal line.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Make horizontal line.
+ */
 template<class Trait>
 inline void
 makeHorLine(const typename MdBlock<Trait>::Line &line,
@@ -9117,7 +9528,11 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
     return line;
 }
 
-//! \return Is the given string a new list item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns whether the given string a new list item.
+ */
 template<class Trait>
 inline bool
 isListItemAndNotNested(const typename Trait::String &s,
@@ -9151,7 +9566,11 @@ isListItemAndNotNested(const typename Trait::String &s,
         return false;
 }
 
-//! \return Indent.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns indent.
+ */
 template<class Trait>
 inline std::pair<long long int, long long int>
 calculateIndent(const typename Trait::String &s,
@@ -9160,7 +9579,11 @@ calculateIndent(const typename Trait::String &s,
     return {0, skipSpaces<Trait>(p, s)};
 }
 
-//! \return List item data.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Returns list item data.
+ */
 template<class Trait>
 inline std::tuple<bool, long long int, typename Trait::Char, bool>
 listItemData(const typename Trait::String &s,
@@ -9210,7 +9633,11 @@ listItemData(const typename Trait::String &s,
     return {false, 0, typename Trait::Char(), false};
 }
 
-//! Set last position of the item.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Set last position of the item.
+ */
 template<class Trait>
 inline void
 setLastPos(std::shared_ptr<Item<Trait>> item,
@@ -9221,7 +9648,11 @@ setLastPos(std::shared_ptr<Item<Trait>> item,
     item->setEndLine(line);
 }
 
-//! Update last position of all parent.
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Update last position of all parent.
+ */
 template<class Trait>
 inline void
 updateLastPosInList(const RawHtmlBlock<Trait> &html)

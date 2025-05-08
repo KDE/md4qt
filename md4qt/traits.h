@@ -50,7 +50,13 @@
 namespace MD
 {
 
-//! Internal string, used to get virgin (original) string from transformed string.
+/*!
+ * \class MD::InternalStringT
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * Internal string, used to get virgin (original) string from transformed string.
+ */
 template<class String, class Char, class Latin1Char>
 class InternalStringT
 {
@@ -64,25 +70,33 @@ public:
     {
     }
 
-    //! \return Reference to string.
+    /*!
+     * Returns reference to string.
+     */
     String &asString()
     {
         return m_str;
     }
 
-    //! \return Reference to string.
+    /*!
+     * Returns reference to string.
+     */
     const String &asString() const
     {
         return m_str;
     }
 
-    //! \return Full virgin string.
+    /*!
+     * Returns full virgin string.
+     */
     const String & fullVirginString() const
     {
         return m_virginStr;
     }
 
-    //! \return Virgin sub-string with position and length in the transformed string.
+    /*!
+     * Returns virgin sub-string with position and length in the transformed string.
+     */
     String virginSubString(long long int pos = 0, long long int len = -1) const
     {
         if (pos < 0) {
@@ -129,7 +143,9 @@ public:
         return startStr + m_virginStr.sliced(virginStartPos, virginEndPos - virginStartPos + 1) + endStr;
     }
 
-    //! \return Virgin position from transformed.
+    /*!
+     * Returns virgin position from transformed.
+     */
     long long int virginPos(
             //! Transformed position.
             long long int pos,
@@ -145,12 +161,17 @@ public:
         return pos;
     }
 
+    /*!
+     * Returns char at a given \a position position.
+     */
     Char operator[](long long int position) const
     {
         return m_str[position];
     }
 
-    //! Replace substring.
+    /*!
+     * Replace substring.
+     */
     InternalStringT &replaceOne(long long int pos, long long int size, const String &with)
     {
         const auto len = m_str.length();
@@ -166,7 +187,9 @@ public:
         return *this;
     }
 
-    //! Replace string.
+    /*!
+     * Replace string.
+     */
     InternalStringT &replace(const String &what, const String &with)
     {
         String tmp;
@@ -202,7 +225,9 @@ public:
         return *this;
     }
 
-    //! Remove sub-string.
+    /*!
+     * Remove sub-string.
+     */
     InternalStringT &remove(long long int pos, long long int size)
     {
         const auto len = m_str.length();
@@ -215,19 +240,25 @@ public:
         return *this;
     }
 
-    //! \return Is this string empty?
+    /*!
+     * Returns whether this string empty?
+     */
     bool isEmpty() const
     {
         return m_str.isEmpty();
     }
 
-    //! \return Length of the string.
+    /*!
+     * Returns length of the string.
+     */
     long long int length() const
     {
         return m_str.length();
     }
 
-    //! \return Simplified string.
+    /*!
+     * Returns simplified string.
+     */
     InternalStringT simplified() const
     {
         if (isEmpty()) {
@@ -290,7 +321,9 @@ public:
         return result;
     }
 
-    //! Split string.
+    /*!
+     * Split string.
+     */
     std::vector<InternalStringT> split(const InternalStringT &sep) const
     {
         std::vector<InternalStringT> result;
@@ -334,7 +367,9 @@ public:
         return result;
     }
 
-    //! \return Sliced sub-string.
+    /*!
+     * Returns sliced sub-string.
+     */
     InternalStringT sliced(long long int pos, long long int len = -1) const
     {
         InternalStringT tmp = *this;
@@ -348,7 +383,9 @@ public:
         return tmp;
     }
 
-    //! \return Right sub-string.
+    /*!
+     * Returns right sub-string.
+     */
     InternalStringT right(long long int n) const
     {
         InternalStringT tmp = *this;
@@ -359,13 +396,17 @@ public:
         return tmp;
     }
 
-    //! Insert one character.
+    /*!
+     * Insert one character.
+     */
     InternalStringT &insert(long long int pos, Char ch)
     {
         return insert(pos, String(1, ch));
     }
 
-    //! Insert string.
+    /*!
+     * Insert string.
+     */
     InternalStringT &insert(long long int pos, const String &s)
     {
         const auto len = m_str.length();
@@ -380,25 +421,35 @@ public:
     }
 
 private:
-    //! Transformed string.
+    /*!
+     * Transformed string.
+     */
     String m_str;
-    //! Virgin (original) string.
+    /*!
+     * Virgin (original) string.
+     */
     String m_virginStr;
 
-    //! Auxiliary struct to store information about transformation.
+    /*!
+     * Auxiliary struct to store information about transformation.
+     */
     struct ChangedPos {
         long long int m_pos = -1;
         long long int m_oldLen = -1;
         long long int m_len = -1;
     };
 
-    //! Auxiliary struct to store information about transformation.
+    /*!
+     * Auxiliary struct to store information about transformation.
+     */
     struct LengthAndStartPos {
         long long int m_firstPos = 0;
         long long int m_length = 0;
     };
 
-    //! Information about transformations.
+    /*!
+     * Information about transformations.
+     */
     std::vector<std::pair<LengthAndStartPos, std::vector<ChangedPos>>> m_changedPos;
 
 private:
@@ -460,7 +511,13 @@ private:
 // UnicodeChar
 //
 
-//! Wrapper for UChar32 to be used with MD::Parser.
+/*!
+ * \class MD::UnicodeChar
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * Wrapper for UChar32 to be used with MD::Parser.
+ */
 class UnicodeChar
 {
 public:
@@ -595,7 +652,13 @@ private:
 // UnicodeString
 //
 
-//! Wrapper for icu::UnicodeString to be used with MD::Parser.
+/*!
+ * \class MD::UnicodeString
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * Wrapper for icu::UnicodeString to be used with MD::Parser.
+ */
 class UnicodeString final : public icu::UnicodeString
 {
 public:
@@ -889,7 +952,13 @@ private:
 // UnicodeStringTrait
 //
 
-//! Trait to use this library with std::string.
+/*!
+ * \class MD::UnicodeStringTrait
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * Trait to use this library with std::string.
+ */
 struct UnicodeStringTrait {
     template<class T>
     using Vector = std::vector<T>;
@@ -911,7 +980,9 @@ struct UnicodeStringTrait {
 
     using Url = UrlUri;
 
-    //! \return Is Unicode whitespace?
+    /*!
+     * Returns whether Unicode whitespace?
+     */
     static bool isUnicodeWhitespace(const UnicodeChar &ch)
     {
         const auto c = ch.unicode();
@@ -925,31 +996,41 @@ struct UnicodeStringTrait {
         }
     }
 
-    //! Convert UTF-16 into trait's string.
+    /*!
+     * Convert UTF-16 into trait's string.
+     */
     static String utf16ToString(const char16_t *u16)
     {
         return UnicodeString(u16);
     }
 
-    //! Convert Latin1 into trait's string.
+    /*!
+     * Convert Latin1 into trait's string.
+     */
     static String latin1ToString(const char *latin1)
     {
         return UnicodeString(latin1);
     }
 
-    //! Convert Latin1 char into trait's char.
+    /*!
+     * Convert Latin1 char into trait's char.
+     */
     static Char latin1ToChar(char latin1)
     {
         return UnicodeChar(latin1);
     }
 
-    //! Convert UTF8 into trait's string.
+    /*!
+     * Convert UTF8 into trait's string.
+     */
     static String utf8ToString(const char *utf8)
     {
         return UnicodeString(utf8);
     }
 
-    //! \return Does file exist.
+    /*!
+     * Returns whether file exist.
+     */
     static bool fileExists(const String &fileName, const String &workingPath)
     {
         std::string path;
@@ -962,7 +1043,9 @@ struct UnicodeStringTrait {
         return (er ? false : result);
     }
 
-    //! \return Does file exist.
+    /*!
+     * Returns whether file exist.
+     */
     static bool fileExists(const String &fileName)
     {
         std::string path;
@@ -975,7 +1058,9 @@ struct UnicodeStringTrait {
         return (er ? false : result);
     }
 
-    //! \return Absolute file path.
+    /*!
+     * Returns absolute file path.
+     */
     static String absoluteFilePath(const String &path)
     {
         std::string tmp;
@@ -988,13 +1073,17 @@ struct UnicodeStringTrait {
         return (er ? "" : UnicodeString::fromUTF8(p));
     }
 
-    //! Add UCS4 to string.
+    /*!
+     * Add UCS4 to string.
+     */
     static void appendUcs4(String &str, char32_t ch)
     {
         str.push_back(Char(ch));
     }
 
-    //! Search for last occurrence of string.
+    /*!
+     * Search for last occurrence of string.
+     */
     static long long int lastIndexOf(const String &where, const String &what, long long int from)
     {
         if (from < 0) {
@@ -1013,7 +1102,13 @@ struct UnicodeStringTrait {
 // QStringTrait
 //
 
-//! Trait to use this library with QString.
+/*!
+ * \class MD::QStringTrait
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * Trait to use this library with QString.
+ */
 struct QStringTrait {
     template<class T>
     using Vector = QVector<T>;
@@ -1035,7 +1130,9 @@ struct QStringTrait {
 
     using Url = QUrl;
 
-    //! \return Is Unicode whitespace?
+    /*!
+     * Returns whether Unicode whitespace?
+     */
     static bool isUnicodeWhitespace(const QChar &ch)
     {
         const auto c = ch.unicode();
@@ -1049,56 +1146,74 @@ struct QStringTrait {
         }
     }
 
-    //! Convert UTF-16 into trait's string.
+    /*!
+     * Convert UTF-16 into trait's string.
+     */
     static String utf16ToString(const char16_t *u16)
     {
         return QString::fromUtf16(u16);
     }
 
-    //! Convert Latin1 into trait's string.
+    /*!
+     * Convert Latin1 into trait's string.
+     */
     static String latin1ToString(const char *latin1)
     {
         return QLatin1String(latin1);
     }
 
-    //! Convert Latin1 char into trait's char.
+    /*!
+     * Convert Latin1 char into trait's char.
+     */
     static Char latin1ToChar(char latin1)
     {
         return QLatin1Char(latin1);
     }
 
-    //! Convert UTF8 into trait's string.
+    /*!
+     * Convert UTF8 into trait's string.
+     */
     static String utf8ToString(const char *utf8)
     {
         return QString::fromUtf8(utf8, -1);
     }
 
-    //! \return Does file exist.
+    /*!
+     * Returns whether file exist.
+     */
     static bool fileExists(const String &fileName, const String &workingPath)
     {
         return QFileInfo::exists((workingPath.isEmpty() ?
                                     QString() : workingPath + latin1ToString("/")) + fileName);
     }
 
-    //! \return Does file exist.
+    /*!
+     * Returns whether file exist.
+     */
     static bool fileExists(const String &fileName)
     {
         return QFileInfo::exists(fileName);
     }
 
-    //! \return Absolute file path.
+    /*!
+     * Returns absolute file path.
+     */
     static String absoluteFilePath(const String &path)
     {
         return QFileInfo(path).absoluteFilePath();
     }
 
-    //! Add UCS4 to string.
+    /*!
+     * Add UCS4 to string.
+     */
     static void appendUcs4(String &str, char32_t ch)
     {
         str += QChar::fromUcs4(ch);
     }
 
-    //! Search for last occurrence of string.
+    /*!
+     * Search for last occurrence of string.
+     */
     static long long int lastIndexOf(const String &where, const String &what, long long int from)
     {
         if (from < 0) {

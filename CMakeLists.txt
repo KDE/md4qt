@@ -30,6 +30,7 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMSetupVersion)
+include(ECMGenerateQDoc)
 
 set(CMAKE_WIN32_EXECUTABLE FALSE)
 set(CMAKE_MACOSX_BUNDLE FALSE)
@@ -133,6 +134,8 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
 
         install(TARGETS md2qdoc RUNTIME DESTINATION ${KDE_INSTALL_BINDIR})
     endif()
+
+    ecm_generate_qdoc(md4qt docs/md4qt.qdocconf)
 
 else()
 

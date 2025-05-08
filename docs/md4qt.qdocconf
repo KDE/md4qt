@@ -1,0 +1,21 @@
+include($KDE_DOCS/global/qt-module-defaults-online.qdocconf)
+
+project = md4qt
+description = Header-only C++ library for parsing Markdown.
+
+documentationinheaders = true
+
+headerdirs += ../md4qt
+sourcedirs += ../md4qt \
+              .
+imagedirs += ..
+
+defines += MD4QT_ICU_STL_SUPPORT \
+           MD4QT_QT_SUPPORT
+
+visibility = protected
+
+outputformats = HTML
+
+depends += \
+    qtcore
