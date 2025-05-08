@@ -41,10 +41,12 @@ public:
 
     virtual void toQDoc(std::shared_ptr<MD::Document<MD::QStringTrait>> doc,
                         const QString &workingDirectory,
-                        const QString &outputDirectory)
+                        const QString &outputDirectory,
+                        const QString &prefix)
     {
         m_workingDirectory = workingDirectory;
         m_outputDirectory = outputDirectory;
+        m_prefix = prefix;
 
         this->process(doc);
     }
@@ -300,6 +302,11 @@ protected:
             relative.remove(dotPos, relative.size() - dotPos);
         }
 
+        if (!m_prefix.isEmpty()) {
+            m_fileName.insert(m_fileName.lastIndexOf(QStringLiteral("/")) + 1, m_prefix + QStringLiteral("-"));
+            relative.insert(relative.lastIndexOf(QStringLiteral("/")) + 1, m_prefix + QStringLiteral("-"));
+        }
+
         const QString fileName = m_outputDirectory + relative + QStringLiteral(".qdoc");
 
         QFileInfo info(fileName);
@@ -342,6 +349,10 @@ protected:
         if (std::find(this->m_anchors.cbegin(), this->m_anchors.cend(), url) != this->m_anchors.cend()) {
             url.remove(m_workingDirectory);
             url.append(QStringLiteral(".html"));
+
+            if (!m_prefix.isEmpty()) {
+                url.insert(url.lastIndexOf(QStringLiteral("/")) + 1, m_prefix + QStringLiteral("-"));
+            }
         } else if (url.startsWith(QStringLiteral("#"))) {
             const auto it = this->m_doc->labeledHeadings().find(url);
 
@@ -420,6 +431,8 @@ protected:
     QString m_workingDirectory;
     //! Output directory.
     QString m_outputDirectory;
+    //! Prefix used to create top-level targets.
+    QString m_prefix;
     //! Current file.
     QSharedPointer<QFile> m_file;
     //! Current offset for nested blocks.
@@ -478,10 +491,15 @@ int main(int argc, char **argv)
     QCommandLineOption recursive(QStringList() << QStringLiteral("r") << QStringLiteral("recursive"),
                                  QStringLiteral("Load and convert all linked Markdown files."));
     QCommandLineOption offset(QStringList() << QStringLiteral("offset"),
-                           QStringLiteral("Amount of spaces used for offset."), QStringLiteral("int"), QStringLiteral("4"));
+                              QStringLiteral("Amount of spaces used for offset."),
+                              QStringLiteral("int"), QStringLiteral("4"));
+    QCommandLineOption prefix(QStringList() << QStringLiteral("prefix"),
+                              QStringLiteral("Prefix used to create top-level targets."),
+                              QStringLiteral("str"), QStringLiteral(""));
     parser.addOption(out);
     parser.addOption(recursive);
     parser.addOption(offset);
+    parser.addOption(prefix);
 
     parser.process(app);
 
@@ -489,6 +507,7 @@ int main(int argc, char **argv)
     const auto outputDirectory = parser.value(out);
     const auto isRecursive = parser.isSet(recursive);
     auto offsetValue = parser.value(offset).toInt();
+    const auto prefixValue = parser.value(prefix);
 
     if (offsetValue <= 0) {
         offsetValue = 4;
@@ -516,7 +535,7 @@ int main(int argc, char **argv)
 
                 QDocVisitor visitor(offsetValue);
 
-                visitor.toQDoc(doc, workingDirectory, outputDirectoryPath);
+                visitor.toQDoc(doc, workingDirectory, outputDirectoryPath, prefixValue);
             } else {
                 s_outStream << QStringLiteral("File \"%1\" does not exist.\n").arg(file);
             }
