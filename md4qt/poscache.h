@@ -28,7 +28,7 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/poscache.h
  *
- * Cached position of Item.
+ * \brief Cached position of Item.
  */
 template<class Trait>
 struct PosRange {
@@ -106,7 +106,7 @@ bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * \inmodule md4qt
  * \inheaderfile md4qt/poscache.h
  *
- * Cache of Markdown items to be accessed via position.
+ * \brief Cache of Markdown items to be accessed via position.
  */
 template<class Trait>
 class PosCache : public MD::Visitor<Trait>
@@ -140,6 +140,8 @@ public:
     /*!
      * \class MD::PosCache::Items
      * \inmodule md4qt
+     *
+     * \brief Vector of items.
      *
      * Vector with items, where front is a top-level item,
      * and back is most nested child.

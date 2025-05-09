@@ -30,7 +30,7 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/html.h
  *
- * HTML visitor interface to walk through Document.
+ * \brief HTML visitor interface to walk through Document.
  */
 template<class Trait>
 class HtmlVisitor : public Visitor<Trait>
@@ -812,7 +812,7 @@ protected:
      * \class MD::details::HtmlVisitor::FootnoteRefStuff
      * \inmodule md4qt
      *
-     * Auxiliary struct to process footnotes.
+     * \brief Auxiliary struct to process footnotes.
      */
     struct FootnoteRefStuff {
         //! ID of footnote.
@@ -834,7 +834,7 @@ protected:
 /*!
  * \inheaderfile md4qt/html.h
  *
- * Convert Document to HTML.
+ * \brief Convert Document to HTML.
  *
  * \a doc Markdown document.
  *

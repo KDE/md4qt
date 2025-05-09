@@ -18,7 +18,7 @@ namespace MD
  * \relates MD
  * \inheaderfile md4qt/utils.h
  *
- * Macro for disabling copy.
+ * \brief Macro for disabling copy.
  */
 #define MD_DISABLE_COPY(Class)                                                                                                                                 \
     Class(const Class &) = delete;                                                                                                                             \
@@ -33,7 +33,7 @@ namespace MD
  * \relates MD
  * \inheaderfile md4qt/utils.h
  *
- * Avoid "unused parameter" warnings.
+ * \brief Avoid "unused parameter" warnings.
  */
 #define MD_UNUSED(x) (void)x;
 

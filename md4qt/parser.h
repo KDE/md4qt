@@ -44,6 +44,8 @@
  * \namespace MD
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
+ *
+ * \brief Main namespace of md4qt library.
  */
 namespace MD
 {
@@ -228,7 +230,7 @@ isOrderedList(const typename Trait::String &s,
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Internal structure for pre-storing HTML.
+ * \brief Internal structure for pre-storing HTML.
  */
 template<class Trait>
 struct RawHtmlBlock {
@@ -264,7 +266,7 @@ struct RawHtmlBlock {
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Internal structure for auxiliary information about a line in Markdown.
+ * \brief Internal structure for auxiliary information about a line in Markdown.
  */
 struct MdLineData {
     long long int m_lineNumber = -1;
@@ -285,7 +287,7 @@ struct MdLineData {
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Internal structure for block of text in Markdown.
+ * \brief Internal structure for block of text in Markdown.
  */
 template<class Trait>
 struct MdBlock {
@@ -328,7 +330,7 @@ emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Wrapper for typename Trait::StringList to be behaved like a stream.
+ * \brief Wrapper for typename Trait::StringList to be behaved like a stream.
  */
 template<class Trait>
 class StringListStream final
@@ -935,7 +937,7 @@ removeBackslashes(const typename MdBlock<Trait>::Data &d)
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Type of the paragraph's optimization.
+ * \brief Type of the paragraph's optimization.
  *
  * \value Full Full optimization.
  * \value Semi Semi optimization, optimization won't concatenate text
@@ -959,7 +961,7 @@ enum class OptimizeParagraphType {
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * ID of text plugin.
+ * \brief ID of text plugin.
  *
  * \value UnknownPluginID Unknown plugin.
  * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
@@ -980,7 +982,7 @@ enum TextPlugin : int {
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Emphasis type.
+ * \brief Emphasis type.
  *
  * \value Italic1 "*".
  * \value Italic2 "_".
@@ -1035,7 +1037,7 @@ struct TextParsingOpts;
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Functor type for text plugin.
+ * \brief Functor type for text plugin.
  */
 template<class Trait>
 using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
@@ -1051,7 +1053,7 @@ using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Type of the map of text plugins.
+ * \brief Type of the map of text plugins.
  */
 template<class Trait>
 using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
@@ -1067,7 +1069,7 @@ using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Internal structure for auxiliary options for parser.
+ * \brief Internal structure for auxiliary options for parser.
  */
 template<class Trait>
 struct TextParsingOpts {
@@ -1611,7 +1613,7 @@ githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
  * \inmodule md4qt
  * \inheaderfile md4qt/parser.h
  *
- * Markdown parser.
+ * \brief Markdown parser.
  */
 template<class Trait>
 class Parser final

@@ -55,7 +55,7 @@ namespace MD
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * Internal string, used to get virgin (original) string from transformed string.
+ * \brief Internal string, used to get virgin (original) string from transformed string.
  */
 template<class String, class Char, class Latin1Char>
 class InternalStringT
@@ -516,7 +516,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * Wrapper for UChar32 to be used with MD::Parser.
+ * \brief Wrapper for UChar32 to be used with MD::Parser.
  */
 class UnicodeChar
 {
@@ -657,7 +657,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * Wrapper for icu::UnicodeString to be used with MD::Parser.
+ * \brief Wrapper for icu::UnicodeString to be used with MD::Parser.
  */
 class UnicodeString final : public icu::UnicodeString
 {
@@ -957,7 +957,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * Trait to use this library with std::string.
+ * \brief Trait to use this library with std::string.
  */
 struct UnicodeStringTrait {
     template<class T>
@@ -1107,7 +1107,7 @@ struct UnicodeStringTrait {
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * Trait to use this library with QString.
+ * \brief Trait to use this library with QString.
  */
 struct QStringTrait {
     template<class T>

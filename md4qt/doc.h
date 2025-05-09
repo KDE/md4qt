@@ -25,7 +25,7 @@ namespace MD
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Enumeration of item types.
+ * \brief Enumeration of item types.
  *
  * \value Heading Heading.
  * \value Text Text.
@@ -83,7 +83,7 @@ enum class ItemType : int {
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Base for any thing with start and end position.
+ * \brief Base for any thing with start and end position.
  */
 class WithPosition
 {
@@ -221,7 +221,7 @@ class Document;
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Base class for item in Markdown document.
+ * \brief Base class for item in Markdown document.
  */
 template<class Trait>
 class Item : public WithPosition
@@ -255,7 +255,8 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Text option.
+ * \brief Text option.
+ *
  * \value TextWithoutFormat No format.
  * \value BoldText Bold text.
  * \value ItalicText Italic text.
@@ -277,7 +278,7 @@ enum TextOption {
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Emphasis in the Markdown document.
+ * \brief Emphasis in the Markdown document.
  */
 class StyleDelim final : public WithPosition
 {
@@ -318,7 +319,7 @@ private:
  * \relates MD::StyleDelim
  * \inheaderfile md4qt/doc.h
  *
- * Returns whether both are equal.
+ * \brief Returns whether both are equal.
  */
 inline bool operator==(const StyleDelim &l, const StyleDelim &r)
 {
@@ -333,6 +334,8 @@ inline bool operator==(const StyleDelim &l, const StyleDelim &r)
  * \class MD::ItemWithOpts
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
+ *
+ * \brief Base class for items with style options.
  *
  * Base class for items that can have style options.
  * These are all items in Paragraph.
@@ -440,7 +443,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Page break.
+ * \brief Page break.
  */
 template<class Trait>
 class PageBreak final : public Item<Trait>
@@ -480,7 +483,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Horizontal line.
+ * \brief Horizontal line.
  */
 template<class Trait>
 class HorizontalLine final : public Item<Trait>
@@ -523,7 +526,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Just an anchor.
+ * \brief Just an anchor.
  */
 template<class Trait>
 class Anchor final : public Item<Trait>
@@ -580,7 +583,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Raw HTML.
+ * \brief Raw HTML.
  */
 template<class Trait>
 class RawHtml final : public ItemWithOpts<Trait>
@@ -677,7 +680,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Text item in Paragraph.
+ * \brief Text item in Paragraph.
  */
 template<typename Trait>
 class Text : public ItemWithOpts<Trait>
@@ -750,7 +753,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Line break.
+ * \brief Line break.
  */
 template<class Trait>
 class LineBreak final : public Text<Trait>
@@ -793,7 +796,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Abstract block (storage of child items).
+ * \brief Abstract block (storage of child items).
  */
 template<class Trait>
 class Block : public Item<Trait>
@@ -899,7 +902,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Paragraph.
+ * \brief Paragraph.
  */
 template<class Trait>
 class Paragraph final : public Block<Trait>
@@ -940,7 +943,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Heading.
+ * \brief Heading.
  */
 template<class Trait>
 class Heading final : public Item<Trait>
@@ -1154,7 +1157,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Blockquote.
+ * \brief Blockquote.
  */
 template<class Trait>
 class Blockquote final : public Block<Trait>
@@ -1224,7 +1227,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * List item in a list.
+ * \brief List item in a list.
  */
 template<class Trait>
 class ListItem final : public Block<Trait>
@@ -1439,7 +1442,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * List.
+ * \brief List.
  */
 template<class Trait>
 class List final : public Block<Trait>
@@ -1480,7 +1483,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Base class for links.
+ * \brief Base class for links.
  */
 template<class Trait>
 class LinkBase : public ItemWithOpts<Trait>
@@ -1637,7 +1640,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Image.
+ * \brief Image.
  */
 template<class Trait>
 class Image final : public LinkBase<Trait>
@@ -1678,7 +1681,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Link.
+ * \brief Link.
  */
 template<class Trait>
 class Link final : public LinkBase<Trait>
@@ -1753,7 +1756,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Code.
+ * \brief Code.
  */
 template<class Trait>
 class Code : public ItemWithOpts<Trait>
@@ -1961,7 +1964,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * LaTeX math expression.
+ * \brief LaTeX math expression.
  */
 template<class Trait>
 class Math final : public Code<Trait>
@@ -2024,7 +2027,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Table cell.
+ * \brief Table cell.
  */
 template<class Trait>
 class TableCell final : public Block<Trait>
@@ -2065,7 +2068,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Table row.
+ * \brief Table row.
  */
 template<class Trait>
 class TableRow final : public Item<Trait>
@@ -2152,7 +2155,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Table.
+ * \brief Table.
  */
 template<class Trait>
 class Table final : public Item<Trait>
@@ -2298,7 +2301,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Footnote reference.
+ * \brief Footnote reference.
  */
 template<class Trait>
 class FootnoteRef final : public Text<Trait>
@@ -2379,7 +2382,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Footnote.
+ * \brief Footnote.
  */
 template<class Trait>
 class Footnote final : public Block<Trait>
@@ -2442,7 +2445,7 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/doc.h
  *
- * Document.
+ * \brief Document.
  */
 template<class Trait>
 class Document final : public Block<Trait>

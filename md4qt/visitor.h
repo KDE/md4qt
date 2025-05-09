@@ -26,7 +26,7 @@ namespace MD
  * \inmodule md4qt
  * \inheaderfile md4qt/visitor.h
  *
- * Visitor interface to walk through Document.
+ * \brief Visitor interface to walk through Document.
  */
 template<class Trait>
 class Visitor

@@ -21,7 +21,7 @@ namespace MD
  * \typealias MD::ItemFunctor
  * \inheaderfile md4qt/algo.h
  *
- * Function type for algorithms.
+ * \brief Function type for algorithms.
  */
 template<class Trait>
 using ItemFunctor = std::function<void(Item<Trait> *)>;
@@ -30,6 +30,8 @@ using ItemFunctor = std::function<void(Item<Trait> *)>;
  * \namespace MD::details
  * \inmodule md4qt
  * \inheaderfile md4qt/algo.h
+ *
+ * \brief Namespace for some implemetation details, but useful for reuse.
  */
 namespace details
 {
@@ -43,7 +45,7 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/algo.h
  *
- * Visitor for algorithms.
+ * \brief Visitor for algorithms.
  */
 template<class Trait>
 class AlgoVisitor : public Visitor<Trait>
@@ -400,6 +402,8 @@ protected:
     /*!
      * \inmodule md4qt
      *
+     * \brief Auxiliary structure for MD::details::AlgoVisitor.
+     *
      * Auxiliary structure to increment/decrement nesting level during walking through
      * the document, and checking circumstances for the algorithm.
      */
@@ -456,7 +460,7 @@ protected:
 /*!
  * \inheaderfile md4qt/algo.h
  *
- * Calls function for each item in the document with the given type.
+ * \brief Calls function for each item in the document with the given type.
  *
  * \a types Vector of item's types to be processed.
  *
