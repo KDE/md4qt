@@ -96,6 +96,10 @@ public:
 
     /*!
      * Returns virgin sub-string with position and length in the transformed string.
+     *
+     * \a pos Position.
+     *
+     * \a len Length.
      */
     String virginSubString(long long int pos = 0, long long int len = -1) const
     {
@@ -145,14 +149,15 @@ public:
 
     /*!
      * Returns virgin position from transformed.
+     *
+     * \a pos Transformed position.
+     *
+     * \a end If true will be return last virgin position before transformation.
+     *        For example if in virgin string 2 characters were replaced with 1,
+     *        we will receive position of second character if \a end is true.
      */
-    long long int virginPos(
-            //! Transformed position.
-            long long int pos,
-            //! If true will be return last virgin position before transformation.
-            //! For example if in virgin string 2 characters were replaced with 1,
-            //! we will receive position of second character if \p end is true.
-            bool end = false) const
+    long long int virginPos(long long int pos,
+                            bool end = false) const
     {
         for (auto it = m_changedPos.crbegin(), last = m_changedPos.crend(); it != last; ++it) {
             pos = virginPosImpl(pos, *it, end);
@@ -163,6 +168,8 @@ public:
 
     /*!
      * Returns char at a given \a position position.
+     *
+     * \a position Position.
      */
     Char operator[](long long int position) const
     {
@@ -171,6 +178,12 @@ public:
 
     /*!
      * Replace substring.
+     *
+     * \a pos Position.
+     *
+     * \a size Length.
+     *
+     * \a with Value to insert.
      */
     InternalStringT &replaceOne(long long int pos, long long int size, const String &with)
     {
@@ -189,6 +202,10 @@ public:
 
     /*!
      * Replace string.
+     *
+     * \a what What to replace.
+     *
+     * \a with Value to insert.
      */
     InternalStringT &replace(const String &what, const String &with)
     {
@@ -227,6 +244,10 @@ public:
 
     /*!
      * Remove sub-string.
+     *
+     * \a pos Position.
+     *
+     * \a size Length.
      */
     InternalStringT &remove(long long int pos, long long int size)
     {
@@ -323,6 +344,8 @@ public:
 
     /*!
      * Split string.
+     *
+     * \a sep Separator.
      */
     std::vector<InternalStringT> split(const InternalStringT &sep) const
     {
@@ -369,6 +392,10 @@ public:
 
     /*!
      * Returns sliced sub-string.
+     *
+     * \a pos Position.
+     *
+     * \a len Length.
      */
     InternalStringT sliced(long long int pos, long long int len = -1) const
     {
@@ -384,7 +411,9 @@ public:
     }
 
     /*!
-     * Returns right sub-string.
+     * Returns a substring that contains the \a n rightmost characters of the string.
+     *
+     * \a n Count of characters.
      */
     InternalStringT right(long long int n) const
     {
@@ -398,6 +427,10 @@ public:
 
     /*!
      * Insert one character.
+     *
+     * \a pos Position.
+     *
+     * \a ch Character.
      */
     InternalStringT &insert(long long int pos, Char ch)
     {
@@ -406,6 +439,10 @@ public:
 
     /*!
      * Insert string.
+     *
+     * \a pos Position.
+     *
+     * \a s String.
      */
     InternalStringT &insert(long long int pos, const String &s)
     {
@@ -982,6 +1019,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Returns whether Unicode whitespace?
+     *
+     * \a ch Character to check.
      */
     static bool isUnicodeWhitespace(const UnicodeChar &ch)
     {
@@ -998,6 +1037,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Convert UTF-16 into trait's string.
+     *
+     * \a u16 String.
      */
     static String utf16ToString(const char16_t *u16)
     {
@@ -1006,6 +1047,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Convert Latin1 into trait's string.
+     *
+     * \a latin1 String.
      */
     static String latin1ToString(const char *latin1)
     {
@@ -1014,6 +1057,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Convert Latin1 char into trait's char.
+     *
+     * \a latin1 Character.
      */
     static Char latin1ToChar(char latin1)
     {
@@ -1022,6 +1067,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Convert UTF8 into trait's string.
+     *
+     * \a utf8 UTF-8 string.
      */
     static String utf8ToString(const char *utf8)
     {
@@ -1030,6 +1077,10 @@ struct UnicodeStringTrait {
 
     /*!
      * Returns whether file exist.
+     *
+     * \a fileName File name.
+     *
+     * \a workingPath Working path.
      */
     static bool fileExists(const String &fileName, const String &workingPath)
     {
@@ -1045,6 +1096,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Returns whether file exist.
+     *
+     * \a fileName File name.
      */
     static bool fileExists(const String &fileName)
     {
@@ -1060,6 +1113,8 @@ struct UnicodeStringTrait {
 
     /*!
      * Returns absolute file path.
+     *
+     * \a path Path.
      */
     static String absoluteFilePath(const String &path)
     {
@@ -1075,6 +1130,10 @@ struct UnicodeStringTrait {
 
     /*!
      * Add UCS4 to string.
+     *
+     * \a str String.
+     *
+     * \a ch Character to append.
      */
     static void appendUcs4(String &str, char32_t ch)
     {
@@ -1083,6 +1142,12 @@ struct UnicodeStringTrait {
 
     /*!
      * Search for last occurrence of string.
+     *
+     * \a where String for checking.
+     *
+     * \a what What to look for?
+     *
+     * \a from Start position.
      */
     static long long int lastIndexOf(const String &where, const String &what, long long int from)
     {
@@ -1132,6 +1197,8 @@ struct QStringTrait {
 
     /*!
      * Returns whether Unicode whitespace?
+     *
+     * \a ch Character to check.
      */
     static bool isUnicodeWhitespace(const QChar &ch)
     {
@@ -1148,6 +1215,8 @@ struct QStringTrait {
 
     /*!
      * Convert UTF-16 into trait's string.
+     *
+     * \a u16 String.
      */
     static String utf16ToString(const char16_t *u16)
     {
@@ -1156,6 +1225,8 @@ struct QStringTrait {
 
     /*!
      * Convert Latin1 into trait's string.
+     *
+     * \a latin1 String.
      */
     static String latin1ToString(const char *latin1)
     {
@@ -1164,6 +1235,8 @@ struct QStringTrait {
 
     /*!
      * Convert Latin1 char into trait's char.
+     *
+     * \a latin1 Character.
      */
     static Char latin1ToChar(char latin1)
     {
@@ -1172,6 +1245,8 @@ struct QStringTrait {
 
     /*!
      * Convert UTF8 into trait's string.
+     *
+     * \a utf8 UTF-8 string.
      */
     static String utf8ToString(const char *utf8)
     {
@@ -1180,6 +1255,10 @@ struct QStringTrait {
 
     /*!
      * Returns whether file exist.
+     *
+     * \a fileName File name.
+     *
+     * \a workingPath Working path.
      */
     static bool fileExists(const String &fileName, const String &workingPath)
     {
@@ -1189,6 +1268,8 @@ struct QStringTrait {
 
     /*!
      * Returns whether file exist.
+     *
+     * \a fileName File name.
      */
     static bool fileExists(const String &fileName)
     {
@@ -1197,6 +1278,8 @@ struct QStringTrait {
 
     /*!
      * Returns absolute file path.
+     *
+     * \a path Path.
      */
     static String absoluteFilePath(const String &path)
     {
@@ -1205,6 +1288,10 @@ struct QStringTrait {
 
     /*!
      * Add UCS4 to string.
+     *
+     * \a str String.
+     *
+     * \a ch Character to append.
      */
     static void appendUcs4(String &str, char32_t ch)
     {
@@ -1213,6 +1300,12 @@ struct QStringTrait {
 
     /*!
      * Search for last occurrence of string.
+     *
+     * \a where String for checking.
+     *
+     * \a what What to look for?
+     *
+     * \a from Start position.
      */
     static long long int lastIndexOf(const String &where, const String &what, long long int from)
     {

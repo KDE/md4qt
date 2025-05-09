@@ -51,6 +51,15 @@ template<class Trait>
 class AlgoVisitor : public Visitor<Trait>
 {
 public:
+    /*!
+     * Constructor
+     *
+     * \a mnl Maximum nesting level
+     *
+     * \a t List of items' types.
+     *
+     * \a f Functor.
+     */
     AlgoVisitor(unsigned int mnl,
                 const typename Trait::template Vector<ItemType> &t,
                 ItemFunctor<Trait> f)
@@ -64,6 +73,8 @@ public:
 
     /*!
      * Walk through the document.
+     *
+     * \a doc Document.
      */
     virtual void walk(std::shared_ptr<Document<Trait>> doc)
     {
@@ -79,6 +90,8 @@ protected:
 
     /*!
      * Process user defined item type.
+     *
+     * \a i Item.
      */
     void onUserDefined(Item<Trait> *i) override
     {
@@ -91,6 +104,8 @@ protected:
 
     /*!
      * Process text item.
+     *
+     * \a t Text.
      */
     void onText(Text<Trait> *t) override
     {
@@ -103,6 +118,8 @@ protected:
 
     /*!
      * Process LaTeX math item.
+     *
+     * \a m Math.
      */
     void onMath(Math<Trait> *m) override
     {
@@ -115,6 +132,8 @@ protected:
 
     /*!
      * Process line break.
+     *
+     * \a l Line break.
      */
     void onLineBreak(LineBreak<Trait> *l) override
     {
@@ -127,6 +146,8 @@ protected:
 
     /*!
      * Process paragraph.
+     *
+     * \a p Paragraph.
      */
     void onParagraph(Paragraph<Trait> *p, bool) override
     {
@@ -143,6 +164,8 @@ protected:
 
     /*!
      * Process heading.
+     *
+     * \a h Heading.
      */
     void onHeading(Heading<Trait> *h) override
     {
@@ -159,6 +182,8 @@ protected:
 
     /*!
      * Process code block.
+     *
+     * \a c Code.
      */
     void onCode(Code<Trait> *c) override
     {
@@ -171,6 +196,8 @@ protected:
 
     /*!
      * Process inline code.
+     *
+     * \a c Code.
      */
     void onInlineCode(Code<Trait> *c) override
     {
@@ -183,6 +210,8 @@ protected:
 
     /*!
      * Process blockquote.
+     *
+     * \a b Blockquote.
      */
     void onBlockquote(Blockquote<Trait> *b) override
     {
@@ -199,6 +228,8 @@ protected:
 
     /*!
      * Process list.
+     *
+     * \a l List.
      */
     void onList(List<Trait> *l) override
     {
@@ -217,6 +248,8 @@ protected:
 
     /*!
      * Process table.
+     *
+     * \a t Table.
      */
     void onTable(Table<Trait> *t) override
     {
@@ -253,6 +286,8 @@ protected:
 
     /*!
      * Process anchor.
+     *
+     * \a a Anchor.
      */
     void onAnchor(Anchor<Trait> *a) override
     {
@@ -265,6 +300,8 @@ protected:
 
     /*!
      * Process raw HTML block.
+     *
+     * \a h Raw HTML.
      */
     void onRawHtml(RawHtml<Trait> *h) override
     {
@@ -277,6 +314,8 @@ protected:
 
     /*!
      * Process horizontal line.
+     *
+     * \a l Horizontal line.
      */
     void onHorizontalLine(HorizontalLine<Trait> *l) override
     {
@@ -289,6 +328,8 @@ protected:
 
     /*!
      * Process link.
+     *
+     * \a l Link.
      */
     void onLink(Link<Trait> *l) override
     {
@@ -309,6 +350,8 @@ protected:
 
     /*!
      * Process Image.
+     *
+     * \a i Image.
      */
     void onImage(Image<Trait> *i) override
     {
@@ -321,6 +364,8 @@ protected:
 
     /*!
      * Process footnote reference.
+     *
+     * \a ref Footnote reference.
      */
     void onFootnoteRef(FootnoteRef<Trait> *ref) override
     {
@@ -333,6 +378,8 @@ protected:
 
     /*!
      * Process list item.
+     *
+     * \a i List item.
      */
     void onListItem(ListItem<Trait> *i, bool) override
     {
@@ -349,6 +396,8 @@ protected:
 
     /*!
      * Process table cell.
+     *
+     * \a c Table cell.
      */
     void onTableCell(TableCell<Trait> *c) override
     {
@@ -357,6 +406,8 @@ protected:
 
     /*!
      * Process footnote.
+     *
+     * \a f Footnote.
      */
     void onFootnote(Footnote<Trait> *f) override
     {
@@ -373,6 +424,8 @@ protected:
 
     /*!
      * Process all footnotes.
+     *
+     * \a doc Document.
      */
     virtual void onFootnotes(std::shared_ptr<Document<Trait>> doc)
     {
@@ -408,6 +461,15 @@ protected:
      * the document, and checking circumstances for the algorithm.
      */
     struct IncrementNestingLevel {
+        /*!
+         * Constructor.
+         *
+         * \a l Level.
+         *
+         * \a m Max nesting level.
+         *
+         * \a t List of types.
+         */
         IncrementNestingLevel(unsigned int &l,
                               unsigned int m,
                               const typename Trait::template Vector<ItemType> &t)
@@ -425,6 +487,8 @@ protected:
 
         /*!
          * Returns whether this item type allowed at this nesting level.
+         *
+         * \a t Item's type to check.
          */
         bool allowed(ItemType t) const
         {

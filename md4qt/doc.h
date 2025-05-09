@@ -104,6 +104,8 @@ public:
 
     /*!
      * Apply positions to this from other.
+     *
+     * \a other Positions to apply.
      */
     void applyPositions(const WithPosition &other)
     {
@@ -146,6 +148,8 @@ public:
 
     /*!
      * Set start column.
+     *
+     * \a c New value.
      */
     void setStartColumn(long long int c)
     {
@@ -154,6 +158,8 @@ public:
 
     /*!
      * Set start line.
+     *
+     * \a l New value.
      */
     void setStartLine(long long int l)
     {
@@ -162,6 +168,8 @@ public:
 
     /*!
      * Set end column.
+     *
+     * \a c New value.
      */
     void setEndColumn(long long int c)
     {
@@ -170,6 +178,8 @@ public:
 
     /*!
      * Set end line.
+     *
+     * \a l New value.
      */
     void setEndLine(long long int l)
     {
@@ -200,6 +210,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * Returns whether both are equal.
+ *
+ * \a l Left operand.
+ *
+ * \a r Right operand.
  */
 inline bool operator==(const WithPosition &l, const WithPosition &r)
 {
@@ -239,6 +253,8 @@ public:
 
     /*!
      * Clone this item.
+     *
+     * \a doc Parent of new item.
      */
     virtual std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const = 0;
 
@@ -305,6 +321,8 @@ public:
 
     /*!
      * Set style.
+     *
+     * \a t New value.
      */
     void setStyle(int t)
     {
@@ -320,6 +338,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Returns whether both are equal.
+ *
+ * \a l Left operand.
+ *
+ * \a r Right operand.
  */
 inline bool operator==(const StyleDelim &l, const StyleDelim &r)
 {
@@ -351,6 +373,8 @@ public:
 
     /*!
      * Apply other item with options to this.
+     *
+     * \a other Value to apply.
      */
     void applyItemWithOpts(const ItemWithOpts<Trait> &other)
     {
@@ -379,6 +403,8 @@ public:
 
     /*!
      * Set style options.
+     *
+     * \a o New value.
      */
     void setOpts(int o)
     {
@@ -462,6 +488,8 @@ public:
 
     /*!
      * Clone this page break.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -502,6 +530,8 @@ public:
 
     /*!
      * Clone this horizontal line.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -541,6 +571,8 @@ public:
 
     /*!
      * Clone this anchor.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -594,6 +626,8 @@ public:
 
     /*!
      * Clone this raw HTML.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -625,6 +659,8 @@ public:
 
     /*!
      * Set HTML content.
+     *
+     * \a t New value.
      */
     void setText(const typename Trait::String &t)
     {
@@ -652,6 +688,8 @@ protected:
      * Set that this HTML is a free, not inline one.
      *
      * \note This method is for internal use only.
+     *
+     * \a on New value.
      */
     void setFreeTag(bool on = true)
     {
@@ -689,7 +727,11 @@ public:
     Text() = default;
     ~Text() override = default;
 
-    //! Apply other text to this.
+    /*!
+     * Apply other text to this.
+     *
+     * \a t Value to apply.
+     */
     void applyText(const Text<Trait> &t)
     {
         if (this != &t) {
@@ -700,6 +742,8 @@ public:
 
     /*!
      * Clone this text item.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -729,6 +773,8 @@ public:
 
     /*!
      * Set text content.
+     *
+     * \a t New value.
      */
     void setText(const typename Trait::String &t)
     {
@@ -764,6 +810,8 @@ public:
 
     /*!
      * Clone this line break.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -822,6 +870,10 @@ public:
 
     /*!
      * Apply other block to this.
+     *
+     * \a other Value to apply.
+     *
+     * \a doc Parent of new item.
      */
     void applyBlock(const Block<Trait> &other, Document<Trait> *doc = nullptr)
     {
@@ -844,7 +896,11 @@ public:
     }
 
     /*!
-     * Insert child item at give position.
+     * Insert child item at given position.
+     *
+     * \a idx Index where insert.
+     *
+     * \a i Item to insert.
      */
     void insertItem(long long int idx, ItemSharedPointer i)
     {
@@ -853,6 +909,8 @@ public:
 
     /*!
      * Append child item.
+     *
+     * \a i Item to append.
      */
     void appendItem(ItemSharedPointer i)
     {
@@ -861,6 +919,8 @@ public:
 
     /*!
      * Remove child item at the given position.
+     *
+     * \a idx Index where to remove.
      */
     void removeItemAt(long long int idx)
     {
@@ -870,6 +930,8 @@ public:
 
     /*!
      * Returns child item at the given position.
+     *
+     * \a idx Index.
      */
     ItemSharedPointer getItemAt(long long int idx) const
     {
@@ -913,6 +975,8 @@ public:
 
     /*!
      * Clone this paragraph.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -965,6 +1029,8 @@ public:
 
     /*!
      * Clone this heading.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1010,6 +1076,8 @@ public:
 
     /*!
      * Set content of the heading.
+     *
+     * \a t New value.
      */
     void setText(ParagraphSharedPointer t)
     {
@@ -1026,6 +1094,8 @@ public:
 
     /*!
      * Set level of the heading.
+     *
+     * \a l New value.
      */
     void setLevel(int l)
     {
@@ -1050,6 +1120,8 @@ public:
 
     /*!
      * Set label of the heading.
+     *
+     * \a l New value.
      */
     void setLabel(const typename Trait::String &l)
     {
@@ -1066,6 +1138,8 @@ public:
 
     /*!
      * Set list of service characters.
+     *
+     * \a d New value.
      */
     void setDelims(const Delims &d)
     {
@@ -1082,6 +1156,8 @@ public:
 
     /*!
      * Set position of a label in the heading.
+     *
+     * \a p New value.
      */
     void setLabelPos(const WithPosition &p)
     {
@@ -1113,6 +1189,8 @@ public:
 
     /*!
      * Set label variants.
+     *
+     * \a vars New value.
      */
     void setLabelVariants(const LabelsVector &vars)
     {
@@ -1168,6 +1246,8 @@ public:
 
     /*!
      * Clone this blockquote.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1238,6 +1318,8 @@ public:
 
     /*!
      * Clone this list item.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1298,6 +1380,8 @@ public:
 
     /*!
      * Set type of the list.
+     *
+     * \a t New value.
      */
     void setListType(ListType t)
     {
@@ -1314,6 +1398,8 @@ public:
 
     /*!
      * Set preliminary state of the ordered list.
+     *
+     * \a s New value.
      */
     void setOrderedListPreState(OrderedListPreState s)
     {
@@ -1330,6 +1416,8 @@ public:
 
     /*!
      * Set start number of the ordered list.
+     *
+     * \a n New value.
      */
     void setStartNumber(int n)
     {
@@ -1346,6 +1434,8 @@ public:
 
     /*!
      * Set this list item to be a tsk list item.
+     *
+     * \a on New value.
      */
     void setTaskList(bool on = true)
     {
@@ -1362,6 +1452,8 @@ public:
 
     /*!
      * Set this task list item to be checked.
+     *
+     * \a on New value.
      */
     void setChecked(bool on = true)
     {
@@ -1378,6 +1470,8 @@ public:
 
     /*!
      * Set service character position.
+     *
+     * \a d New value.
      */
     void setDelim(const WithPosition &d)
     {
@@ -1394,6 +1488,8 @@ public:
 
     /*!
      * Set position of the task list "checkbox" in Markdown.
+     *
+     * \a d New value.
      */
     void setTaskDelim(const WithPosition &d)
     {
@@ -1453,6 +1549,8 @@ public:
 
     /*!
      * Clone this list.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1498,6 +1596,10 @@ public:
 
     /*!
      * Apply other base of link to this.
+     *
+     * \a other Value to apply.
+     *
+     * \a doc Parent of new item.
      */
     void applyLinkBase(const LinkBase<Trait> &other, Document<Trait> *doc = nullptr)
     {
@@ -1528,6 +1630,8 @@ public:
 
     /*!
      * Set URL of the link.
+     *
+     * \a u New value.
      */
     void setUrl(const typename Trait::String &u)
     {
@@ -1544,6 +1648,8 @@ public:
 
     /*!
      * Set not parsed text of link's description.
+     *
+     * \a t New value.
      */
     void setText(const typename Trait::String &t)
     {
@@ -1568,6 +1674,8 @@ public:
 
     /*!
      * Set pointer to parsed text of link's description.
+     *
+     * \a v New value.
      */
     void setP(ParagraphSharedPointer v)
     {
@@ -1584,6 +1692,8 @@ public:
 
     /*!
      * Set position of link's description.
+     *
+     * \a pos New value.
      */
     void setTextPos(const WithPosition &pos)
     {
@@ -1600,6 +1710,8 @@ public:
 
     /*!
      * Set position of URL.
+     *
+     * \a pos New value.
      */
     void setUrlPos(const WithPosition &pos)
     {
@@ -1651,6 +1763,8 @@ public:
 
     /*!
      * Clone this image.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1695,6 +1809,8 @@ public:
 
     /*!
      * Clone this link.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1732,6 +1848,8 @@ public:
 
     /*!
      * Set image of the link.
+     *
+     * \a i New value.
      */
     void setImg(ImageSharedPointer i)
     {
@@ -1774,6 +1892,8 @@ public:
 
     /*!
      * Apply other code to this.
+     *
+     * \a other Value to apply.
      */
     void applyCode(const Code<Trait> &other)
     {
@@ -1791,6 +1911,8 @@ public:
 
     /*!
      * Clone this code.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -1820,6 +1942,8 @@ public:
 
     /*!
      * Set content of the code.
+     *
+     * \a t New value.
      */
     void setText(const typename Trait::String &t)
     {
@@ -1836,6 +1960,8 @@ public:
 
     /*!
      * Set this code to be inline.
+     *
+     * \a on New value.
      */
     void setInline(bool on = true)
     {
@@ -1852,6 +1978,8 @@ public:
 
     /*!
      * Set syntax of the fensed code block.
+     *
+     * \a s New value.
      */
     void setSyntax(const typename Trait::String &s)
     {
@@ -1868,6 +1996,8 @@ public:
 
     /*!
      * Set position of the syntax of the fensed code block.
+     *
+     * \a p New value.
      */
     void setSyntaxPos(const WithPosition &p)
     {
@@ -1884,6 +2014,8 @@ public:
 
     /*!
      * Set position of the start service characters.
+     *
+     * \a d New value.
      */
     void setStartDelim(const WithPosition &d)
     {
@@ -1900,6 +2032,8 @@ public:
 
     /*!
      * Set position of the ending service characters.
+     *
+     * \a d New value.
      */
     void setEndDelim(const WithPosition &d)
     {
@@ -1916,6 +2050,8 @@ public:
 
     /*!
      * Set this code block to be a fensed code block.
+     *
+     * \a on New value.
      */
     void setFensedCode(bool on = true)
     {
@@ -1979,6 +2115,8 @@ public:
 
     /*!
      * Clone this LaTeX math expression.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2008,6 +2146,8 @@ public:
 
     /*!
      * Set content.
+     *
+     * \a e New value.
      */
     void setExpr(const typename Trait::String &e)
     {
@@ -2038,6 +2178,8 @@ public:
 
     /*!
      * Clone this table cell.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2079,6 +2221,8 @@ public:
 
     /*!
      * Clone this table row.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2123,6 +2267,8 @@ public:
 
     /*!
      * Append cell.
+     *
+     * \a c New value.
      */
     void appendCell(TableCellSharedPointer c)
     {
@@ -2166,6 +2312,8 @@ public:
 
     /*!
      * Clone this table.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2214,6 +2362,8 @@ public:
 
     /*!
      * Append row.
+     *
+     * \a r New value.
      */
     void appendRow(TableRowSharedPointer r)
     {
@@ -2245,6 +2395,8 @@ public:
 
     /*!
      * Returns alignment of the given column.
+     *
+     * \a idx Index.
      */
     Alignment columnAlignment(int idx) const
     {
@@ -2253,6 +2405,10 @@ public:
 
     /*!
      * Set alignment of the given column.
+     *
+     * \a idx Index.
+     *
+     * \a a New value.
      */
     void setColumnAlignment(int idx, Alignment a)
     {
@@ -2316,6 +2472,8 @@ public:
 
     /*!
      * Clone this footnote reference.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2354,6 +2512,8 @@ public:
 
     /*!
      * Set position of ID.
+     *
+     * \a pos Position.
      */
     void setIdPos(const WithPosition &pos)
     {
@@ -2393,6 +2553,8 @@ public:
 
     /*!
      * Clone this footnote.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2421,6 +2583,8 @@ public:
 
     /*!
      * Set position of ID.
+     *
+     * \a pos Position.
      */
     void setIdPos(const WithPosition &pos)
     {
@@ -2464,6 +2628,8 @@ public:
 
     /*!
      * Clone this document.
+     *
+     * \a doc Parent of new item.
      */
     std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
     {
@@ -2508,6 +2674,10 @@ public:
 
     /*!
      * Insert footnote with the give ID.
+     *
+     * \a id ID.
+     *
+     * \a fn Footnote.
      */
     void insertFootnote(const typename Trait::String &id, FootnoteSharedPointer fn)
     {
@@ -2537,6 +2707,10 @@ public:
 
     /*!
      * Insert shortcut link with the given label.
+     *
+     * \a label Label.
+     *
+     * \a lnk Link.
      */
     void insertLabeledLink(const typename Trait::String &label, LinkSharedPointer lnk)
     {
@@ -2566,6 +2740,10 @@ public:
 
     /*!
      * Insert heading with the given label.
+     *
+     * \a label Label.
+     *
+     * \a h Heading.
      */
     void insertLabeledHeading(const typename Trait::String &label, HeadingSharedPointer h)
     {

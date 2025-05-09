@@ -73,6 +73,10 @@ struct PosRange {
  * \inheaderfile md4qt/poscache.h
  *
  * Returns whether both are equal.
+ *
+ * \a l Left operand.
+ *
+ * \a r Right operand.
  */
 template<class Trait>
 bool operator==(const PosRange<Trait> &l, const PosRange<Trait> &r)
@@ -87,6 +91,10 @@ bool operator==(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * \inheaderfile md4qt/poscache.h
  *
  * Returns whether left is less of right.
+ *
+ * \a l Left operand.
+ *
+ * \a r Right operand.
  */
 template<class Trait>
 bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
@@ -119,6 +127,8 @@ public:
      * Initialize m_cache with the give document.
      *
      * \note Document should not be recursive.
+     *
+     * \a doc Document.
      */
     virtual void initialize(std::shared_ptr<MD::Document<Trait>> doc)
     {
@@ -148,7 +158,11 @@ public:
      */
     using Items = typename Trait::template Vector<Item<Trait> *>;
 
-    //! Returns first occurense of Markdown item with all first children by the give position.
+    /*!
+     * Returns first occurense of Markdown item with all first children by the give position.
+     *
+     * \a pos Position.
+     */
     Items findFirstInCache(const MD::WithPosition &pos) const
     {
         Items res;
@@ -250,6 +264,8 @@ protected:
 protected:
     /*!
      * Cache user defined item.
+     *
+     * \a i Item.
      */
     void onUserDefined(Item<Trait> *i) override
     {
@@ -260,6 +276,8 @@ protected:
 
     /*!
      * Cache shortcut link.
+     *
+     * \a l Link.
      */
     virtual void onReferenceLink(Link<Trait> *l)
     {
@@ -274,6 +292,8 @@ protected:
 
     /*!
      * Cache text item.
+     *
+     * \a t Text.
      */
     void onText(Text<Trait> *t) override
     {
@@ -288,6 +308,8 @@ protected:
 
     /*!
      * Cache LaTeX math expression.
+     *
+     * \a m Math.
      */
     void onMath(Math<Trait> *m) override
     {
@@ -317,6 +339,11 @@ protected:
 
     /*!
      * Cache paragraph.
+     *
+     * \a p Paragraph.
+     *
+     * \a wrap Wrap this paragraph with something or no? It's useful to not wrap standalone
+     *         paragraph in list item, for example.
      */
     void onParagraph(Paragraph<Trait> *p, bool wrap) override
     {
@@ -329,6 +356,8 @@ protected:
 
     /*!
      * Cache heading.
+     *
+     * \a h Heading.
      */
     void onHeading(Heading<Trait> *h) override
     {
@@ -343,6 +372,8 @@ protected:
 
     /*!
      * Cache code.
+     *
+     * \a c Code.
      */
     void onCode(Code<Trait> *c) override
     {
@@ -358,6 +389,8 @@ protected:
 
     /*!
      * Cache inline code.
+     *
+     * \a c Code.
      */
     void onInlineCode(Code<Trait> *c) override
     {
@@ -383,6 +416,8 @@ protected:
 
     /*!
      * Cache blockquote.
+     *
+     * \a b Blockquote.
      */
     void onBlockquote(Blockquote<Trait> *b) override
     {
@@ -395,6 +430,8 @@ protected:
 
     /*!
      * Cache list.
+     *
+     * \a l List.
      */
     void onList(List<Trait> *l) override
     {
@@ -415,6 +452,8 @@ protected:
 
     /*!
      * Cache table.
+     *
+     * \a t Table.
      */
     void onTable(Table<Trait> *t) override
     {
@@ -453,6 +492,8 @@ protected:
 
     /*!
      * Cache raw HTML.
+     *
+     * \a h Raw HTML.
      */
     void onRawHtml(RawHtml<Trait> *h) override
     {
@@ -463,6 +504,8 @@ protected:
 
     /*!
      * Cache horizontal line.
+     *
+     * \a l Horizontal line.
      */
     void onHorizontalLine(HorizontalLine<Trait> *l) override
     {
@@ -473,6 +516,8 @@ protected:
 
     /*!
      * Cache link.
+     *
+     * \a l Link.
      */
     void onLink(Link<Trait> *l) override
     {
@@ -504,6 +549,8 @@ protected:
 
     /*!
      * Cache image.
+     *
+     * \a i Image.
      */
     void onImage(Image<Trait> *i) override
     {
@@ -535,6 +582,8 @@ protected:
 
     /*!
      * Cache footnote reference.
+     *
+     * \a ref Footnote reference.
      */
     void onFootnoteRef(FootnoteRef<Trait> *ref) override
     {
@@ -560,6 +609,8 @@ protected:
 
     /*!
      * Cache footnote.
+     *
+     * \a f Footnote.
      */
     void onFootnote(Footnote<Trait> *f) override
     {
@@ -572,6 +623,10 @@ protected:
 
     /*!
      * Cache list item.
+     *
+     * \a l List item.
+     *
+     * \a first Is this item first in the list?
      */
     void onListItem(ListItem<Trait> *l, bool first) override
     {

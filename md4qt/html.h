@@ -41,6 +41,12 @@ public:
 
     /*!
      * Walk through the document.
+     *
+     * \a doc Document.
+     *
+     * \a hrefForRefBackImage String that will be applied as URL for image for back link from footnote.
+     *
+     * \a wrappedInArticle Wrap HTML with <article> tag?
      */
     virtual typename Trait::String toHtml(std::shared_ptr<Document<Trait>> doc,
                                           const typename Trait::String &hrefForRefBackImage,
@@ -61,6 +67,8 @@ public:
 protected:
     /*!
      * Insert into HTML tags for opening styles.
+     *
+     * \a styles Styles.
      */
     virtual void openStyle(const typename ItemWithOpts<Trait>::Styles &styles)
     {
@@ -86,6 +94,8 @@ protected:
 
     /*!
      * Insert into HTML tags for closing styles.
+     *
+     * \a styles Styles.
      */
     virtual void closeStyle(const typename ItemWithOpts<Trait>::Styles &styles)
     {
@@ -670,6 +680,8 @@ protected:
 
     /*!
      * Handle footnotes.
+     *
+     * \a hrefForRefBackImage String that will be applied as URL for image for back link from footnote.
      */
     virtual void onFootnotes(const typename Trait::String &hrefForRefBackImage)
     {
@@ -732,6 +744,8 @@ protected:
 
     /*!
      * Returns HTML content for heading's ID.
+     *
+     * \a h Heading.
      */
     virtual typename Trait::String headingIdToHtml(Heading<Trait> *h)
     {
@@ -752,6 +766,8 @@ protected:
 
     /*!
      * Prepare text to insert into HTML content.
+     *
+     * \a t String.
      */
     virtual typename Trait::String prepareTextForHtml(const typename Trait::String &t)
     {
@@ -765,6 +781,8 @@ protected:
 
     /*!
      * Returns HTML content for table alignment.
+     *
+     * \a a Alignment.
      */
     virtual typename Trait::String tableAlignmentToHtml(typename Table<Trait>::Alignment a)
     {
@@ -815,11 +833,17 @@ protected:
      * \brief Auxiliary struct to process footnotes.
      */
     struct FootnoteRefStuff {
-        //! ID of footnote.
+        /*!
+         * ID of footnote.
+         */
         typename Trait::String m_id;
-        //! Count of references with this ID.
+        /*!
+         * Count of references with this ID.
+         */
         long long int m_count = 0;
-        //! Number of footnote reference with this ID.
+        /*!
+         * Number of footnote reference with this ID.
+         */
         long long int m_current = 0;
     };
 
