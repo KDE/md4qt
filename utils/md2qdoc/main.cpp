@@ -42,11 +42,17 @@ public:
     virtual void toQDoc(std::shared_ptr<MD::Document<MD::QStringTrait>> doc,
                         const QString &workingDirectory,
                         const QString &outputDirectory,
-                        const QString &prefix)
+                        const QString &prefix,
+                        bool isGenIncludes)
     {
         m_workingDirectory = workingDirectory;
         m_outputDirectory = outputDirectory;
         m_prefix = prefix;
+        m_isGenIncludes = isGenIncludes;
+
+        if (m_isGenIncludes) {
+            m_offset = 0;
+        }
 
         this->process(doc);
     }
@@ -307,7 +313,8 @@ protected:
             relative.insert(relative.lastIndexOf(QStringLiteral("/")) + 1, m_prefix + QStringLiteral("-"));
         }
 
-        const QString fileName = m_outputDirectory + relative + QStringLiteral(".qdoc");
+        const QString fileName = m_outputDirectory + relative + QStringLiteral(".qdoc") +
+                (m_isGenIncludes ? QStringLiteral("inc") : QString());
 
         QFileInfo info(fileName);
 
@@ -320,7 +327,10 @@ protected:
             s_outStream << QStringLiteral("Unable to open \"%1\" file.\n").arg(fileName);
             m_file.reset();
         } else {
-            m_qdoc.append(QStringLiteral("/*!\n%2\\page %1\n").arg(m_fileName + QStringLiteral(".html"), currentOffset()));
+            if (!m_isGenIncludes) {
+                m_qdoc.append(QStringLiteral("/*!\n%2\\page %1\n")
+                              .arg(m_fileName + QStringLiteral(".html"), currentOffset()));
+            }
         }
     }
 
@@ -445,13 +455,21 @@ protected:
     bool m_inList = false;
     //! Flag to skip image.
     bool m_skipImage = false;
+    //! Generate QDoc includes only, i.e. without \"/*! */\" comment.
+    bool m_isGenIncludes;
 
     void closeQDoc()
     {
         if (m_file) {
             QTextStream stream(m_file.data());
             stream << m_qdoc;
-            stream << QStringLiteral("\n*/\n");
+
+            if (!m_isGenIncludes) {
+                stream << QStringLiteral("\n*/\n");
+            } else {
+                stream << QStringLiteral("\n");
+            }
+
             m_qdoc.clear();
         }
     }
@@ -496,10 +514,13 @@ int main(int argc, char **argv)
     QCommandLineOption prefix(QStringList() << QStringLiteral("prefix"),
                               QStringLiteral("Prefix used to create top-level targets."),
                               QStringLiteral("str"), QStringLiteral(""));
+    QCommandLineOption include(QStringList() << QStringLiteral("i") << QStringLiteral("gen-includes"),
+                                 QStringLiteral("Generate QDoc includes only, i.e. without \"/*! */\" comment."));
     parser.addOption(out);
     parser.addOption(recursive);
     parser.addOption(offset);
     parser.addOption(prefix);
+    parser.addOption(include);
 
     parser.process(app);
 
@@ -508,6 +529,7 @@ int main(int argc, char **argv)
     const auto isRecursive = parser.isSet(recursive);
     auto offsetValue = parser.value(offset).toInt();
     const auto prefixValue = parser.value(prefix);
+    const auto isGenIncludes = parser.isSet(include);
 
     if (offsetValue <= 0) {
         offsetValue = 4;
@@ -535,7 +557,7 @@ int main(int argc, char **argv)
 
                 QDocVisitor visitor(offsetValue);
 
-                visitor.toQDoc(doc, workingDirectory, outputDirectoryPath, prefixValue);
+                visitor.toQDoc(doc, workingDirectory, outputDirectoryPath, prefixValue, isGenIncludes);
             } else {
                 s_outStream << QStringLiteral("File \"%1\" does not exist.\n").arg(file);
             }

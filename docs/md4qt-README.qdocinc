@@ -166,11 +166,11 @@ resolved, welcome to discussion.
 
         \code /
         MD::Link<MD::QStringTrait> *item = ...;
-
+        
         QString url = item->url();
-
+        
         const auto it = doc->labeledLinks().find(url);
-
+        
         if (it != doc->labeledLinks().cend()) {
             url = it->second->url();
         }
@@ -286,15 +286,15 @@ resolved, welcome to discussion.
         #include <md4qt\1traits.h>
         #include <md4qt\1parser.h>
         #include <md4qt\1html.h>
-
+        
         int main()
         {
             MD::Parser<MD::QStringTrait> p;
-
+        
             auto doc = p.parse(QStringLiteral("your_markdown.md"));
-
+        
             const auto html = MD::toHtml(doc);
-
+        
             return 0;
         }
         \endcode
@@ -482,14 +482,14 @@ resolved, welcome to discussion.
         template<class Trait>
         inline void
         githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
-            TextParsingOpts< Trait > &po)
+          TextParsingOpts< Trait > &po)
         {
             if (!po.collectRefLinks) {
                 long long int i = 0;
-
+        
                 while (i >= 0 && i < (long long int) po.rawTextData.size()) {
                     i = processGitHubAutolinkExtension(p, po, i);
-
+        
                     ++i;
                 }
             }
@@ -598,3 +598,5 @@ resolved, welcome to discussion.
         items in \c {MD::Visitor} class now exists method \c {void onUserDefined(MD::Item<Trait> *item)}.
         So you can handle your custom items and do what you need.
 \endlist
+
+

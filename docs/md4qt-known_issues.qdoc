@@ -1,72 +1,9 @@
 /*!
     \page md4qt-known_issues.md.html
-    \target #1-Lazy-HTML//home/igor/Work/KDE/md4qt/known_issues.md
-    \section1 1. Lazy HTML
+    \title Known issues
+    \inmodule md4qt
 
-    In contrast to CommonMark, \c {md4qt} has one difference. If in list item first element is HTML
-    CommonMark doesn't apply rule to lazy continuation lines as this is not a paragraph,
-    whereas \c {md4qt} does so. For example.
+    \brief Known issues
 
-    \code /
-    * <!--
-    -->
-    \endcode
-
-    In CommonMark will be.
-
-    \code /
-    <ul>
-    <li>
-    <!--
-    <\1li>
-    <\1ul>
-    <p>--&gt;<\1p>
-    \endcode
-
-    And in \c {md4qt} it will be.
-
-    \code /
-    <ul>
-    <li>
-    <!--
-    -->
-    <\1li>
-    <\1ul>
-    \endcode
-
-    I know about this difference. And I decided to keep it. But if somebody
-    will provide compelling reasons to do exactly as in CommonMark in this case, I will
-    work with this question.
-
-    \target #2-Content-of-task-list-item//home/igor/Work/KDE/md4qt/known_issues.md
-    \section1 2. Content of task list item
-
-    GitHub treats everything after task list item as paragraph. I.e.
-
-    \code /
-    * [ ] > text
-    \endcode
-
-    Will be.
-
-    \code /
-    <ul>
-    <li class="task-list-item"><input type="checkbox" id="" disabled=""> &gt; text<\1li>
-    <\1ul>
-    \endcode
-
-    Whereas in \c {md4qt} it will be.
-
-    \code /
-    <ul>
-    <li class="task-list-item"><input type="checkbox" id="" disabled="">
-    
-    <blockquote><p>text<\1p><\1blockquote>
-    <\1li>
-    <\1ul>
-    \endcode
-
-    Interesting question. And I decided to keep it as is now.
-
-
+    \include md4qt-known_issues.qdocinc
 */
