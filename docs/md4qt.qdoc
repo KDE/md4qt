@@ -6,4 +6,6 @@
     \cmakecomponent md4qt
 
     \brief Header-only C++ library for parsing Markdown.
+
+    \include md4qt-README.qdocinc
 */

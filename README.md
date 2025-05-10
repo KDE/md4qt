@@ -3,8 +3,6 @@
 	SPDX-License-Identifier: MIT
 -->
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
 <img src="https://kde.org/stuff/clipart/logo/kde-logo-blue-transparent-source.svg" width="20%" align="right">
 
 `md4qt` is a header-only C++ library for parsing Markdown.
@@ -21,31 +19,31 @@ This library parses Markdown into tree structure.
 * [Playground](#playground)
 * [Release notes](#release-notes)
 * [Known issues](#known-issues)
-* [Q/A](#qa)
-  * [Why another AST Markdown parser?](#why-another-ast-markdown-parser)
-  * [What should I know about links in the document?](#what-should-i-know-about-links-in-the-document)
-  * [What is the second argument of `MD::Parser::parse()`?](#what-is-the-second-argument-of-mdparserparse)
-  * [What is an `MD::Anchor`?](#what-is-an-mdanchor)
-  * [Does the library throw exceptions?](#does-the-library-throw-exceptions)
-  * [Why `MD::Parser` and `MD::Document` are templates?](#why-mdparser-and-mddocument-are-templates)
-  * [So, how can I use `md4qt` with `Qt6` and `ICU`?](#so-how-can-i-use-md4qt-with-qt6-and-icu)
-  * [`ICU` is slower than `Qt6`? Really?](#icu-is-slower-than-qt6-really)
-  * [Why is parsing wrong on Windows with `std::ifstream`?](#why-is-parsing-wrong-on-windows-with-stdifstream)
-  * [How can I convert `MD::Document` into `HTML`?](#how-can-i-convert-mddocument-into-html)
-  * [How can I obtain positions of blocks/elements in `Markdown` file?](#how-can-i-obtain-positions-of-blockselements-in-markdown-file)
-  * [How can I easily traverse through the `MD::Document`?](#how-can-i-easily-traverse-through-the-mddocument)
-  * [Why don't you have an implementation for pure `STL` with `std::string`?](#why-dont-you-have-an-implementation-for-pure-stl-with-stdstring)
-  * [Is it possible to write custom text plugin for this parser?](#is-it-possible-to-write-custom-text-plugin-for-this-parser)
-    * [What is a `ID` of a plugin?](#what-is-a-id-of-a-plugin)
-    * [What is a `MD::TextPluginFunc<Trait>`?](#what-is-a-mdtextpluginfunctrait)
-    * [What is `processInLinks` flag for?](#what-is-processinlinks-flag-for)
-    * [What for is a `userData` argument?](#what-for-is-a-userdata-argument)
-    * [Could you show an example of a plugin?](#could-you-show-an-example-of-a-plugin)
-    * [I didn't understand how raw text data correlates with a paragraph.](#i-didnt-understand-how-raw-text-data-correlates-with-a-paragraph)
-    * [How can I get a string of `MD::StyleDelim`?](#how-can-i-get-a-string-of-mdstyledelim)
-  * [Is it possible to find `Markdown` item by its position?](#is-it-possible-to-find-markdown-item-by-its-position)
-  * [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
-  * [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
+* [Why another AST Markdown parser?](#why-another-ast-markdown-parser)
+* [What should I know about links in the document?](#what-should-i-know-about-links-in-the-document)
+* [What is the second argument of `MD::Parser::parse()`?](#what-is-the-second-argument-of-mdparserparse)
+* [What is an `MD::Anchor`?](#what-is-an-mdanchor)
+* [Does the library throw exceptions?](#does-the-library-throw-exceptions)
+* [Why `MD::Parser` and `MD::Document` are templates?](#why-mdparser-and-mddocument-are-templates)
+* [So, how can I use `md4qt` with `Qt6` and `ICU`?](#so-how-can-i-use-md4qt-with-qt6-and-icu)
+* [`ICU` is slower than `Qt6`? Really?](#icu-is-slower-than-qt6-really)
+* [Why is parsing wrong on Windows with `std::ifstream`?](#why-is-parsing-wrong-on-windows-with-stdifstream)
+* [How can I convert `MD::Document` into `HTML`?](#how-can-i-convert-mddocument-into-html)
+* [How can I obtain positions of blocks/elements in `Markdown` file?](#how-can-i-obtain-positions-of-blockselements-in-markdown-file)
+* [How can I easily traverse through the `MD::Document`?](#how-can-i-easily-traverse-through-the-mddocument)
+* [Why don't you have an implementation for pure `STL` with `std::string`?](#why-dont-you-have-an-implementation-for-pure-stl-with-stdstring)
+* [Is it possible to write custom text plugin for this parser?](#is-it-possible-to-write-custom-text-plugin-for-this-parser)
+* [What is a `ID` of a plugin?](#what-is-a-id-of-a-plugin)
+* [What is a `MD::TextPluginFunc<Trait>`?](#what-is-a-mdtextpluginfunctrait)
+* [What is `processInLinks` flag for?](#what-is-processinlinks-flag-for)
+* [What for is a `userData` argument?](#what-for-is-a-userdata-argument)
+* [Could you show an example of a plugin?](#could-you-show-an-example-of-a-plugin)
+* [I didn't understand how raw text data correlates with a paragraph.](#i-didnt-understand-how-raw-text-data-correlates-with-a-paragraph)
+* [How can I get a string of `MD::StyleDelim`?](#how-can-i-get-a-string-of-mdstyledelim)
+* [Is it possible to find `Markdown` item by its position?](#is-it-possible-to-find-markdown-item-by-its-position)
+* [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
+* [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
+
 
 # Example
 
@@ -110,10 +108,7 @@ You can find a list of know issues [here](./known_issues.md). These issues are c
 a little, so at this time they exists as is in `md4qt`. But if you'd like to see any of them
 resolved, welcome to discussion.
 
-# Q/A
-
-Why another AST Markdown parser?
----
+# Why another AST Markdown parser?
 
  * When I wrote this library I knew about `md4c` parser, but not about `cmark-gfm`.
  `md4c` was not suitable for my purposes, whereas `cmark-gfm` could do
@@ -127,8 +122,7 @@ Why another AST Markdown parser?
    And one more cherry on the cake - `md4qt` can parse Markdown recursively.
    What it is described below.
 
-What should I know about links in the document?
----
+# What should I know about links in the document?
 
  * In some cases in Markdown link's URL is something document related. So, when
 you got a `MD::Link` in the document check if the labelled links of the
@@ -147,24 +141,21 @@ labelled links, look:
    }
    ```
 
-What is the second argument of `MD::Parser::parse()`?
----
+# What is the second argument of `MD::Parser::parse()`?
 
  * Second argument of `MD::Parser::parse()` is a flag that tells the
 parser to process Markdown files recursively or not. If parsing is recursive
 then if in the targeted Markdown file exist links to other Markdown files,
 then they will be parsed too and will exist in the resulting document.
 
-What is an `MD::Anchor`?
----
+# What is an `MD::Anchor`?
 
  * As `md4qt` supports recursive Markdown parsing, then in the resulting
 document can be represented more than one Markdown file. Each file in the
 document starts with `MD::Anchor`, it just shows that during traversing through
 the document you reached new file.
 
-Does the library throw exceptions?
----
+# Does the library throw exceptions?
 
  * No. This library doesn't use exceptions. Any text is a valid Markdown, so I
 don't need to inform user about errors. Qt itself doesn't use exceptions either.
@@ -173,8 +164,7 @@ example. Possibly with `MD::UnicodeStringTrait` you will catch more standard
 exceptions, possibly I missed something somewhere, but I tried to negotiate
 all possible exceptions.
 
-Why `MD::Parser` and `MD::Document` are templates?
----
+# Why `MD::Parser` and `MD::Document` are templates?
 
  * Since version `2.0.0` `md4qt` can be built not only with `Qt6`, but with
 `STL` too. The code of the parser is the same in both cases. I just added two
@@ -182,8 +172,7 @@ ready traits to support different C++ worlds. With `STL` I use `ICU` library
 for Unicode handling, and `uriparser` library to parse and check URLs.
 These dependencies can be installed with the Conan package manager.
 
-So, how can I use `md4qt` with `Qt6` and `ICU`?
----
+# So, how can I use `md4qt` with `Qt6` and `ICU`?
 
  * To build with `ICU` support you need to define `MD4QT_ICU_STL_SUPPORT`
 before including `parser.h`. In this case you will get access to
@@ -199,8 +188,7 @@ parameter. You will receive in dependencies `C++ STL`, `ICU` and
    You can define both to have ability to use `md4qt` with `Qt6` and
    `ICU`.
 
-`ICU` is slower than `Qt6`? Really?
----
+# `ICU` is slower than `Qt6`? Really?
 
  * Don't believe anybody, just build built-in `md_benchamrk` and have a
 look. Dry numbers say, that `Qt6` `QString` is ~2 times faster than
@@ -211,15 +199,13 @@ parser's code and the profiler says that most of the run-time is spent
 on such operations. `QString` is just more optimized for accessing separate
 characters than `icu::UnicodeString`...
 
-Why is parsing wrong on Windows with `std::ifstream`?
----
+# Why is parsing wrong on Windows with `std::ifstream`?
 
  * Such a problem can occur on Windows with MSVC if you open the file in text
 mode, so for `MD::Parser` always open `std::ifstream` with `std::ios::binary`
 flag. And yes, I expect to receive UTF-8 encoded content...
 
-How can I convert `MD::Document` into `HTML`?
----
+# How can I convert `MD::Document` into `HTML`?
 
  * In version `2.0.5` were made commits with implementation of
 `MD::toHtml()` function. You can do the following:
@@ -242,15 +228,14 @@ How can I convert `MD::Document` into `HTML`?
    }
    ```
 
-How can I obtain positions of blocks/elements in `Markdown` file?
----
+# How can I obtain positions of blocks/elements in `Markdown` file?
 
  * Done in version `2.0.5`. Remember that all positions in `md4qt` start with 0,
 where first symbol on first line will have coordinates `(0,0)`. One more important thing is
 that all ranges of position in `md4qt` are given inclusive, that mean that last column
 of any element will point to the last symbol in this element.
 
-## How can I easily traverse through the `MD::Document`?
+# How can I easily traverse through the `MD::Document`?
 
 * Since version `2.6.0` in `visitor.h` header implemented `MD::Visitor` interface
 with which you can easily walk through the document, all you need is implement/override
@@ -262,14 +247,14 @@ virtual methods to handle that or another element in the document, like:
       MD::Heading<Trait> *h) = 0;
   ```
 
-## Why don't you have an implementation for pure `STL` with `std::string`?
+# Why don't you have an implementation for pure `STL` with `std::string`?
 
 * Because of performance, I did a pure `STL` implementation where the string class
 was an `std::string` with some small third-party library to handle `UTF8`, and
 benchmark said that the performance was like with `Qt6` `QString`, so I decided
 to not support third trait. Maybe because I am lazy?
 
-## Is it possible to write custom text plugin for this parser?
+# Is it possible to write custom text plugin for this parser?
 
 * Since version `3.0.0` in the `MD::Parser` was added a method for adding custom
 text plugins.
@@ -287,7 +272,7 @@ text plugins.
       const typename Trait::StringList &userData);
   ```
 
-### What is a `ID` of a plugin?
+# What is a `ID` of a plugin?
 
 * `ID` of a plugin is a regular `int` that should be (but not mandatory) started from
 
@@ -303,7 +288,7 @@ text plugins.
   to its `ID` from smallest to largest, so a developer can handle an order of text
   plugins.
 
-### What is a `MD::TextPluginFunc<Trait>`?
+# What is a `MD::TextPluginFunc<Trait>`?
 
 * Text plugin is a usual function with a signature
 
@@ -359,19 +344,19 @@ text plugins.
 
   where `s` is an object of `MD::TextData` type.
 
-### What is `processInLinks` flag for?
+# What is `processInLinks` flag for?
 
 * `processInLinks` flag should be set to false if you desire to not process your
 plugin in link's captions, as, for example, links can't contain other links, so
 if you are implementing a plugin for new links this flag should be set to `false`
 for your plugin.
 
-### What for is a `userData` argument?
+# What for is a `userData` argument?
 
 * This list of strings will be passed to plugin function. This is auxiliary data
 that can be handy for plugin implementation.
 
-### Could you show an example of a plugin?
+# Could you show an example of a plugin?
 
 * In `md4qt` already exists one text plugin for handling GitHub's auto-link. A
   plugin function is quite simple, look.
@@ -399,7 +384,7 @@ that can be handy for plugin implementation.
 
   Good luck with plugining. :)
 
-### I didn't understand how raw text data correlates with a paragraph.
+# I didn't understand how raw text data correlates with a paragraph.
 
 * Let I will show you on example how raw text data correlate with paragraph. Just two
   diagrams and you won't have any more questions. Look.
@@ -413,7 +398,7 @@ that can be handy for plugin implementation.
 
   ![](./docs/pics/paragraph_after.svg)
 
-### How can I get a string of `MD::StyleDelim`?
+# How can I get a string of `MD::StyleDelim`?
 
 * Since version `3.0.0` was added a function to get a substring from text fragment with given
 virgin positions.
@@ -434,13 +419,13 @@ virgin positions.
       long long int virginLine)
   ```
 
-## Is it possible to find `Markdown` item by its position?
+# Is it possible to find `Markdown` item by its position?
 
  * Since version `3.0.0` was added new structure `MD::PosCache`. You can pass
 `MD::Document` into its `MD::PosCache::initialize()` method and find first item with all its
 nested first children by given position with `MD::PosCache::findFirstInCache()` method.
 
-## How can I walk through the document and find all items of given type?
+# How can I walk through the document and find all items of given type?
 
  * Since version `3.0.0` was added algorithm `MD::forEach()`.
 
@@ -460,7 +445,7 @@ nested first children by given position with `MD::PosCache::findFirstInCache()` 
        unsigned int maxNestingLevel = 0);
    ```
 
-## How can I add and process a custom (user-defined) item in `MD::Document`?
+# How can I add and process a custom (user-defined) item in `MD::Document`?
 
  * Since version `3.0.0` in `MD::ItemType` enum appeared `MD::UserDefined` enumerator.
 So you can inherit from any `MD::Item` class and return from `type()` method

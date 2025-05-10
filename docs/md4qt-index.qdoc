@@ -12,12 +12,6 @@
 
     \include {module-use.qdocinc} {building with cmake} {md4qt} {md4qt} {md4qt::md4qt}
 
-    \section1 Readings
-
-    \list
-        \li \l{md4qt-README.md.html} {README}
-    \endlist
-
     \section1 API Reference
 
     \list
