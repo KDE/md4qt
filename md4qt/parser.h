@@ -1535,6 +1535,106 @@ isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
 
 #endif
 
+/*
+ * This function has been got and rewriten from cmark-gfm autolink.c file
+ * that licensed with:
+ *
+ * Copyright (c) 2014, John MacFarlane
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *
+ *    * Redistributions in binary form must reproduce the above
+ *      copyright notice, this list of conditions and the following
+ *      disclaimer in the documentation and/or other materials provided
+ *      with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+template<class Trait>
+inline long long int
+autolinkEnd(const typename Trait::String &url)
+{
+    typename Trait::Char cclose, copen;
+    long long int i;
+
+    long long int linkEnd = url.length();
+
+    for (i = 0; i < linkEnd; ++i) {
+        if (url[i] == Trait::latin1ToChar('<')) {
+            linkEnd = i;
+            break;
+        }
+    }
+
+    while (linkEnd > 0) {
+        cclose = url[linkEnd - 1];
+
+        if (cclose == Trait::latin1ToChar(')')) {
+            copen = Trait::latin1ToChar('(');
+        } else {
+            copen = Trait::latin1ToChar(0);
+        }
+
+        static const typename Trait::String notAllowed = Trait::latin1ToString("?!.,:*_~'\"");
+
+        if (notAllowed.indexOf(url[linkEnd - 1]) != -1) {
+            --linkEnd;
+        } else if (url[linkEnd - 1] == Trait::latin1ToChar(';')) {
+            long long int newEnd = linkEnd - 2;
+
+            while (newEnd > 0 && url[newEnd].isLetter()) {
+                --newEnd;
+            }
+
+            if (newEnd < linkEnd - 2 && url[newEnd] == Trait::latin1ToChar('&')) {
+                linkEnd = newEnd;
+            } else {
+                --linkEnd;
+            }
+        } else if (copen != Trait::latin1ToChar(0)) {
+            long long int closing = 0;
+            long long int opening = 0;
+            i = 0;
+
+            while (i < linkEnd) {
+                if (url[i] == copen) {
+                    ++opening;
+                } else if (url[i] == cclose) {
+                    ++closing;
+                }
+
+                ++i;
+            }
+
+            if (closing <= opening) {
+                break;
+            }
+
+            --linkEnd;
+        } else {
+          break;
+        }
+    }
+
+    return linkEnd;
+}
+
 /*!
  * \inheaderfile md4qt/parser.h
  *
@@ -1556,34 +1656,39 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
         return idx;
     }
 
-    static const auto s_delims = Trait::latin1ToString("*_~()<>");
+    static const auto s_delims = Trait::latin1ToString("*_~()<>?!.,:'\"");
     auto s = po.m_rawTextData[idx];
     bool first = true;
     long long int j = 0;
-    auto end = typename Trait::Char(0x00);
-    bool skipSpace = true;
     long long int ret = idx;
 
     while (s.m_str.length()) {
         long long int i = 0;
-        end = typename Trait::Char(0x00);
+        bool processed = false;
 
         for (; i < s.m_str.length(); ++i) {
             if (first) {
-                if (s.m_str[i] == Trait::latin1ToChar('(')) {
-                    end = Trait::latin1ToChar(')');
-                }
-
                 if (s_delims.indexOf(s.m_str[i]) == -1 && !s.m_str[i].isSpace()) {
                     first = false;
-                    j = i;
                 }
+
+                j = i;
             } else {
-                if (s.m_str[i].isSpace() || i == s.m_str.length() - 1 || s.m_str[i] == end) {
+                if (s.m_str[i].isSpace() || i == s.m_str.length() - 1) {
                     auto tmp = s.m_str.sliced(j, i - j +
-                        (i == s.m_str.length() - 1 && s.m_str[i] != end && !s.m_str[i].isSpace() ?
+                        (i == s.m_str.length() - 1 && !s.m_str[i].isSpace() ?
                             1 : 0));
-                    skipSpace = s.m_str[i].isSpace();
+                    const long long int newJ = i;
+                    processed = true;
+                    bool adjusted = false;
+
+                    const auto newEnd = autolinkEnd<Trait>(tmp);
+
+                    if (newEnd < tmp.length()) {
+                        i -= (tmp.length() - newEnd) + s.m_str[i].isSpace();
+                        tmp = tmp.sliced(0, newEnd);
+                        adjusted = true;
+                    }
 
                     const auto email = isEmail<Trait>(tmp);
 
@@ -1618,8 +1723,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                             lnk->setStartLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                             lnk->setEndColumn(
                                 po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + i -
-                                    (i == s.m_str.length() - 1 && s.m_str[i] != end && !s.m_str[i].isSpace() ?
-                                        0 : 1)));
+                                    (((i == s.m_str.length() - 1 && !s.m_str[i].isSpace()) || adjusted) ? 0 : 1)));
                             lnk->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                             lnk->openStyles() = openStyles;
                             lnk->setTextPos({lnk->startColumn(), lnk->startLine(), lnk->endColumn(), lnk->endLine()});
@@ -1637,8 +1741,8 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                             lnk->setOpts(opts);
                             p->insertItem(ti, lnk);
 
-                            s.m_pos += i + (s.m_str[i] == end || s.m_str[i].isSpace() ? 0 : 1);
-                            s.m_str.remove(0, i + (s.m_str[i] == end || s.m_str[i].isSpace() ? 0 : 1));
+                            s.m_pos += i + (s.m_str[i].isSpace() ? 0 : 1);
+                            s.m_str.remove(0, i + (s.m_str[i].isSpace() ? 0 : 1));
                             j = 0;
                             i = 0;
 
@@ -1660,10 +1764,15 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
 
                             break;
                         }
+                    } else {
+                        i = newJ;
+                        first = true;
                     }
-
-                    j = i + (skipSpace ? 1 : 0);
                 }
+            }
+
+            if (!first && i == (s.m_str.length() - 1) && !processed) {
+                --i;
             }
         }
 

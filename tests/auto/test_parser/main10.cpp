@@ -740,3 +740,130 @@ TEST_CASE("304")
         REQUIRE(i->url() == wd + TRAIT::latin1ToString("./data/b.png"));
     }
 }
+
+/*
+https://www.google.com.
+
+*/
+TEST_CASE("305")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/305.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 2);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
+    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+    REQUIRE(l->startColumn() == 0);
+    REQUIRE(l->startLine() == 0);
+    REQUIRE(l->endColumn() == 21);
+    REQUIRE(l->endLine() == 0);
+    REQUIRE(l->url() == TRAIT::latin1ToString("https://www.google.com"));
+    REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text<TRAIT>*>(p->items().at(1).get());
+    REQUIRE(t->startColumn() == 22);
+    REQUIRE(t->startLine() == 0);
+    REQUIRE(t->endColumn() == 22);
+    REQUIRE(t->endLine() == 0);
+    REQUIRE(t->text() == TRAIT::latin1ToString("."));
+}
+
+/*
+www.google.com. https://www.google.com)
+
+*/
+TEST_CASE("306")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/306.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 4);
+
+    {
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
+        auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
+        REQUIRE(l->startColumn() == 0);
+        REQUIRE(l->startLine() == 0);
+        REQUIRE(l->endColumn() == 13);
+        REQUIRE(l->endLine() == 0);
+        REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
+        REQUIRE(l->textPos() == MD::WithPosition{0, 0, 13, 0});
+        REQUIRE(l->urlPos() == l->textPos());
+    }
+
+    {
+        REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(t->startColumn() == 14);
+        REQUIRE(t->startLine() == 0);
+        REQUIRE(t->endColumn() == 15);
+        REQUIRE(t->endLine() == 0);
+        REQUIRE(t->text() == TRAIT::latin1ToString(". "));
+    }
+
+    {
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Link);
+        auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(2).get());
+        REQUIRE(l->startColumn() == 16);
+        REQUIRE(l->startLine() == 0);
+        REQUIRE(l->endColumn() == 37);
+        REQUIRE(l->endLine() == 0);
+        REQUIRE(l->url() == TRAIT::latin1ToString("https://www.google.com"));
+        REQUIRE(l->textPos() == MD::WithPosition{16, 0, 37, 0});
+        REQUIRE(l->urlPos() == l->textPos());
+    }
+
+    {
+        REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
+        REQUIRE(t->startColumn() == 38);
+        REQUIRE(t->startLine() == 0);
+        REQUIRE(t->endColumn() == 38);
+        REQUIRE(t->endLine() == 0);
+        REQUIRE(t->text() == TRAIT::latin1ToString(")"));
+    }
+}
+
+/*
+...www.google.com
+
+*/
+TEST_CASE("307")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/307.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+
+    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 2);
+
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text<TRAIT>*>(p->items().at(0).get());
+    REQUIRE(t->startColumn() == 0);
+    REQUIRE(t->startLine() == 0);
+    REQUIRE(t->endColumn() == 2);
+    REQUIRE(t->endLine() == 0);
+    REQUIRE(t->text() == TRAIT::latin1ToString("..."));
+
+    REQUIRE(p->items().at(1)->type() == MD::ItemType::Link);
+    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(1).get());
+    REQUIRE(l->startColumn() == 3);
+    REQUIRE(l->startLine() == 0);
+    REQUIRE(l->endColumn() == 16);
+    REQUIRE(l->endLine() == 0);
+    REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
+}
