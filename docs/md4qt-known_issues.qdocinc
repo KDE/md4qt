@@ -36,6 +36,10 @@ I know about this difference. And I decided to keep it. But if somebody
 will provide compelling reasons to do exactly as in CommonMark in this case, I will
 work with this question.
 
+The same issue is in blockquotes too.
+
+\b{Interested in this question may start a discussion with me \l {https://invent.kde.org/libraries/md4qt/-/issues/5} {here}.}
+
 \target #2-Content-of-task-list-item//home/igor/Work/KDE/md4qt/known_issues.md
 \section1 2. Content of task list item
 
@@ -65,5 +69,7 @@ Whereas in \c {md4qt} it will be.
 \endcode
 
 Interesting question. And I decided to keep it as is now.
+
+\b{Interested in this question may start a discussion with me \l {https://invent.kde.org/libraries/md4qt/-/issues/6} {here}.}
 
 

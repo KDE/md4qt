@@ -40,6 +40,10 @@ I know about this difference. And I decided to keep it. But if somebody
 will provide compelling reasons to do exactly as in CommonMark in this case, I will
 work with this question.
 
+The same issue is in blockquotes too.
+
+**Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/5).**
+
 # 2. Content of task list item
 
 GitHub treats everything after task list item as paragraph. I.e.
@@ -68,3 +72,5 @@ Whereas in `md4qt` it will be.
 ```
 
 Interesting question. And I decided to keep it as is now.
+
+**Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/6).**
