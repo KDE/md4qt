@@ -15,6 +15,9 @@ defines += MD4QT_ICU_STL_SUPPORT \
 
 visibility = protected
 
+navigation.landingpage  = "md4qt"
+navigation.cppclassespage = "md4qt C++ Classes"
+
 outputformats = HTML
 
 depends += \
