@@ -15,6 +15,7 @@ tables, footnotes, tasks lists, strikethroughs, LaTeX Maths injections, GitHub's
 This library parses Markdown into tree structure.
 
 * [Example](#example)
+* [License](#license)
 * [Benchmark](#benchmark)
 * [Playground](#playground)
 * [Release notes](#release-notes)
@@ -74,6 +75,15 @@ int main()
 
     return 0;
 }
+```
+
+# License
+
+```cpp
+/*
+    SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+    SPDX-License-Identifier: MIT
+*/
 ```
 
 # Benchmark

@@ -10,6 +10,7 @@ This library parses Markdown into tree structure.
 
 \list
     \li \l {#Example//home/igor/Work/KDE/md4qt/README.md} {Example}
+    \li \l {#License//home/igor/Work/KDE/md4qt/README.md} {License}
     \li \l {#Benchmark//home/igor/Work/KDE/md4qt/README.md} {Benchmark}
     \li \l {#Playground//home/igor/Work/KDE/md4qt/README.md} {Playground}
     \li \l {#Release-notes//home/igor/Work/KDE/md4qt/README.md} {Release notes}
@@ -70,6 +71,16 @@ int main()
 
     return 0;
 }
+\endcode
+
+\target #License//home/igor/Work/KDE/md4qt/README.md
+\section1 License
+
+\code /
+\1*
+    SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+    SPDX-License-Identifier: MIT
+*\1
 \endcode
 
 \target #Benchmark//home/igor/Work/KDE/md4qt/README.md
