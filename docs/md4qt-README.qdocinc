@@ -104,19 +104,19 @@ major extensions and sugar and cherry on the cake.
 
         \li \l {https://github.com/github/cmark-gfm} {cmark-gfm}
 
-        \li 0.22 ms
+        \li 0.21 ms
 
     \row
 
         \li \c {md4qt} with \c {Qt6}
 
-        \li 2.9 ms
+        \li 2.7 ms
 
     \row
 
         \li \c {md4qt} with \c {Qt6} without \c {GitHub} auto-links extension
 
-        \li 2.5 ms
+        \li 2.3 ms
 
 \endtable
 

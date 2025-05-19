@@ -95,9 +95,9 @@ major extensions and sugar and cherry on the cake.
 
 | Markdown library | Result |
 | --- | --- |
-| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.22 ms |
-| `md4qt` with `Qt6` | 2.9 ms |
-| `md4qt` with `Qt6` without `GitHub` auto-links extension | 2.5 ms |
+| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.21 ms |
+| `md4qt` with `Qt6` | 2.7 ms |
+| `md4qt` with `Qt6` without `GitHub` auto-links extension | 2.3 ms |
 
 # Playground
 
