@@ -2691,47 +2691,33 @@ Parser<Trait>::parse(const typename Trait::String &fileName,
 }
 
 template<class Trait>
-class TextStream;
-
-#ifdef MD4QT_QT_SUPPORT
-
-template<>
-class TextStream<QStringTrait>
+class TextStreamBase
 {
+protected:
+    virtual ~TextStreamBase() = default;
+
 public:
-    TextStream(QTextStream &stream)
-        : m_stream(stream)
-        , m_lastBuf(false)
-        , m_pos(0)
-    {
-    }
+    virtual bool atEnd() const = 0;
 
-    bool
-    atEnd() const
+    typename Trait::String readLine()
     {
-        return (m_lastBuf && m_pos == m_buf.size());
-    }
-
-    QString
-    readLine()
-    {
-        QString line;
+        typename Trait::String line;
         bool rFound = false;
 
         while (!atEnd()) {
             const auto c = getChar();
 
-            if (rFound && c != s_newLineChar<QStringTrait>) {
+            if (rFound && c != s_newLineChar<Trait>) {
                 --m_pos;
 
                 return line;
             }
 
-            if (c == s_carriageReturnChar<QStringTrait>) {
+            if (c == s_carriageReturnChar<Trait>) {
                 rFound = true;
 
                 continue;
-            } else if (c == s_newLineChar<QStringTrait>) {
+            } else if (c == s_newLineChar<Trait>) {
                 return line;
             }
 
@@ -2743,9 +2729,35 @@ public:
         return line;
     }
 
+protected:
+    virtual typename Trait::Char getChar() = 0;
+
+protected:
+    long long int m_pos = 0;
+};
+
+template<class Trait>
+class TextStream;
+
+#ifdef MD4QT_QT_SUPPORT
+
+template<>
+class TextStream<QStringTrait> : public TextStreamBase<QStringTrait>
+{
+public:
+    TextStream(QTextStream &stream)
+        : m_stream(stream)
+        , m_lastBuf(false)
+    {
+    }
+
+    bool atEnd() const override
+    {
+        return (m_lastBuf && m_pos == m_buf.size());
+    }
+
 private:
-    void
-    fillBuf()
+    void fillBuf()
     {
         m_buf = m_stream.read(512);
 
@@ -2756,8 +2768,8 @@ private:
         m_pos = 0;
     }
 
-    QChar
-    getChar()
+protected:
+    QChar getChar() override
     {
         if (m_pos < m_buf.size()) {
             return m_buf.at(m_pos++);
@@ -2774,7 +2786,6 @@ private:
     QTextStream &m_stream;
     QString m_buf;
     bool m_lastBuf;
-    long long int m_pos;
 }; // class TextStream
 
 #endif
@@ -2782,11 +2793,10 @@ private:
 #ifdef MD4QT_ICU_STL_SUPPORT
 
 template<>
-class TextStream<UnicodeStringTrait>
+class TextStream<UnicodeStringTrait> : public TextStreamBase<UnicodeStringTrait>
 {
 public:
     TextStream(std::istream &stream)
-        : m_pos(0)
     {
         std::vector<unsigned char> content;
 
@@ -2822,47 +2832,13 @@ public:
         m_str = UnicodeString::fromUTF8((char *)&content[0]);
     }
 
-    bool
-    atEnd() const
+    bool atEnd() const override
     {
         return m_pos == m_str.size();
     }
 
-    UnicodeString
-    readLine()
-    {
-        UnicodeString line;
-
-        bool rFound = false;
-
-        while (!atEnd()) {
-            const auto c = getChar();
-
-            if (rFound && c != s_newLineChar<UnicodeStringTrait>) {
-                --m_pos;
-
-                return line;
-            }
-
-            if (c == s_carriageReturnChar<UnicodeStringTrait>) {
-                rFound = true;
-
-                continue;
-            } else if (c == s_newLineChar<UnicodeStringTrait>) {
-                return line;
-            }
-
-            if (!c.isNull()) {
-                line.push_back(c);
-            }
-        }
-
-        return line;
-    }
-
-private:
-    UnicodeChar
-    getChar()
+protected:
+    UnicodeChar getChar() override
     {
         if (!atEnd()) {
             return m_str[m_pos++];
@@ -2873,7 +2849,6 @@ private:
 
 private:
     UnicodeString m_str;
-    long long int m_pos;
 };
 
 #endif
