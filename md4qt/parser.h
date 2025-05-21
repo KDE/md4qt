@@ -345,13 +345,14 @@ struct RawHtmlBlock {
     std::shared_ptr<Block<Trait>>
     findParent(long long int indent) const
     {
-        for (auto it = m_blocks.crbegin(), last = m_blocks.crend(); it != last; ++it) {
-            if (indent >= it->second) {
-                return it->first;
-            }
-        }
+        const auto it = std::find_if(m_blocks.crbegin(), m_blocks.crend(),
+                                     [indent](const auto &p){ return (indent >= p.second); });
 
-        return nullptr;
+        if (it != m_blocks.crend()) {
+            return it->first;
+        } else {
+            return {};
+        }
     }
 }; // struct RawHtmlBlock
 
@@ -402,21 +403,12 @@ inline long long int
 emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
                       typename MdBlock<Trait>::Data::iterator it)
 {
-    long long int count = 0;
+    const auto rbegin = std::make_reverse_iterator(it);
 
-    if (it != begin) {
-        while (it != begin) {
-            it = std::prev(it);
+    const auto firstNonEmpty = std::find_if(rbegin, std::make_reverse_iterator(begin),
+                                 [](const auto &line){ return (!line.first.asString().simplified().isEmpty()); });
 
-            if (it->first.asString().simplified().isEmpty()) {
-                ++count;
-            } else {
-                break;
-            }
-        }
-    }
-
-    return count;
+    return std::distance(rbegin, firstNonEmpty);
 }
 
 //
