@@ -8939,8 +8939,6 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
     t->setStartColumn((*it)->startColumn());
     t->setStartLine((*it)->startLine());
 
-    typename ItemWithOpts<Trait>::Styles close;
-
     typename Trait::String data;
 
     for (; it != last; ++it) {
@@ -8955,7 +8953,7 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
 
         if (!tt->closeStyles().empty()) {
             std::copy(tt->closeStyles().cbegin(), tt->closeStyles().cend(),
-                std::back_inserter(close));
+                std::back_inserter(t->closeStyles()));
         }
     }
 
@@ -8964,7 +8962,6 @@ concatenateText(typename Block<Trait>::Items::const_iterator it,
     t->setText(data);
     t->setEndColumn((*it)->endColumn());
     t->setEndLine((*it)->endLine());
-    t->closeStyles() = close;
 
     return t;
 }
