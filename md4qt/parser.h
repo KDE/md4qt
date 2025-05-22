@@ -3922,13 +3922,7 @@ inline long long int
 posOfListItem(const typename Trait::String &s,
               bool ordered)
 {
-    long long int p = 0;
-
-    for (; p < s.size(); ++p) {
-        if (!s[p].isSpace()) {
-            break;
-        }
-    }
+    auto p = skipSpaces<Trait>(0, s);
 
     if (ordered) {
         for (; p < s.size(); ++p) {
@@ -3940,15 +3934,9 @@ posOfListItem(const typename Trait::String &s,
 
     ++p;
 
-    long long int sc = 0;
+    const auto sc = skipSpaces<Trait>(p, s) - p;
 
-    for (; p < s.size(); ++p) {
-        if (!s[p].isSpace()) {
-            break;
-        } else {
-            ++sc;
-        }
-    }
+    p += sc;
 
     if (p == s.length() || sc > 4) {
         p = p - sc + 1;
