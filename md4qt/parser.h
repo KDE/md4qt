@@ -172,15 +172,14 @@ indentInList(const std::vector<long long int> *indents,
  *
  * \sa MD::skipIfBackward
  */
-template<class Trait>
+template<class Trait, class Pred>
 inline long long int
 skipIf(long long int startPos, const typename Trait::String &line,
-       const std::function<bool(const typename Trait::Char &)> &pred,
-       long long int endPos = -1)
+       Pred pred, long long int endPos = -1)
 {
-    const auto length = (endPos < line.length() && endPos > -1 ? endPos : line.length());
+    endPos = (endPos < line.length() && endPos > -1 ? endPos : line.length());
 
-    while (startPos < length && pred(line[startPos])) {
+    while (startPos < endPos && pred(line[startPos])) {
         ++startPos;
     }
 
@@ -202,11 +201,10 @@ skipIf(long long int startPos, const typename Trait::String &line,
  *
  * \sa MD::skipIf
  */
-template<class String, class Char>
+template<class String, class Char, class Pred>
 inline long long int
 skipIfBackward(long long int startPos, const String &line,
-               const std::function<bool(const Char &)> &pred,
-               long long int endPos = -1)
+               Pred pred, long long int endPos = -1)
 {
     const auto lastPos = line.length() - 1;
 
@@ -240,11 +238,10 @@ skipIfBackward(long long int startPos, const String &line,
  *
  * \sa MD::skipIf
  */
-template<class Trait>
+template<class Trait, class Pred>
 inline long long int
 skipIfBackward(long long int startPos, const typename Trait::String &line,
-               const std::function<bool(const typename Trait::Char &)> &pred,
-               long long int endPos = -1)
+               Pred pred, long long int endPos = -1)
 {
     return skipIfBackward<typename Trait::String, typename Trait::Char>(startPos, line, pred, endPos);
 }
@@ -4331,12 +4328,9 @@ findAndRemoveHeaderLabel(typename Trait::InternalString &s)
     const auto start = s.asString().indexOf(s_startIdString<Trait>);
 
     if (start >= 0) {
-        long long int p = start + 2;
+        const auto p = s.asString().indexOf(s_rightCurlyBracketChar<Trait>, start + 2);
 
-        p = skipIf<Trait>(p, s.asString(),
-            [](const typename Trait::Char &ch){ return ch != s_rightCurlyBracketChar<Trait>; });
-
-        if (p < s.length() && s[p] == s_rightCurlyBracketChar<Trait>) {
+        if (p >= start + 2 && s[p] == s_rightCurlyBracketChar<Trait>) {
             WithPosition pos;
             pos.setStartColumn(s.virginPos(start));
             pos.setEndColumn(s.virginPos(p));
