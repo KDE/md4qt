@@ -663,6 +663,97 @@ isCodeFences(const typename Trait::String &s, bool closing = false)
 }
 
 /*!
+ * \class MD::ReverseSolidusHandler
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Helper for process reverse solidus characters.
+ *
+ */
+template<class Trait>
+struct ReverseSolidusHandler {
+    /*!
+     * Process current character.
+     *
+     * Returns true if current character was recognized as reverse solidus, false otherwise.
+     *
+     * \a ch Current character.
+     *
+     * \a additionalRule Additional boolean value that should be true to recognize current character
+     *                   as reverse solidus.
+     */
+    bool process(const typename Trait::Char &ch, bool additionalRule = true)
+    {
+        if (ch == s_reverseSolidusChar<Trait> && !isPrevReverseSolidus() && additionalRule) {
+            m_reverseSolidus = true;
+            m_now = true;
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /*!
+     * Return whether previous character was reverse solidus.
+     */
+    bool isPrevReverseSolidus() const
+    {
+        return m_reverseSolidus;
+    }
+
+    /*!
+     * Combination of processing of current character and checking that previous \b {WAS NOT}
+     * a reverse solidus character.
+     *
+     * Returns true if current character \b {WAS NOT} recognized as reverse solidus and previous character
+     * \b {WAS NOT} a reverse solidus (i.e not escaped and not reverse solidus), false otherwise.
+     *
+     * \a ch Current character.
+     *
+     * \a additionalRule Additional boolean value that should be true to recognize current character
+     *                   as reverse solidus.
+     */
+    bool isNotEscaped(const typename Trait::Char &ch, bool additionalRule = true)
+    {
+        return (!process(ch, additionalRule) && !isPrevReverseSolidus());
+    }
+
+    /*!
+     * Combination of processing of current character and checking that previous was
+     * a reverse solidus character.
+     *
+     * Returns true if current character \b {WAS NOT} recognized as reverse solidus and previous character
+     * \b {WAS} a reverse solidus (i.e escaped and not reverse solidus), false otherwise.
+     *
+     * \a ch Current character.
+     *
+     * \a additionalRule Additional boolean value that should be true to recognize current character
+     *                   as reverse solidus.
+     */
+    bool isEscaped(const typename Trait::Char &ch, bool additionalRule = true)
+    {
+        return (!process(ch, additionalRule) && isPrevReverseSolidus());
+    }
+
+    /*!
+     * Should be invoked after processing of current character and all logic with current character.
+     */
+    void next()
+    {
+        if (!m_now) {
+            m_reverseSolidus = false;
+        }
+
+        m_now = false;
+    }
+
+private:
+    bool m_now = false;
+    bool m_reverseSolidus = false;
+};
+
+/*!
  * \inheaderfile md4qt/parser.h
  *
  * Skip escaped sequence of characters till first space.
@@ -679,28 +770,20 @@ readEscapedSequence(long long int i,
                     const typename Trait::String &str,
                     long long int *endPos = nullptr)
 {
-    bool backslash = false;
     const auto start = i;
 
     if (start >= str.length()) {
         return {};
     }
 
-    while (i < str.length()) {
-        bool now = false;
+    ReverseSolidusHandler<Trait> reverseSolidus;
 
-        if (str[i] == s_reverseSolidusChar<Trait> && !backslash) {
-            backslash = true;
-            now = true;
-        } else if (str[i].isSpace() && !backslash) {
+    for (;i < str.length(); ++i) {
+        if (reverseSolidus.isNotEscaped(str[i]) && str[i].isSpace()) {
             break;
         }
 
-        if (!now) {
-            backslash = false;
-        }
-
-        ++i;
+        reverseSolidus.next();
     }
 
     if (endPos) {
@@ -725,23 +808,17 @@ inline String
 removeBackslashes(const String &s)
 {
     String r = s;
-    bool backslash = false;
     long long int extra = 0;
 
-    for (long long int i = 0; i < s.length(); ++i) {
-        bool now = false;
+    ReverseSolidusHandler<Trait> reverseSolidus;
 
-        if (s[i] == s_reverseSolidusChar<Trait> && !backslash && i != s.length() - 1) {
-            backslash = true;
-            now = true;
-        } else if (s_canBeEscaped<Trait>.contains(s[i]) && backslash) {
+    for (long long int i = 0; i < s.length(); ++i) {
+        if (reverseSolidus.isEscaped(s[i], i != s.length() - 1) && s_canBeEscaped<Trait>.contains(s[i])) {
             r.remove(i - extra - 1, 1);
             ++extra;
         }
 
-        if (!now) {
-            backslash = false;
-        }
+        reverseSolidus.next();
     }
 
     return r;
@@ -4255,31 +4332,22 @@ inline int
 isTableHeader(const typename Trait::String &s)
 {
     if (s.contains(s_verticalLineChar<Trait>)) {
-        int c = 0;
+        int c = 1;
 
         const auto tmp = s.simplified();
         const auto p = tmp.startsWith(s_verticalLineString<Trait>) ? 1 : 0;
         const auto n = tmp.size() - p - (tmp.endsWith(s_verticalLineString<Trait>) && tmp.size() > 1 ? 1 : 0);
         const auto v = tmp.sliced(p, n);
 
-        bool backslash = false;
+        ReverseSolidusHandler<Trait> reverseSolidus;
 
-        for (long long int i = 0; i < v.size(); ++i) {
-            bool now = false;
-
-            if (v[i] == s_reverseSolidusChar<Trait> && !backslash) {
-                backslash = true;
-                now = true;
-            } else if (v[i] == s_verticalLineChar<Trait> && !backslash) {
+        for (long long int i = 0; i < v.length(); ++i) {
+            if (reverseSolidus.isNotEscaped(v[i]) && v[i] == s_verticalLineChar<Trait>) {
                 ++c;
             }
 
-            if (!now) {
-                backslash = false;
-            }
+            reverseSolidus.next();
         }
-
-        ++c;
 
         return c;
     } else {
@@ -4625,24 +4693,18 @@ splitTableRow(const typename Trait::InternalString &s)
     typename Trait::InternalStringList res;
     std::vector<long long int> columns;
 
-    bool backslash = false;
     long long int start = 0;
 
-    for (long long int i = 0; i < s.length(); ++i) {
-        bool now = false;
+    ReverseSolidusHandler<Trait> reverseSolidus;
 
-        if (s[i] == s_reverseSolidusChar<Trait> && !backslash) {
-            backslash = true;
-            now = true;
-        } else if (s[i] == s_verticalLineChar<Trait> && !backslash) {
+    for (long long int i = 0; i < s.length(); ++i) {
+        if (reverseSolidus.isNotEscaped(s[i]) && s[i] == s_verticalLineChar<Trait>) {
             res.push_back(prepareTableData<Trait>(s.sliced(start, i - start)));
             columns.push_back(s.virginPos(i));
             start = i + 1;
         }
 
-        if (!now) {
-            backslash = false;
-        }
+        reverseSolidus.next();
     }
 
     res.push_back(prepareTableData<Trait>(s.sliced(start, s.length() - start)));
@@ -4987,18 +5049,16 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
         } else if (isH2<Trait>(withoutSpaces) && p < 4) {
             d.push_back({Delimiter::H2, line, 0, str.length(), false, false, false});
         } else {
-            bool backslash = false;
+            ReverseSolidusHandler<Trait> reverseSolidus;
             bool word = false;
 
             for (long long int i = p; i < str.size(); ++i) {
-                bool now = false;
 
-                if (str[i] == s_reverseSolidusChar<Trait> && !backslash) {
-                    backslash = true;
-                    now = true;
+                if(reverseSolidus.process(str[i])) {
                 }
                 // * or _
-                else if ((str[i] == s_lowLineChar<Trait> || str[i] == s_asteriskChar<Trait>) && !backslash) {
+                else if ((str[i] == s_lowLineChar<Trait> || str[i] == s_asteriskChar<Trait>) &&
+                         !reverseSolidus.isPrevReverseSolidus()) {
                     typename Trait::String style;
 
                     const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
@@ -5044,7 +5104,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     --i;
                 }
                 // ~
-                else if (str[i] == s_tildeChar<Trait> && !backslash) {
+                else if (str[i] == s_tildeChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     typename Trait::String style;
 
                     const bool punctBefore = (i > 0 ? str[i - 1].isPunct() || str[i - 1].isSymbol() : true);
@@ -5084,13 +5144,13 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     --i;
                 }
                 // [
-                else if (str[i] == s_leftSquareBracketChar<Trait> && !backslash) {
+                else if (str[i] == s_leftSquareBracketChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::SquareBracketsOpen, line, i, 1, word, false});
 
                     word = false;
                 }
                 // !
-                else if (str[i] == s_exclamationMarkChar<Trait> && !backslash) {
+                else if (str[i] == s_exclamationMarkChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     if (i + 1 < str.length()) {
                         if (str[i + 1] == s_leftSquareBracketChar<Trait>) {
                             d.push_back({Delimiter::ImageOpen, line, i, 2, word, false});
@@ -5106,31 +5166,31 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     }
                 }
                 // (
-                else if (str[i] == s_leftParenthesisChar<Trait> && !backslash) {
+                else if (str[i] == s_leftParenthesisChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::ParenthesesOpen, line, i, 1, word, false});
 
                     word = false;
                 }
                 // ]
-                else if (str[i] == s_rightSquareBracketChar<Trait> && !backslash) {
+                else if (str[i] == s_rightSquareBracketChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::SquareBracketsClose, line, i, 1, word, false});
 
                     word = false;
                 }
                 // )
-                else if (str[i] == s_rightParenthesisChar<Trait> && !backslash) {
+                else if (str[i] == s_rightParenthesisChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::ParenthesesClose, line, i, 1, word, false});
 
                     word = false;
                 }
                 // <
-                else if (str[i] == s_lessSignChar<Trait> && !backslash) {
+                else if (str[i] == s_lessSignChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::Less, line, i, 1, word, false});
 
                     word = false;
                 }
                 // >
-                else if (str[i] == s_greaterSignChar<Trait> && !backslash) {
+                else if (str[i] == s_greaterSignChar<Trait> && !reverseSolidus.isPrevReverseSolidus()) {
                     d.push_back({Delimiter::Greater, line, i, 1, word, false});
 
                     word = false;
@@ -5147,10 +5207,10 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
 
                     d.push_back({Delimiter::InlineCode,
                                  line,
-                                 i - code.length() - (backslash ? 1 : 0),
-                                 code.length() + (backslash ? 1 : 0),
+                                 i - code.length() - (reverseSolidus.isPrevReverseSolidus() ? 1 : 0),
+                                 code.length() + (reverseSolidus.isPrevReverseSolidus() ? 1 : 0),
                                  word,
-                                 backslash});
+                                 reverseSolidus.isPrevReverseSolidus()});
 
                     word = false;
 
@@ -5166,7 +5226,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     m.push_back(typename Trait::String(count, s_dollarSignChar<Trait>));
                     i += count;
 
-                    if (m.length() <= 2 && !backslash) {
+                    if (m.length() <= 2 && !reverseSolidus.isPrevReverseSolidus()) {
                         d.push_back({Delimiter::Math, line, i - m.length(), m.length(),
                             false, false, false, false});
                     }
@@ -5178,9 +5238,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     word = true;
                 }
 
-                if (!now) {
-                    backslash = false;
-                }
+                reverseSolidus.next();
             }
         }
     }
@@ -7588,7 +7646,6 @@ readLinkDestination(long long int line,
 
     const auto destLine = line;
     const auto &s = po.m_fr.m_data.at(line).first.asString();
-    bool backslash = false;
 
     if (pos < s.length() && line <= po.m_lastTextLine) {
         if (s[pos] == s_lessSignChar<Trait>) {
@@ -7601,23 +7658,18 @@ readLinkDestination(long long int line,
 
             const auto start = pos;
 
-            while (pos < s.size()) {
-                bool now = false;
+            ReverseSolidusHandler<Trait> reverseSolidus;
 
-                if (s[pos] == s_reverseSolidusChar<Trait> && !backslash) {
-                    backslash = true;
-                    now = true;
-                } else if (!backslash && s[pos] == s_lessSignChar<Trait>) {
-                    return {line, pos, false, {}, destLine};
-                } else if (!backslash && s[pos] == s_greaterSignChar<Trait>) {
-                    break;
+            for (; pos < s.size(); ++pos) {
+                if(reverseSolidus.isNotEscaped(s[pos])) {
+                    if (s[pos] == s_lessSignChar<Trait>) {
+                        return {line, pos, false, {}, destLine};
+                    } else if (s[pos] == s_greaterSignChar<Trait>) {
+                        break;
+                    }
                 }
 
-                if (!now) {
-                    backslash = false;
-                }
-
-                ++pos;
+                reverseSolidus.next();
             }
 
             if (pos < s.size() && s[pos] == s_greaterSignChar<Trait>) {
@@ -7642,43 +7694,39 @@ readLinkDestination(long long int line,
                 urlPos->setStartLine(po.m_fr.m_data[line].second.m_lineNumber);
             }
 
-            while (pos < s.size()) {
-                bool now = false;
+            ReverseSolidusHandler<Trait> reverseSolidus;
 
-                if (s[pos] == s_reverseSolidusChar<Trait> && !backslash) {
-                    backslash = true;
-                    now = true;
-                } else if (!backslash && s[pos] == s_spaceChar<Trait>) {
-                    if (!pc) {
-                        if (urlPos) {
-                            urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
-                            urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
+            for (; pos < s.size(); ++pos) {
+
+                if (reverseSolidus.isNotEscaped(s[pos])) {
+                    if (s[pos] == s_spaceChar<Trait>) {
+                        if (!pc) {
+                            if (urlPos) {
+                                urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                                urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
+                            }
+
+                            return {line, pos, true, s.sliced(start, pos - start), destLine};
+                        } else {
+                            return {line, pos, false, {}, destLine};
                         }
+                    } else if (s[pos] == s_leftParenthesisChar<Trait>) {
+                        ++pc;
+                    } else if (s[pos] == s_rightParenthesisChar<Trait>) {
+                        if (!pc) {
+                            if (urlPos) {
+                                urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
+                                urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
+                            }
 
-                        return {line, pos, true, s.sliced(start, pos - start), destLine};
-                    } else {
-                        return {line, pos, false, {}, destLine};
-                    }
-                } else if (!backslash && s[pos] == s_leftParenthesisChar<Trait>) {
-                    ++pc;
-                } else if (!backslash && s[pos] == s_rightParenthesisChar<Trait>) {
-                    if (!pc) {
-                        if (urlPos) {
-                            urlPos->setEndColumn(po.m_fr.m_data[line].first.virginPos(pos - 1));
-                            urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
+                            return {line, pos, true, s.sliced(start, pos - start), destLine};
+                        } else {
+                            --pc;
                         }
-
-                        return {line, pos, true, s.sliced(start, pos - start), destLine};
-                    } else {
-                        --pc;
                     }
                 }
 
-                if (!now) {
-                    backslash = false;
-                }
-
-                ++pos;
+                reverseSolidus.next();
             }
 
             if (urlPos) {
@@ -7736,37 +7784,34 @@ readLinkTitle(long long int line,
 
     const auto startLine = line;
 
-    bool backslash = false;
-
     ++pos;
 
     skipSpacesUpTo1Line<Trait>(line, pos, po.m_fr.m_data);
 
     typename Trait::String title;
 
-    while (line < (long long int)po.m_fr.m_data.size() && pos < po.m_fr.m_data.at(line).first.length()) {
-        bool now = false;
+    ReverseSolidusHandler<Trait> reverseSolidus;
 
-        if (po.m_fr.m_data.at(line).first[pos] == s_reverseSolidusChar<Trait> && !backslash) {
-            backslash = true;
-            now = true;
+    while (line < (long long int)po.m_fr.m_data.size() && pos < po.m_fr.m_data.at(line).first.length()) {
+        if (reverseSolidus.process(po.m_fr.m_data.at(line).first[pos])) {
         } else if (sc == s_leftParenthesisChar<Trait> &&
-            po.m_fr.m_data.at(line).first[pos] == s_rightParenthesisChar<Trait> && !backslash) {
+                   po.m_fr.m_data.at(line).first[pos] == s_rightParenthesisChar<Trait> &&
+                   !reverseSolidus.isPrevReverseSolidus()) {
             ++pos;
             return {line, pos, line <= po.m_lastTextLine, title, startLine};
         } else if (sc == s_leftParenthesisChar<Trait> &&
-            po.m_fr.m_data.at(line).first[pos] == s_leftParenthesisChar<Trait> && !backslash) {
+                   po.m_fr.m_data.at(line).first[pos] == s_leftParenthesisChar<Trait> &&
+                   !reverseSolidus.isPrevReverseSolidus()) {
             return {line, pos, false, {}, startLine};
-        } else if (sc != s_leftParenthesisChar<Trait> && po.m_fr.m_data.at(line).first[pos] == sc && !backslash) {
+        } else if (sc != s_leftParenthesisChar<Trait> && po.m_fr.m_data.at(line).first[pos] == sc &&
+                   !reverseSolidus.isPrevReverseSolidus()) {
             ++pos;
             return {line, pos, line <= po.m_lastTextLine, title, startLine};
         } else {
             title.push_back(po.m_fr.m_data.at(line).first[pos]);
         }
 
-        if (!now) {
-            backslash = false;
-        }
+        reverseSolidus.next();
 
         ++pos;
 
