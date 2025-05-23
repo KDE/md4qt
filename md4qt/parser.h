@@ -261,7 +261,7 @@ template<class Trait>
 inline long long int
 skipSpaces(long long int i, const typename Trait::String &line)
 {
-    return skipIf<Trait>(i, line, [](const typename Trait::Char &ch){ return ch.isSpace(); });
+    return skipIf<Trait>(i, line, [](const typename Trait::Char &ch) { return ch.isSpace(); });
 }
 
 /*!
@@ -275,7 +275,7 @@ template<class String, class Char>
 inline long long int
 lastNonSpacePos(const String &line)
 {
-    return skipIfBackward<String, Char>(line.length() - 1, line, [](const Char &ch){ return ch.isSpace(); });
+    return skipIfBackward<String, Char>(line.length() - 1, line, [](const Char &ch) { return ch.isSpace(); });
 }
 
 /*!
@@ -318,7 +318,7 @@ startSequence(const typename Trait::String &line)
 
     ++pos;
 
-    pos = skipIf<Trait>(pos, line, [&sch](const typename Trait::Char &ch){ return (ch == sch); });
+    pos = skipIf<Trait>(pos, line, [&sch](const typename Trait::Char &ch) { return (ch == sch); });
 
     return line.sliced(start, pos - start);
 }
@@ -351,7 +351,7 @@ isOrderedList(const typename Trait::String &s,
 
     const auto dp = p;
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch){ return ch.isDigit(); });
+    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
 
     if (dp != p && p < s.size()) {
         const auto digits = s.sliced(dp, p - dp);
@@ -419,7 +419,7 @@ struct RawHtmlBlock {
     findParent(long long int indent) const
     {
         const auto it = std::find_if(m_blocks.crbegin(), m_blocks.crend(),
-                                     [indent](const auto &p){ return (indent >= p.second); });
+                                     [indent](const auto &p) { return (indent >= p.second); });
 
         if (it != m_blocks.crend()) {
             return it->first;
@@ -479,7 +479,7 @@ emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
     const auto rbegin = std::make_reverse_iterator(it);
 
     const auto firstNonEmpty = std::find_if(rbegin, std::make_reverse_iterator(begin),
-                                 [](const auto &line){ return (!line.first.asString().simplified().isEmpty()); });
+                                 [](const auto &line) { return (!line.first.asString().simplified().isEmpty()); });
 
     return std::distance(rbegin, firstNonEmpty);
 }
@@ -867,7 +867,7 @@ isStartOfCode(const typename Trait::String &str,
 
         const auto skipCh = (c96 ? s_graveAccentChar<Trait> : s_tildeChar<Trait>);
         const auto delta = skipIf<Trait>(p, str,
-            [&skipCh](const typename Trait::Char &ch){ return (ch == skipCh); }) - p;
+            [&skipCh](const typename Trait::Char &ch) { return (ch == skipCh); }) - p;
 
         p += delta;
         c += delta;
@@ -977,7 +977,7 @@ isColumnAlignment(const typename Trait::String &s)
         ++p;
     }
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch){ return (ch == s_minusChar<Trait>); });
+    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return (ch == s_minusChar<Trait>); });
 
     if (p == s.size()) {
         return true;
@@ -989,7 +989,7 @@ isColumnAlignment(const typename Trait::String &s)
 
     ++p;
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch){ return ch.isSpace(); });
+    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isSpace(); });
 
     if (p < s.size()) {
         return false;
@@ -1606,7 +1606,7 @@ isEmail(const typename Trait::String &url)
         }
 
         i = skipIf<Trait>(i, url,
-            [&isAllowed, &isAdditional](const typename Trait::Char &ch){ return (isAllowed(ch) || isAdditional(ch)); },
+            [&isAllowed, &isAdditional](const typename Trait::Char &ch) { return (isAllowed(ch) || isAdditional(ch)); },
             dogPos);
 
         if (i != dogPos) {
@@ -1632,7 +1632,7 @@ isEmail(const typename Trait::String &url)
             }
 
             start = skipIf<Trait>(start, url,
-                [&isAllowed](const typename Trait::Char &ch){ return (isAllowed(ch) || ch == s_minusChar<Trait>); },
+                [&isAllowed](const typename Trait::Char &ch) { return (isAllowed(ch) || ch == s_minusChar<Trait>); },
                 dotPos);
 
             if (start != dotPos) {
@@ -2817,7 +2817,7 @@ Parser<Trait>::parse(const typename Trait::String &fileName,
     auto i = workingDirectory.length() - 1;
 
     i = skipIfBackward<Trait>(workingDirectory.length() - 1, workingDirectory,
-                              [](const typename Trait::Char &ch){ return (ch == s_reverseSolidusChar<Trait> ||
+                              [](const typename Trait::Char &ch) { return (ch == s_reverseSolidusChar<Trait> ||
                                                                           ch == s_solidusChar<Trait>); });
 
     if (i < 0) {
@@ -4072,7 +4072,7 @@ posOfListItem(const typename Trait::String &s,
     auto p = skipSpaces<Trait>(0, s);
 
     if (ordered) {
-        p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch){ return ch.isDigit(); });
+        p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
     }
 
     ++p;
@@ -4146,7 +4146,7 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
         if (s.asString().startsWith(s_numberSignString<Trait>) &&
             (indent ? first - indent->m_indent < 4 : first < 4)) {
             const auto c = skipIf<Trait>(0, s.asString(),
-                [](const typename Trait::Char &ch){ return ch == s_numberSignChar<Trait>; });
+                [](const typename Trait::Char &ch) { return ch == s_numberSignChar<Trait>; });
 
             if (c <= 6 && ((c < s.length() && s[c].isSpace()) || c == s.length())) {
                 isHeading = true;
@@ -4576,7 +4576,7 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         }
 
         pos = skipIf<Trait>(0, line.asString(),
-            [](const typename Trait::Char &ch){ return ch == s_numberSignChar<Trait>; });
+            [](const typename Trait::Char &ch) { return ch == s_numberSignChar<Trait>; });
 
         const int lvl = pos;
 
@@ -4893,13 +4893,13 @@ isH(const typename Trait::String &s,
 
     const auto start = p;
 
-    p = skipIf<Trait>(p, s, [&c](const typename Trait::Char &ch){ return (ch == c); });
+    p = skipIf<Trait>(p, s, [&c](const typename Trait::Char &ch) { return (ch == c); });
 
     if (p - start < 1) {
         return false;
     }
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch){ return ch.isSpace(); });
+    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isSpace(); });
 
     if (p < s.length()) {
         return false;
@@ -5069,7 +5069,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     const auto ch = str[i];
 
                     const auto count = skipIf<Trait>(i, str,
-                        [&ch](const typename Trait::Char &c){ return (ch == c); }) - i;
+                        [&ch](const typename Trait::Char &c) { return (ch == c); }) - i;
 
                     style.push_back(typename Trait::String(count, ch));
                     i += count;
@@ -5112,7 +5112,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
 
                     const auto count = skipIf<Trait>(i, str,
-                        [](const typename Trait::Char &ch){ return (ch == s_tildeChar<Trait>); }) - i;
+                        [](const typename Trait::Char &ch) { return (ch == s_tildeChar<Trait>); }) - i;
 
                     style.push_back(typename Trait::String(count, s_tildeChar<Trait>));
                     i += count;
@@ -5200,7 +5200,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     typename Trait::String code;
 
                     const auto count = skipIf<Trait>(i, str,
-                        [](const typename Trait::Char &ch){ return (ch == s_graveAccentChar<Trait>); }) - i;
+                        [](const typename Trait::Char &ch) { return (ch == s_graveAccentChar<Trait>); }) - i;
 
                     code.push_back(typename Trait::String(count, s_graveAccentChar<Trait>));
                     i += count;
@@ -5221,7 +5221,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     typename Trait::String m;
 
                     const auto count = skipIf<Trait>(i, str,
-                        [](const typename Trait::Char &ch){ return (ch == s_dollarSignChar<Trait>); }) - i;
+                        [](const typename Trait::Char &ch) { return (ch == s_dollarSignChar<Trait>); }) - i;
 
                     m.push_back(typename Trait::String(count, s_dollarSignChar<Trait>));
                     i += count;
@@ -5262,7 +5262,7 @@ isLineBreak(const typename Trait::String &s)
     }
 
     const auto pos = skipIfBackward<Trait>(s.length() - 1, s,
-        [](const typename Trait::Char &ch){ return (ch == s_reverseSolidusChar<Trait>); });
+        [](const typename Trait::Char &ch) { return (ch == s_reverseSolidusChar<Trait>); });
 
     const auto count = (pos < 0 ? s.length() : s.length() - pos - 1);
 
@@ -5792,7 +5792,7 @@ readHtmlAttr(long long int &l,
     const auto start = p;
 
     p = skipIf<Trait>(p, fr[l].first.asString(),
-        [](const typename Trait::Char &ch){ return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
+        [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
                 ch != s_equalSignChar<Trait>); });
 
     const typename Trait::String name = fr[l].first.asString().sliced(start, p - start).toLower();
@@ -5803,7 +5803,7 @@ readHtmlAttr(long long int &l,
     }
 
     const auto i = skipIf<Trait>(1, name,
-        [](const typename Trait::Char &ch){
+        [](const typename Trait::Char &ch) {
             static const auto allowedInName = Trait::latin1ToString("abcdefghijklmnopqrstuvwxyz0123456789_.:-");
 
             return allowedInName.contains(ch);
@@ -6001,7 +6001,7 @@ isHtmlTag(long long int line,
 
     // tag
     p = skipIf<Trait>(p, po.m_fr.m_data[l].first.asString(),
-        [](const typename Trait::Char &ch){ return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
+        [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
                 ch != s_solidusChar<Trait>); });
 
     tag.push_back(po.m_fr.m_data[l].first.asString().sliced(start, p - start));
@@ -6130,7 +6130,7 @@ Parser<Trait>::readHtmlTag(typename Delims::iterator it,
     }
 
     i = skipIf<Trait>(i, po.m_fr.m_data[it->m_line].first.asString(),
-        [](const typename Trait::Char &ch){ return (!ch.isSpace() && ch != s_greaterSignChar<Trait>); });
+        [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait>); });
 
     return {po.m_fr.m_data[it->m_line].first.asString().sliced(start, i - start),
             (i < po.m_fr.m_data[it->m_line].first.length() ?
@@ -6503,7 +6503,7 @@ Parser<Trait>::finishRule3HtmlTag(typename Delims::iterator it,
                     long long int i = it->m_pos + 1;
 
                     i = skipIf<Trait>(i, po.m_fr.m_data[it->m_line].first.asString(),
-                        [](const typename Trait::Char &ch){ return (ch != s_lessSignChar<Trait>); });
+                        [](const typename Trait::Char &ch) { return (ch != s_lessSignChar<Trait>); });
 
                     if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
                         eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 3, onLine);
@@ -6545,7 +6545,7 @@ Parser<Trait>::finishRule4HtmlTag(typename Delims::iterator it,
                 long long int i = it->m_pos + 1;
 
                 i = skipIf<Trait>(i, po.m_fr.m_data[it->m_line].first.asString(),
-                    [](const typename Trait::Char &ch){ return (ch != s_lessSignChar<Trait>); });
+                    [](const typename Trait::Char &ch) { return (ch != s_lessSignChar<Trait>); });
 
                 if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
                     eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 4, onLine);
@@ -6588,7 +6588,7 @@ Parser<Trait>::finishRule5HtmlTag(typename Delims::iterator it,
                     long long int i = it->m_pos + 1;
 
                     i = skipIf<Trait>(i, po.m_fr.m_data[it->m_line].first.asString(),
-                        [](const typename Trait::Char &ch){ return (ch != s_lessSignChar<Trait>); });
+                        [](const typename Trait::Char &ch) { return (ch != s_lessSignChar<Trait>); });
 
                     if (onLine || !isNewBlockIn(po.m_fr, start->m_line, it->m_line)) {
                         eatRawHtml(po.m_line, po.m_pos, it->m_line, i, po, true, 5, onLine);
@@ -6788,7 +6788,7 @@ Parser<Trait>::htmlTagRule(typename Delims::iterator it,
             Trait::latin1ToString("track"),    Trait::latin1ToString("ul")};
 
         const auto i = skipIf<Trait>(1, tag,
-            [](const typename Trait::Char &ch){ return s_validHtmlTagLetters.contains(ch); });
+            [](const typename Trait::Char &ch) { return s_validHtmlTagLetters.contains(ch); });
 
         if (i < tag.length()) {
             return -1;
@@ -6941,7 +6941,7 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::iterator it,
             const auto url = po.m_fr.m_data.at(it->m_line).first.asString().sliced(
                 it->m_pos + 1, nit->m_pos - it->m_pos - 1);
 
-            const auto i = skipIf<Trait>(0, url, [](const typename Trait::Char &ch){ return !ch.isSpace(); });
+            const auto i = skipIf<Trait>(0, url, [](const typename Trait::Char &ch) { return !ch.isSpace(); });
 
             bool isUrl = (i == url.length());
 
