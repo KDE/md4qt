@@ -22,3 +22,5 @@ outputformats = HTML
 
 depends += \
     qtcore
+
+tagfile = md4qt.tags
