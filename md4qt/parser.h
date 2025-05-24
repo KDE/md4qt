@@ -1583,13 +1583,13 @@ template<class Trait>
 inline bool
 isEmail(const typename Trait::String &url)
 {
-    auto isAllowed = [](const typename Trait::Char &ch) -> bool {
+    static const auto isAllowed = [](const typename Trait::Char &ch) -> bool {
         const auto unicode = ch.unicode();
         return ((unicode >= 48 && unicode <= 57) || (unicode >= 97 && unicode <= 122) ||
                 (unicode >= 65 && unicode <= 90));
     };
 
-    auto isAdditional = [](const typename Trait::Char &ch) -> bool {
+    static const auto isAdditional = [](const typename Trait::Char &ch) -> bool {
         const auto unicode = ch.unicode();
         return (unicode == 33 || (unicode >= 35 && unicode <= 39) ||
                 unicode == 42 || unicode == 43 || (unicode >= 45 && unicode <= 47) ||
@@ -1606,7 +1606,7 @@ isEmail(const typename Trait::String &url)
         }
 
         i = skipIf<Trait>(i, url,
-            [&isAllowed, &isAdditional](const typename Trait::Char &ch) { return (isAllowed(ch) || isAdditional(ch)); },
+            [](const typename Trait::Char &ch) { return (isAllowed(ch) || isAdditional(ch)); },
             dogPos);
 
         if (i != dogPos) {
@@ -1632,7 +1632,7 @@ isEmail(const typename Trait::String &url)
             }
 
             start = skipIf<Trait>(start, url,
-                [&isAllowed](const typename Trait::Char &ch) { return (isAllowed(ch) || ch == s_minusChar<Trait>); },
+                [](const typename Trait::Char &ch) { return (isAllowed(ch) || ch == s_minusChar<Trait>); },
                 dotPos);
 
             if (start != dotPos) {
@@ -3802,7 +3802,7 @@ Parser<Trait>::parse(StringListStream<Trait> &stream,
 {
     ParserContext ctx;
 
-    auto clearCtx = [&]()
+    const auto clearCtx = [&]()
     {
         ctx.m_fragment.clear();
         ctx.m_type = BlockType::EmptyLine;
@@ -4730,7 +4730,7 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
         table->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
         table->setEndLine(fr.m_data.back().second.m_lineNumber);
 
-        auto parseTableRow = [&](const typename MdBlock<Trait>::Line &lineData) -> bool {
+        const auto parseTableRow = [&](const typename MdBlock<Trait>::Line &lineData) -> bool {
             const auto &row = lineData.first;
 
             if (row.asString().startsWith(s_4spacesString<Trait>)) {
@@ -5534,7 +5534,7 @@ makeText(long long int lastLine,
             isLineBreak<Trait>(po.m_fr.m_data.at(po.m_line).first.virginSubString())));
 
     // makeTOWLB
-    auto makeTOWLB = [&]() {
+    const auto makeTOWLB = [&]() {
         if (po.m_line != (long long int)(po.m_fr.m_data.size() - 1)) {
             const auto &line = po.m_fr.m_data.at(po.m_line).first.asString();
 
@@ -8482,7 +8482,7 @@ Parser<Trait>::isStyleClosed(typename Delims::iterator first,
         }
     };
 
-    auto tryCloseEmphasis = [&dropOpeners, this, &openers, &open](typename Delims::iterator first,
+    const auto tryCloseEmphasis = [&dropOpeners, this, &openers, &open](typename Delims::iterator first,
                                typename Delims::iterator it,
                                typename Delims::iterator last) -> bool
     {
@@ -8550,7 +8550,7 @@ Parser<Trait>::isStyleClosed(typename Delims::iterator first,
         return false;
     };
 
-    auto fillIterators = [](typename Delims::iterator first,
+    static const auto fillIterators = [](typename Delims::iterator first,
                             typename Delims::iterator last) -> std::vector<typename Delims::iterator>
     {
         std::vector<typename Delims::iterator> res;
@@ -10303,7 +10303,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
 
         bool updateIndent = false;
 
-        auto addListMakeNew = [&]() {
+        const auto addListMakeNew = [&]() {
             if (!list->isEmpty() && !collectRefLinks) {
                 parent->appendItem(list);
             }
@@ -10319,7 +10319,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
             }
         };
 
-        auto processLastHtml = [&](std::shared_ptr<ListItem<Trait>> resItem) {
+        const auto processLastHtml = [&](std::shared_ptr<ListItem<Trait>> resItem) {
             if (html.m_html && resItem) {
                 html.m_parent = (resItem->startLine() == html.m_html->startLine() ||
                     html.m_html->startColumn() >= resItem->startColumn() + indent ?
@@ -10349,7 +10349,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
             }
         };
 
-        auto processListItem = [&]() {
+        const auto processListItem = [&]() {
             MdBlock<Trait> block = {listItem, 0};
 
             std::shared_ptr<ListItem<Trait>> resItem;
@@ -10465,6 +10465,15 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                              RawHtmlBlock<Trait> &html,
                              std::shared_ptr<ListItem<Trait>> *resItem)
 {
+    static const auto setHtmlParent = [](RawHtmlBlock<Trait> &html)
+    {
+        html.m_parent = html.findParent(html.m_html->startColumn());
+
+        if (!html.m_parent) {
+            html.m_parent = html.m_topParent;
+        }
+    };
+
     {
         const auto it = (std::find_if(fr.m_data.rbegin(), fr.m_data.rend(), [](const auto &s) {
                             return !s.first.isEmpty();
@@ -10576,7 +10585,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
     std::vector<std::pair<RawHtmlBlock<Trait>, long long int>> htmlToAdd;
     long long int line = -1;
 
-    auto parseStream = [&](StringListStream<Trait> &stream) -> long long int
+    const auto parseStream = [&](StringListStream<Trait> &stream) -> long long int
     {
         const auto tmpHtml = html;
         long long int line = -1;
@@ -10589,9 +10598,9 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         return line;
     };
 
-    auto processHtml = [&](auto it) -> long long int
+    const auto processHtml = [&](auto it) -> long long int
     {
-        auto finishHtml = [&]()
+        const auto finishHtml = [&]()
         {
             if (html.m_html) {
                 htmlToAdd.push_back({html, html.m_parent->items().size()});
@@ -10601,11 +10610,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
         };
 
         if (html.m_html.get()) {
-            html.m_parent = html.findParent(html.m_html->startColumn());
-
-            if (!html.m_parent) {
-                html.m_parent = html.m_topParent;
-            }
+            setHtmlParent(html);
 
             data.clear();
 
@@ -10800,11 +10805,7 @@ Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
             line = parseStream(stream);
 
             if (html.m_html) {
-                html.m_parent = html.findParent(html.m_html->startColumn());
-
-                if (!html.m_parent) {
-                    html.m_parent = html.m_topParent;
-                }
+                setHtmlParent(html);
             }
         }
     } else {
