@@ -84,6 +84,10 @@ enum class ItemType : int {
  * \inheaderfile md4qt/doc.h
  *
  * \brief Base for any thing with start and end position.
+ *
+ * Such information may be needed for syntax highlighters, for example.
+ *
+ * \note Start position of the document has coordinates (0, 0).
  */
 class WithPosition
 {
@@ -236,6 +240,10 @@ class Document;
  * \inheaderfile md4qt/doc.h
  *
  * \brief Base class for item in Markdown document.
+ *
+ * All items in MD::Document derived from this class. Main thing that this class does
+ * is a virtual method MD::Item::type that return type of the item, so when working
+ * with MD::Document a developer can know what type of item he has a pointer to.
  */
 template<class Trait>
 class Item : public WithPosition
@@ -295,6 +303,18 @@ enum TextOption {
  * \inheaderfile md4qt/doc.h
  *
  * \brief Emphasis in the Markdown document.
+ *
+ * Information about where empasises start and end is needed for syntax highlighters.
+ * Any item in MD::Paragraph is MD::ItemWithOpts that stores information about
+ * openers and closer of emphasises if they are presented before/after the given item
+ * in paragraph. A developer may just check MD::ItemWithOpts::openStyles and
+ * MD::ItemWithOpts::closeStyles for data in them, and he will know all information
+ * about delimiters that started or ended style of the item.
+ *
+ * Such information may be needed for developing additional styles (plugins), superscripts, subscripts,
+ * for example.
+ *
+ * \sa MD::ItemWithOpts
  */
 class StyleDelim final : public WithPosition
 {
@@ -470,6 +490,11 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Page break.
+ *
+ * Like MD::Anchor starts a file in MD::Document, MD::PageBreak ends a file.
+ * MD::PageBreak may appear in MD::Document only in recursive mode.
+ *
+ * \note The last file in the document does not have a page break.
  */
 template<class Trait>
 class PageBreak final : public Item<Trait>
@@ -512,6 +537,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Horizontal line.
+ *
+ * Thematic break in Markdown file. In HTML this is usually a \c {<hr />} tag.
  */
 template<class Trait>
 class HorizontalLine final : public Item<Trait>
@@ -557,6 +584,12 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Just an anchor.
+ *
+ * This library supports recursive Markdown parsing - parsed Markdown file may has links
+ * to other Markdown files, that may be parsed recursively with the root file.
+ * So in the resulting document can be represented more than one Markdown file. Each file in the
+ * document starts with MD::Anchor, it just shows that during traversing through
+ * the document you reached new file.
  */
 template<class Trait>
 class Anchor final : public Item<Trait>
@@ -616,6 +649,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Raw HTML.
+ *
+ * HTML injection in Markdown. When converting to HTML this item should be converted to HTML
+ * by inserting returned by MD::RawHtml::text string.
  */
 template<class Trait>
 class RawHtml final : public ItemWithOpts<Trait>
@@ -719,6 +755,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Text item in Paragraph.
+ *
+ * Regular text in paragraph. Information in these items in paragraph is a subject
+ * for custom plugins implementation.
  */
 template<typename Trait>
 class Text : public ItemWithOpts<Trait>
@@ -800,6 +839,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Line break.
+ *
+ * Line break in Markdown. This item in HTML is a usual \c {<br />}.
  */
 template<class Trait>
 class LineBreak final : public Text<Trait>
@@ -845,6 +886,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Abstract block (storage of child items).
+ *
+ * Base class for any item in MD::Document that may has children items.
+ *
+ * \sa MD::Paragraph, MD::Blockquote, MD::List, MD::ListItem, MD::TableCell, MD::Footnote.
  */
 template<class Trait>
 class Block : public Item<Trait>
@@ -965,6 +1010,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Paragraph.
+ *
+ * Block of inline items, such as MD::Text, MD::Link, MD::Image,
+ * MD::RawHtml, MD::Code, MD::Math, MD::LineBreak, MD::FootnoteRef.
  */
 template<class Trait>
 class Paragraph final : public Block<Trait>
@@ -1008,6 +1056,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Heading.
+ *
+ * Any heading in Markdown.
  */
 template<class Trait>
 class Heading final : public Item<Trait>
@@ -1236,6 +1286,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Blockquote.
+ *
+ * Blockquote block in Markdown.
  */
 template<class Trait>
 class Blockquote final : public Block<Trait>
@@ -1308,6 +1360,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief List item in a list.
+ *
+ * List item in a list. List may has only list items, all other content is stored in list items.
+ *
+ * \sa MD::List
  */
 template<class Trait>
 class ListItem final : public Block<Trait>
@@ -1539,6 +1595,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief List.
+ *
+ * List in Markdown. This class is derived from MD::Block, but actually will has only
+ * MD::ListItem as children.
  */
 template<class Trait>
 class List final : public Block<Trait>
@@ -1582,6 +1641,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Base class for links.
+ *
+ * Base class for any links in Markdown, even images.
+ *
+ * \sa MD::Link, MD::Image.
  */
 template<class Trait>
 class LinkBase : public ItemWithOpts<Trait>
@@ -1753,6 +1816,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Image.
+ *
+ * Image in Markdown.
  */
 template<class Trait>
 class Image final : public LinkBase<Trait>
@@ -1796,6 +1861,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Link.
+ *
+ * Link in Markdown. Doesn't matter what kind of link it is - autolink, shortcut link,
+ * GitHub flavored Markdown autolinks, all links will be stored in the document with this item.
  */
 template<class Trait>
 class Link final : public LinkBase<Trait>
@@ -1875,6 +1943,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Code.
+ *
+ * Block of code in Markdown. Used not only for fenced code blocks, indented code blocks, but
+ * for code spans too.
  */
 template<class Trait>
 class Code : public ItemWithOpts<Trait>
@@ -2101,6 +2172,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief LaTeX math expression.
+ *
+ * LaTeX math expression in Markdown.
  */
 template<class Trait>
 class Math final : public Code<Trait>
@@ -2168,6 +2241,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Table cell.
+ *
+ * Block of items in table cell in GitHub flavored Markdown tables.
+ *
+ * \sa MD::TableRow, MD::Table.
  */
 template<class Trait>
 class TableCell final : public Block<Trait>
@@ -2211,6 +2288,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Table row.
+ *
+ * Row of table cells in GitHub flavored Markdown tables.
+ *
+ * \sa MD::TableCell, MD::Table.
  */
 template<class Trait>
 class TableRow final : public Item<Trait>
@@ -2302,6 +2383,10 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Table.
+ *
+ * GitHub flavored Markdown table.
+ *
+ * \sa MD::TableCell, MD::TableRow.
  */
 template<class Trait>
 class Table final : public Item<Trait>
@@ -2458,6 +2543,9 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Footnote reference.
+ *
+ * Inline footnote reference in MD::Paragraph. Ususally renders as
+ * superscript number.
  */
 template<class Trait>
 class FootnoteRef final : public Text<Trait>
@@ -2543,6 +2631,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Footnote.
+ *
+ * Footnote block in Markdown.
  */
 template<class Trait>
 class Footnote final : public Block<Trait>
@@ -2610,6 +2700,8 @@ private:
  * \inheaderfile md4qt/doc.h
  *
  * \brief Document.
+ *
+ * Markdown document.
  */
 template<class Trait>
 class Document final : public Block<Trait>

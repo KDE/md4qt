@@ -32,6 +32,8 @@ using ItemFunctor = std::function<void(Item<Trait> *)>;
  * \inheaderfile md4qt/algo.h
  *
  * \brief Namespace for some implemetation details, but useful for reuse.
+ *
+ * Namespace for reusable auxiliary data structures.
  */
 namespace details
 {

@@ -46,6 +46,8 @@
  * \inheaderfile md4qt/parser.h
  *
  * \brief Main namespace of md4qt library.
+ *
+ * All classes and functions of \c {md4qt} library is defined in this namespace.
  */
 namespace MD
 {
