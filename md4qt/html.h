@@ -30,7 +30,34 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/html.h
  *
- * \brief HTML visitor interface to walk through Document.
+ * \brief HTML visitor interface to walk through the document.
+ *
+ * This is visitor to convert Markdown document to HTML string. This class is highly
+ * customizable, absolutelly everything may be overriden, all data members are protected
+ * so a developer won't have problems with customizaion.
+ *
+ * As example of customization have a look at the following code.
+ *
+ * \code
+ * class HtmlVisitor : public MD::details::HtmlVisitor<MD::QStringTrait>
+ * {
+ * protected:
+ *     QString prepareTextForHtml(const QString &t) override
+ *     {
+ *         auto tmp = MD::details::HtmlVisitor<MD::QStringTrait>::prepareTextForHtml(t);
+ *         tmp.replace(QLatin1Char('$'), QStringLiteral("<span>$</span>"));
+ *
+ *         return tmp;
+ *     }
+ * };
+ * \endcode
+ *
+ * In this example we convert \c {$} character to \c {<span>$</span>} when inserting string to HTML.
+ * This is needed to disable processing of \c {$} character in HTML as start/end of \c {LaTeX} equation
+ * by some JavaScript, like \c {KaTeX}, to prevent wrong rendering of standalone \c {$} character.
+ *
+ * MD::details::HtmlVisitor doesn't do this protection, so if in your case you use rendering of \c {LaTeX}
+ * math equation and enframe them by \c {$} character in HTML, you will need something like the above example.
  */
 template<class Trait>
 class HtmlVisitor : public Visitor<Trait>
