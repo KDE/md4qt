@@ -219,7 +219,7 @@ TEST_CASE("is_email")
     MD::RawHtmlBlock<TRAIT> html;                                                                                                                              \
     const MD::TextPluginsMap<TRAIT> textPlugins;                                                                                                               \
                                                                                                                                                                \
-    MD::TextParsingOpts<TRAIT> po = {fr, parent, nullptr, doc, links, TRAIT::String(), TRAIT::String(), false, false, html, textPlugins};                      \
+    MD::TextParsingOpts<TRAIT> po = {fr, parent, doc, links, TRAIT::String(), TRAIT::String(), false, false, html, textPlugins};                      \
                                                                                                                                                                \
     auto p = std::make_shared<MD::Paragraph<TRAIT>>();
 

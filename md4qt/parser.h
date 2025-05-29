@@ -407,14 +407,23 @@ isOrderedList(const typename Trait::String &s,
  */
 template<class Trait>
 struct RawHtmlBlock {
+    // actual HTML item.
     std::shared_ptr<RawHtml<Trait>> m_html = {};
+    // parent item of this HTML item.
     std::shared_ptr<Block<Trait>> m_parent = {};
+    // very top possible parent of this HTML item.
     std::shared_ptr<Block<Trait>> m_topParent = {};
     using SequenceOfBlock = std::vector<std::pair<std::shared_ptr<Block<Trait>>, long long int>>;
+    // current sequence of block items that was formed before HTML processing started.
     SequenceOfBlock m_blocks = {};
+    // map of sequences of blocks that are parents of a key block.
     std::unordered_map<std::shared_ptr<Block<Trait>>, SequenceOfBlock> m_toAdjustLastPos = {};
+    // HTML rule type.
     int m_htmlBlockType = -1;
+    // this flag is true when HTML processing was not finished, i.e next parsings possibly should
+    // finish started HTML.
     bool m_continueHtml = false;
+    // is this HTML item an online (started on new line), i.e. not inline.
     bool m_onLine = false;
 
     std::shared_ptr<Block<Trait>>
@@ -443,10 +452,14 @@ struct RawHtmlBlock {
  * \brief Internal structure for auxiliary information about a line in Markdown.
  */
 struct MdLineData {
+    // virgin line number
     long long int m_lineNumber = -1;
-    using CommentData = std::pair<char, bool>;
-    using CommentDataMap = std::map<long long int, CommentData>;
     // std::pair< closed, valid >
+    // closed is a number of "-" characters before ">" that forms ending of HTML comment.
+    // may has values 0, 1, 2 if closed, or -1 if a close was not found.
+    using CommentData = std::pair<char, bool>;
+    // <virgin position on line of "<" character, forming start of HTML comment, comment data>
+    using CommentDataMap = std::map<long long int, CommentData>;
     CommentDataMap m_htmlCommentData = {};
     // May this line break a list?
     bool m_mayBreakList = false;
@@ -468,8 +481,11 @@ struct MdBlock {
     using Line = std::pair<typename Trait::InternalString, MdLineData>;
     using Data = typename Trait::template Vector<Line>;
 
+    // lines of a block.
     Data m_data;
+    // count of empty lines before this block.
     long long int m_emptyLinesBefore = 0;
+    // flags that this block ends by empty line.
     bool m_emptyLineAfter = true;
 }; // struct MdBlock
 
@@ -496,6 +512,8 @@ emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
  * \inheaderfile md4qt/parser.h
  *
  * \brief Wrapper for typename Trait::StringList to be behaved like a stream.
+ *
+ * This is actual stream of lines that parser works internally with.
  */
 template<class Trait>
 class StringListStream final
@@ -507,11 +525,19 @@ public:
     {
     }
 
+    /*!
+     * Returns whether this stream at end.
+     */
     bool atEnd() const
     {
         return (m_pos >= (long long int)m_stream.size());
     }
 
+    /*!
+     * Returns current line from stream.
+     *
+     * The second parameter of returned pair is a flag informs that this line may break block forming a list.
+     */
     std::pair<typename Trait::InternalString, bool> readLine()
     {
         const std::pair<typename Trait::InternalString, bool> ret =
@@ -522,27 +548,46 @@ public:
         return ret;
     }
 
+    /*!
+     * Returns current virgin line number.
+     */
     long long int currentLineNumber() const
     {
         return (m_pos < size() ? m_stream.at(m_pos).second.m_lineNumber :
                                  (size() > 0 ? m_stream.at(0).second.m_lineNumber + size() : -1));
     }
 
+    /*!
+     * Returns current local line number. Lines numbering starts at 0.
+     */
     long long int currentStreamPos() const
     {
         return m_pos;
     }
 
+    /*!
+     * Returns line's string at local position.
+     *
+     * \a pos Local position.
+     */
     typename Trait::InternalString lineAt(long long int pos)
     {
         return m_stream.at(pos).first;
     }
 
+    /*!
+     * Returns count of lines in this stream.
+     */
     long long int size() const
     {
         return m_stream.size();
     }
 
+    /*!
+     * Set current line to line with a given virgin line number.
+     *
+     * \a lineNumber Virgin line number.
+     */
     void setLineNumber(long long int lineNumber)
     {
         m_pos = 0;
@@ -671,6 +716,7 @@ isCodeFences(const typename Trait::String &s, bool closing = false)
  *
  * \brief Helper for process reverse solidus characters.
  *
+ * Simplifier for algorithms that handles reverse solidus characters.
  */
 template<class Trait>
 struct ReverseSolidusHandler {
@@ -1348,9 +1394,10 @@ using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>,
  */
 template<class Trait>
 struct TextParsingOpts {
+    // current block of lines.
     MdBlock<Trait> &m_fr;
+    // current parent for items.
     std::shared_ptr<Block<Trait>> m_parent;
-    std::shared_ptr<RawHtml<Trait>> m_tmpHtml;
     std::shared_ptr<Document<Trait>> m_doc;
     typename Trait::StringList &m_linksToParse;
     typename Trait::String m_workingPath;
@@ -6267,8 +6314,6 @@ eatRawHtml(long long int line,
             initLastItemWithOpts<Trait>(po, po.m_html.m_html);
             po.m_html.m_html->setOpts(po.m_opts);
             po.m_lastText = nullptr;
-        } else {
-            po.m_tmpHtml = po.m_html.m_html;
         }
 
         const auto online = po.m_html.m_onLine;
@@ -9617,7 +9662,7 @@ Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
 
     auto delims = collectDelimiters(fr.m_data);
 
-    TextParsingOpts<Trait> po = {fr, p, nullptr, doc, linksToParse, workingPath, fileName,
+    TextParsingOpts<Trait> po = {fr, p, doc, linksToParse, workingPath, fileName,
         collectRefLinks, ignoreLineBreak, html, m_textPlugins};
     typename Delims::iterator styleStackBottom = delims.end();
 
@@ -9933,7 +9978,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
 
         RawHtmlBlock<Trait> html;
 
-        TextParsingOpts<Trait> po = {fr, f, nullptr, doc, linksToParse, workingPath, fileName,
+        TextParsingOpts<Trait> po = {fr, f, doc, linksToParse, workingPath, fileName,
             collectRefLinks, false, html, m_textPlugins};
         po.m_lastTextLine = fr.m_data.size();
         po.m_lastTextPos = fr.m_data.back().first.length();
