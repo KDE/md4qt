@@ -126,6 +126,8 @@ bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * A complexity of walking is N*LOG(N), whereas searching is LOG(N).
  *
  * \note Walking will be refactored to have O(N) complexity.
+ *
+ * \sa MD::Visitor
  */
 template<class Trait>
 class PosCache : public MD::Visitor<Trait>
@@ -135,7 +137,7 @@ public:
     ~PosCache() override = default;
 
     /*!
-     * Initialize m_cache with the give document.
+     * Initialize m_cache with the given document.
      *
      * \note Document should not be recursive.
      *

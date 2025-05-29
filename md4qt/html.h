@@ -30,7 +30,7 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/html.h
  *
- * \brief HTML visitor interface to walk through the document.
+ * \brief HTML visitor interface to walk through the MD:Document.
  *
  * This is visitor to convert Markdown document to HTML string. This class is highly
  * customizable, absolutelly everything may be overriden, all data members are protected
