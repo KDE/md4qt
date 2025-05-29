@@ -29,6 +29,9 @@ namespace details
  * \inheaderfile md4qt/poscache.h
  *
  * \brief Cached position of Item.
+ *
+ * Just a data structure to hold information about positions and pointers to items.
+ * Purely for internal use, a developer should not have a need to work with this structure.
  */
 template<class Trait>
 struct PosRange {
@@ -115,6 +118,14 @@ bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * \inheaderfile md4qt/poscache.h
  *
  * \brief Cache of Markdown items to be accessed via position.
+ *
+ * A visitor that during walking through a document gathers information about positions of items
+ * and stores it internally. When positions cache is initialized a developer can search for items
+ * by its positions with MD::PosCache::findFirstInCache method.
+ *
+ * A complexity of walking is N*LOG(N), whereas searching is LOG(N).
+ *
+ * \note Walking will be refactored to have O(N) complexity.
  */
 template<class Trait>
 class PosCache : public MD::Visitor<Trait>
@@ -159,7 +170,7 @@ public:
     using Items = typename Trait::template Vector<Item<Trait> *>;
 
     /*!
-     * Returns first occurense of Markdown item with all first children by the give position.
+     * Returns first occurence of Markdown item with all first children by the given position.
      *
      * \a pos Position.
      */

@@ -858,18 +858,28 @@ protected:
      * \inmodule md4qt
      *
      * \brief Auxiliary struct to process footnotes.
+     *
+     * This structure is used to form ID of footnote reference in generated HTML.
+     *
+     * ID of footnote reference in HTML looks like "ref-{FOOTNOTE_ID}-{NUMBER_OF_REFERENCE_WITH_THIS_FOOTNOTE_ID}"
      */
     struct FootnoteRefStuff {
         /*!
          * ID of footnote.
+         *
+         * This ID places to {FOOTNOTE_ID}.
          */
         typename Trait::String m_id;
         /*!
          * Count of references with this ID.
+         *
+         * Used to generate back links from footnote to footnote reference.
          */
         long long int m_count = 0;
         /*!
          * Number of footnote reference with this ID.
+         *
+         * This number places to {NUMBER_OF_REFERENCE_WITH_THIS_FOOTNOTE_ID}.
          */
         long long int m_current = 0;
     };
