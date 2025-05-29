@@ -48,6 +48,13 @@ namespace details
  * \inheaderfile md4qt/algo.h
  *
  * \brief Visitor for algorithms.
+ *
+ * The main difference from MD::Visitor is that this class during walking through the
+ * document takes into account nesting level of the item. If nesting level reached defined value
+ * it won't process anything further. And if type of the item is in set types walking through
+ * the document will invoke a given function object for that item.
+ *
+ * \sa MD::Visitor
  */
 template<class Trait>
 class AlgoVisitor : public Visitor<Trait>
