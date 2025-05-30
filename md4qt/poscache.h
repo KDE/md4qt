@@ -11,7 +11,9 @@
 // C++ include.
 #include <algorithm>
 #include <cassert>
+#include <stack>
 #include <vector>
+#include <memory>
 
 namespace MD
 {
@@ -35,6 +37,38 @@ namespace details
  */
 template<class Trait>
 struct PosRange {
+    PosRange(long long int startColumn, long long int startLine,
+             long long int endColumn, long long int endLine)
+        : m_startColumn(startColumn)
+        , m_startLine(startLine)
+        , m_endColumn(endColumn)
+        , m_endLine(endLine)
+    {
+    }
+
+    PosRange(long long int startColumn, long long int startLine,
+             long long int endColumn, long long int endLine,
+             Item<Trait> *item)
+        : m_startColumn(startColumn)
+        , m_startLine(startLine)
+        , m_endColumn(endColumn)
+        , m_endLine(endLine)
+        , m_item(item)
+    {
+    }
+
+    PosRange(long long int startColumn, long long int startLine,
+             long long int endColumn, long long int endLine,
+             Item<Trait> *item, const std::vector<std::shared_ptr<PosRange<Trait>>> &children)
+        : m_startColumn(startColumn)
+        , m_startLine(startLine)
+        , m_endColumn(endColumn)
+        , m_endLine(endLine)
+        , m_item(item)
+        , m_children(children)
+    {
+    }
+
     /*!
      * Start column
      */
@@ -58,7 +92,7 @@ struct PosRange {
     /*!
      * List of children.
      */
-    std::vector<PosRange<Trait>> m_children = {};
+    std::vector<std::shared_ptr<PosRange<Trait>>> m_children = {};
 
     /*!
      * Returns whether position valid.
@@ -108,6 +142,18 @@ bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
 
 } /* namespace details */
 
+template<class Trait>
+bool comparePosRangeLower(const std::shared_ptr<details::PosRange<Trait>> &ptr, const details::PosRange<Trait> &range)
+{
+    return (*ptr.get() < range);
+}
+
+template<class Trait>
+bool comparePosRangeUpper(const details::PosRange<Trait> &range, const std::shared_ptr<details::PosRange<Trait>> &ptr)
+{
+    return (range < *ptr.get());
+}
+
 //
 // PosCache
 //
@@ -123,9 +169,7 @@ bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * and stores it internally. When positions cache is initialized a developer can search for items
  * by its positions with MD::PosCache::findFirstInCache method.
  *
- * A complexity of walking is N*LOG(N), whereas searching is LOG(N).
- *
- * \note Walking will be refactored to have O(N) complexity.
+ * A complexity of walking is O(N), whereas searching is LOG(N).
  *
  * \sa MD::Visitor
  */
@@ -197,21 +241,25 @@ protected:
      * \a pos Position of sought-for item.
      */
     details::PosRange<Trait> *findInCache(
-            std::vector<details::PosRange<Trait>> &vec,
+            std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
             const details::PosRange<Trait> &pos) const
     {
-        const auto it = std::lower_bound(vec.begin(), vec.end(), pos);
-
-        if (it != vec.end() && *it == pos) {
-            if (!it->m_children.empty()) {
-                auto nested = findInCache(it->m_children, pos);
-
-                return (nested ? nested : &(*it));
-            } else {
-                return &(*it);
-            }
+        if (!m_currentItems.empty()) {
+            return m_currentItems.top().get();
         } else {
-            return nullptr;
+            const auto it = std::lower_bound(vec.begin(), vec.end(), pos, comparePosRangeLower<Trait>);
+
+            if (it != vec.end() && *it->get() == pos) {
+                if (!it->get()->m_children.empty()) {
+                    auto nested = findInCache(it->get()->m_children, pos);
+
+                    return (nested ? nested : it->get());
+                } else {
+                    return it->get();
+                }
+            } else {
+                return nullptr;
+            }
         }
     }
 
@@ -225,17 +273,17 @@ protected:
      * \a res Reference to result of search.
      */
     void findFirstInCache(
-            const std::vector<details::PosRange<Trait>> &vec,
+            const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
             const details::PosRange<Trait> &pos,
             Items &res) const
     {
-        const auto it = std::lower_bound(vec.begin(), vec.end(), pos);
+        const auto it = std::lower_bound(vec.begin(), vec.end(), pos, comparePosRangeLower<Trait>);
 
-        if (it != vec.end() && *it == pos) {
-            res.push_back(it->m_item);
+        if (it != vec.end() && *it->get() == pos) {
+            res.push_back(it->get()->m_item);
 
-            if (!it->m_children.empty()) {
-                findFirstInCache(it->m_children, pos, res);
+            if (!it->get()->m_children.empty()) {
+                findFirstInCache(it->get()->m_children, pos, res);
             }
         }
     }
@@ -246,29 +294,52 @@ protected:
      * \a item Position for insertion.
      *
      * \a sort Should we sord when insert top-level item, or we can be sure that this item is last?
+     *
+     * \a insertInStack
      */
     void insertInCache(
             const details::PosRange<Trait> &item,
-            bool sort = false)
+            bool sort = false,
+            bool insertInStack = false)
     {
+        const auto insertInStackFunc = [this, insertInStack](std::shared_ptr<details::PosRange<Trait>> item) {
+            if (insertInStack) {
+                this->m_currentItems.push(item);
+            }
+        };
+
+        static const auto makeSharedPosRange = [](const details::PosRange<Trait> &range)
+                -> std::shared_ptr<details::PosRange<Trait>>
+        {
+            return std::make_shared<details::PosRange<Trait>>(range.m_startColumn, range.m_startLine,
+                                                       range.m_endColumn, range.m_endLine,
+                                                       range.m_item, range.m_children);
+        };
+
         if (!m_skipInCache) {
             assert(item.isValidPos());
 
             auto pos = findInCache(m_cache, item);
 
             if (pos) {
-                pos->m_children.push_back(item);
+                pos->m_children.push_back(makeSharedPosRange(item));
+
+                insertInStackFunc(pos->m_children.back());
             } else {
                 if (sort) {
-                    const auto it = std::upper_bound(m_cache.begin(), m_cache.end(), item);
+                    const auto it = std::upper_bound(m_cache.begin(), m_cache.end(), item, comparePosRangeUpper<Trait>);
 
                     if (it != m_cache.end()) {
-                        m_cache.insert(it, item);
+                        insertInStackFunc(*m_cache.insert(it, makeSharedPosRange(item)));
                     } else {
-                        m_cache.push_back(item);
+                        m_cache.push_back(makeSharedPosRange(item));
+
+                        insertInStackFunc(m_cache.back());
                     }
                 } else {
-                    m_cache.push_back(item);
+                    m_cache.push_back(makeSharedPosRange(item));
+
+                    insertInStackFunc(m_cache.back());
                 }
             }
         }
@@ -362,9 +433,13 @@ protected:
     {
         details::PosRange<Trait> r{p->startColumn(), p->startLine(), p->endColumn(), p->endLine(), p};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         Visitor<Trait>::onParagraph(p, wrap);
+
+        if (!m_skipInCache) {
+            m_currentItems.pop();
+        }
     }
 
     /*!
@@ -376,11 +451,13 @@ protected:
     {
         details::PosRange<Trait> r{h->startColumn(), h->startLine(), h->endColumn(), h->endLine(), h};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         if (h->text() && !h->text()->isEmpty()) {
             onParagraph(h->text().get(), false);
         }
+
+        m_currentItems.pop();
     }
 
     /*!
@@ -436,9 +513,11 @@ protected:
     {
         details::PosRange<Trait> r{b->startColumn(), b->startLine(), b->endColumn(), b->endLine(), b};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         Visitor<Trait>::onBlockquote(b);
+
+        m_currentItems.pop();
     }
 
     /*!
@@ -452,7 +531,7 @@ protected:
 
         details::PosRange<Trait> r{l->startColumn(), l->startLine(), l->endColumn(), l->endLine(), l};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         for (auto it = l->items().cbegin(), last = l->items().cend(); it != last; ++it) {
             if ((*it)->type() == ItemType::ListItem) {
@@ -461,6 +540,8 @@ protected:
                 first = false;
             }
         }
+
+        m_currentItems.pop();
     }
 
     /*!
@@ -472,7 +553,7 @@ protected:
     {
         details::PosRange<Trait> r{t->startColumn(), t->startLine(), t->endColumn(), t->endLine(), t};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         if (!t->isEmpty()) {
             int columns = 0;
@@ -497,6 +578,8 @@ protected:
                 }
             }
         }
+
+        m_currentItems.pop();
     }
 
     void onAnchor(Anchor<Trait> *) override
@@ -554,9 +637,8 @@ protected:
         insertInCache(r);
 
         if (l->p()) {
-            m_skipInCache = true;
+            RollbackBool skipInCacheRollback(m_skipInCache, true);
             onParagraph(l->p().get(), true);
-            m_skipInCache = false;
         }
     }
 
@@ -587,9 +669,8 @@ protected:
         insertInCache(r);
 
         if (i->p()) {
-            m_skipInCache = true;
+            RollbackBool skipInCacheRollback(m_skipInCache, true);
             onParagraph(i->p().get(), true);
-            m_skipInCache = false;
         }
     }
 
@@ -629,9 +710,11 @@ protected:
     {
         details::PosRange<Trait> r{f->startColumn(), f->startLine(), f->endColumn(), f->endLine(), f};
 
-        insertInCache(r, true);
+        insertInCache(r, true, true);
 
         Visitor<Trait>::onFootnote(f);
+
+        m_currentItems.pop();
     }
 
     /*!
@@ -645,20 +728,43 @@ protected:
     {
         details::PosRange<Trait> r{l->startColumn(), l->startLine(), l->endColumn(), l->endLine(), l};
 
-        insertInCache(r);
+        insertInCache(r, false, true);
 
         Visitor<Trait>::onListItem(l, first);
+
+        m_currentItems.pop();
     }
 
 protected:
     /*!
      * Cache.
      */
-    std::vector<details::PosRange<Trait>> m_cache;
+    std::vector<std::shared_ptr<details::PosRange<Trait>>> m_cache;
     /*!
      * Skip adding in cache.
      */
     bool m_skipInCache = false;
+
+private:
+    std::stack<std::shared_ptr<details::PosRange<Trait>>> m_currentItems;
+
+    struct RollbackBool {
+        RollbackBool(bool &variable, bool newValue)
+            : m_variable(variable)
+            , m_prevValue(variable)
+        {
+            m_variable = newValue;
+        }
+
+        ~RollbackBool()
+        {
+            m_variable = m_prevValue;
+        }
+
+    private:
+        bool &m_variable;
+        bool m_prevValue;
+    }; // struct RollbackBool
 }; // class PosCache
 
 } /* namespace MD */
