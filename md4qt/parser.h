@@ -1398,27 +1398,60 @@ struct TextParsingOpts {
     MdBlock<Trait> &m_fr;
     // current parent for items.
     std::shared_ptr<Block<Trait>> m_parent;
+    // document.
     std::shared_ptr<Document<Trait>> m_doc;
+    // list of URLs to parse in recursive mode.
     typename Trait::StringList &m_linksToParse;
+    // working directory.
     typename Trait::String m_workingPath;
+    // current file name.
     typename Trait::String m_fileName;
+    // flags that parser is collecting reference links.
     bool m_collectRefLinks;
+    // flags that hard line break should be ignored.
     bool m_ignoreLineBreak;
+    // pre-stored HTML.
     RawHtmlBlock<Trait> &m_html;
+    // text plugins.
     const TextPluginsMap<Trait> &m_textPlugins;
-    std::shared_ptr<Text<Trait>> m_lastText = {};
+    // indicates that previous thing was a reference link.
     bool m_wasRefLink = false;
+    // indicates that next line should be checked on its type, and possibly parsing should be breaked.
     bool m_checkLineOnNewType = false;
-    // This flag is set only in second step!
+    // This flag is set only in second step! Indicates  that there is nothing in paragraph yet.
     bool m_firstInParagraph = true;
+    // indicates that heading is allowed to be at this parsing state.
     bool m_headingAllowed = false;
 
+    /*!
+     * \class MD::TextParsingOpts::TextData
+     * \inmodule md4qt
+     * \inheaderfile md4qt/parser.h
+     *
+     * \brief Raw text data.
+     *
+     * Raw text data for corresponding text item in paragraph. Here text is not pre-processed
+     * with anything.
+     */
     struct TextData {
+        /*!
+         * String.
+         */
         typename Trait::String m_str;
+        /*!
+         * Local start position of string.
+         */
         long long int m_pos = -1;
+        /*!
+         * Local line number.
+         */
         long long int m_line = -1;
     };
 
+    /*!
+     * Raw text data. Text plugins should check text here. Size of this vector should be equal to
+     * a count of text items in paragraph.
+     */
     std::vector<TextData> m_rawTextData = {};
 
     inline void
@@ -1433,8 +1466,10 @@ struct TextParsingOpts {
         }
     }
 
+    // type of new block that was detected during parsing of paragraph.
     enum class Detected { Nothing, Table, HTML, Code, List, Blockquote }; // enum class Detected
 
+    // type of new block that was detected during parsing of paragraph.
     Detected m_detected = Detected::Nothing;
 
     inline bool
@@ -1453,12 +1488,17 @@ struct TextParsingOpts {
         }
     }
 
+    // current line (in process).
     long long int m_line = 0;
+    // current position (in process).
     long long int m_pos = 0;
-    long long int m_startTableLine = -1;
+    // last line that should pe parsed as paragraph, next line is a table.
     long long int m_lastTextLine = -1;
+    // last position that should pe parsed as paragraph, next position is a table.
     long long int m_lastTextPos = -1;
+    // count of columns in detected table.
     int m_columnsCount = -1;
+    // current style of text.
     int m_opts = TextWithoutFormat;
 
     struct StyleInfo {
@@ -1467,8 +1507,11 @@ struct TextParsingOpts {
         bool m_bothFlanking;
     };
 
+    // current opened styles.
     std::vector<StyleInfo> m_styles = {};
+    // current opened styles.
     typename ItemWithOpts<Trait>::Styles m_openStyles = {};
+    // last item in paragraph that can has styles. used to set closing styles.
     std::shared_ptr<ItemWithOpts<Trait>> m_lastItemWithStyle = nullptr;
 }; // struct TextParsingOpts
 
@@ -2075,6 +2118,8 @@ githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
  * \inheaderfile md4qt/parser.h
  *
  * \brief Markdown parser.
+ *
+ * Parser of Markdown.
  */
 template<class Trait>
 class Parser final
@@ -5449,8 +5494,6 @@ makeTextObject(const typename Trait::String &text,
 
         if (!po.m_collectRefLinks) {
             po.m_parent->appendItem(t);
-
-            po.m_lastText = t;
         }
     } else {
         po.m_pos = startPos;
@@ -5530,7 +5573,6 @@ checkForTableInParagraph(TextParsingOpts<Trait> &po,
 
             if (h && c && c == h) {
                 po.m_detected = TextParsingOpts<Trait>::Detected::Table;
-                po.m_startTableLine = i;
                 po.m_columnsCount = c;
                 po.m_lastTextLine = i - 1;
                 po.m_lastTextPos = po.m_fr.m_data[po.m_lastTextLine].first.length();
@@ -6313,7 +6355,6 @@ eatRawHtml(long long int line,
             po.m_parent->setEndLine(po.m_html.m_html->endLine());
             initLastItemWithOpts<Trait>(po, po.m_html.m_html);
             po.m_html.m_html->setOpts(po.m_opts);
-            po.m_lastText = nullptr;
         }
 
         const auto online = po.m_html.m_onLine;
@@ -6963,7 +7004,6 @@ Parser<Trait>::checkForMath(typename Delims::iterator it,
 
             po.m_pos = end->m_pos + end->m_len;
             po.m_line = end->m_line;
-            po.m_lastText = nullptr;
         }
 
         return end;
@@ -7017,7 +7057,6 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::iterator it,
 
                 po.m_wasRefLink = false;
                 po.m_firstInParagraph = false;
-                po.m_lastText = nullptr;
 
                 if (updatePos) {
                     po.m_pos = nit->m_pos + nit->m_len;
@@ -7101,7 +7140,6 @@ Parser<Trait>::makeInlineCode(long long int startLine,
 
     po.m_wasRefLink = false;
     po.m_firstInParagraph = false;
-    po.m_lastText = nullptr;
 }
 
 template<class Trait>
@@ -7460,8 +7498,6 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
 
     initLastItemWithOpts<Trait>(po, link);
 
-    po.m_lastText = nullptr;
-
     return link;
 }
 
@@ -7585,8 +7621,6 @@ Parser<Trait>::makeImage(const typename Trait::String &url,
     img->setUrlPos(urlPos);
 
     initLastItemWithOpts<Trait>(po, img);
-
-    po.m_lastText = nullptr;
 
     return img;
 }
