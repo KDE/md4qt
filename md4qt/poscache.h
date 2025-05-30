@@ -30,7 +30,7 @@ namespace details
  * \inmodule md4qt
  * \inheaderfile md4qt/poscache.h
  *
- * \brief Cached position of Item.
+ * \brief Cached position of MD::Item.
  *
  * Just a data structure to hold information about positions and pointers to items.
  * Purely for internal use, a developer should not have a need to work with this structure.
