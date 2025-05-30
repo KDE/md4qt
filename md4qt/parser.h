@@ -540,7 +540,7 @@ public:
      */
     bool atEnd() const
     {
-        return (m_pos >= (long long int)m_stream.size());
+        return (m_pos >= size());
     }
 
     /*!
@@ -551,7 +551,7 @@ public:
     std::pair<typename Trait::InternalString, bool> readLine()
     {
         const std::pair<typename Trait::InternalString, bool> ret =
-            {m_stream.at(m_pos).first, m_stream.at(m_pos).second.m_mayBreakList};
+            {m_stream[m_pos].first, m_stream[m_pos].second.m_mayBreakList};
 
         ++m_pos;
 
@@ -563,8 +563,8 @@ public:
      */
     long long int currentLineNumber() const
     {
-        return (m_pos < size() ? m_stream.at(m_pos).second.m_lineNumber :
-                                 (size() > 0 ? m_stream.at(0).second.m_lineNumber + size() : -1));
+        return (m_pos < size() ? m_stream[m_pos].second.m_lineNumber :
+                                 (size() > 0 ? m_stream.back().second.m_lineNumber + 1 : -1));
     }
 
     /*!
@@ -576,13 +576,25 @@ public:
     }
 
     /*!
+     * Set current line to line with a given local line number.
+     *
+     * \a lineNumber Local line number.
+     *
+     * \warning This method doesn't do any checks.
+     */
+    void setStreamPos(long long int lineNumber)
+    {
+        m_pos = lineNumber;
+    }
+
+    /*!
      * Returns line's string at local position.
      *
      * \a pos Local position.
      */
     typename Trait::InternalString lineAt(long long int pos)
     {
-        return m_stream.at(pos).first;
+        return m_stream[pos].first;
     }
 
     /*!
@@ -590,19 +602,19 @@ public:
      */
     long long int size() const
     {
-        return m_stream.size();
+        return static_cast<long long int>(m_stream.size());
     }
 
     /*!
      * Set current line to line with a given virgin line number.
      *
      * \a lineNumber Virgin line number.
+     *
+     * \warning This method doesn't do any checks.
      */
     void setLineNumber(long long int lineNumber)
     {
-        m_pos = 0;
-
-        m_pos += lineNumber - currentLineNumber();
+        m_pos = lineNumber - m_stream.front().second.m_lineNumber;
     }
 
 private:
@@ -3815,7 +3827,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
                     ++ctx.m_emptyLinesCount;
                 }
 
-                stream.setLineNumber(stream.currentLineNumber() - 1);
+                stream.setStreamPos(stream.currentStreamPos() - 1);
             } else {
                 ++ctx.m_emptyLinesCount;
             }
