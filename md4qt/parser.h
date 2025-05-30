@@ -404,6 +404,12 @@ isOrderedList(const typename Trait::String &s,
  * \inheaderfile md4qt/parser.h
  *
  * \brief Internal structure for pre-storing HTML.
+ *
+ * During splitting Markdown to blocks HTML treats as a text, paragraph. And on parsing paragraph may
+ * go with ending HTML. In this case parsing of paragraph will stop at detected HTML and HTML block
+ * may be not fully finished, i.e. next lines may be continuations of HTML block. In this case an object
+ * of this class is initialized, so when next block goes on parsing, parser knows that HTML block
+ * is not finished and should be continued. In other words this struct is for such cases.
  */
 template<class Trait>
 struct RawHtmlBlock {
@@ -450,6 +456,8 @@ struct RawHtmlBlock {
  * \inheaderfile md4qt/parser.h
  *
  * \brief Internal structure for auxiliary information about a line in Markdown.
+ *
+ * Auxiliary information for a line in Markdown for parser.
  */
 struct MdLineData {
     // virgin line number
@@ -475,6 +483,8 @@ struct MdLineData {
  * \inheaderfile md4qt/parser.h
  *
  * \brief Internal structure for block of text in Markdown.
+ *
+ * Block in Markdown.
  */
 template<class Trait>
 struct MdBlock {
@@ -2931,6 +2941,15 @@ Parser<Trait>::parse(const typename Trait::String &fileName,
     return doc;
 }
 
+/*!
+ * \class MD::TextStreamBase
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Base class for text stream.
+ *
+ * This is common things for text streams used for splitting string into lines.
+ */
 template<class Trait>
 class TextStreamBase
 {
@@ -2938,8 +2957,14 @@ protected:
     virtual ~TextStreamBase() = default;
 
 public:
+    /*!
+     * Returns whether stream at end.
+     */
     virtual bool atEnd() const = 0;
 
+    /*!
+     * Returns current line from stream and moves to next line.
+     */
     typename Trait::String readLine()
     {
         typename Trait::String line;
@@ -2971,12 +2996,27 @@ public:
     }
 
 protected:
+    /*!
+     * Returns current character from stream and moves to next character.
+     */
     virtual typename Trait::Char getChar() = 0;
 
 protected:
+    /*!
+     * Current position in stream.
+     */
     long long int m_pos = 0;
 };
 
+/*!
+ * \class MD::TextStream
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Actual text stream.
+ *
+ * Text stream which task is to split string into lines. It handles "\n", "\r", "\r\n" correctly.
+ */
 template<class Trait>
 class TextStream;
 
