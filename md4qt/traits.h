@@ -56,6 +56,11 @@ namespace MD
  * \inheaderfile md4qt/traits.h
  *
  * \brief Internal string, used to get virgin (original) string from transformed string.
+ *
+ * Actually this is a wrapper around string implemented to have ability to get virgin string/substring
+ * after implemented modifications. In other words - if from string "abc" remove letter "b" and then
+ * ask for virgin substring starting at position 0 and length 2, this class will give you virgin
+ * "abc" string.
  */
 template<class String, class Char, class Latin1Char>
 class InternalStringT
@@ -554,6 +559,9 @@ private:
  * \inheaderfile md4qt/traits.h
  *
  * \brief Wrapper for UChar32 to be used with MD::Parser.
+ *
+ * This class is an implementation of methods needed by MD::Parser
+ * methods to work with stand-alone character from MD::UnicodeString.
  */
 class UnicodeChar
 {
@@ -695,6 +703,9 @@ private:
  * \inheaderfile md4qt/traits.h
  *
  * \brief Wrapper for icu::UnicodeString to be used with MD::Parser.
+ *
+ * This is a subclass of icu::UnicodeString with implementations of methods
+ * needed by MD::Parser.
  */
 class UnicodeString final : public icu::UnicodeString
 {
@@ -925,6 +936,15 @@ public:
 // UrlUri
 //
 
+/*!
+ * \class MD::UrlUri
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * \brief URL validator.
+ *
+ * This is a URL validator implemented with help of \c {uriparser} library.
+ */
 class UrlUri
 {
 public:
@@ -994,7 +1014,9 @@ private:
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
  *
- * \brief Trait to use this library with std::string.
+ * \brief Trait to use this library with icu::UnicodeString.
+ *
+ * Trait for \c {md4qt} library to work with icu::UnicodeString as string.
  */
 struct UnicodeStringTrait {
     template<class T>
@@ -1173,6 +1195,8 @@ struct UnicodeStringTrait {
  * \inheaderfile md4qt/traits.h
  *
  * \brief Trait to use this library with QString.
+ *
+ * Trait for \c {md4qt} library to work with QString as string.
  */
 struct QStringTrait {
     template<class T>
