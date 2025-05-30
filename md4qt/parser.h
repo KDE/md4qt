@@ -540,7 +540,7 @@ public:
      */
     bool atEnd() const
     {
-        return (m_pos >= size());
+        return (m_pos >= size() || m_pos < 0);
     }
 
     /*!
@@ -3065,7 +3065,7 @@ protected:
     QChar getChar() override
     {
         if (m_pos < m_buf.size()) {
-            return m_buf.at(m_pos++);
+            return m_buf[m_pos++];
         } else if (!atEnd()) {
             fillBuf();
 
