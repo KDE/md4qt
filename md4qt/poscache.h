@@ -239,13 +239,18 @@ protected:
      * \a vec Cache of position.
      *
      * \a pos Position of sought-for item.
+     *
+     * \a ordered Indicates that we sure that searching item places after everything.
      */
     details::PosRange<Trait> *findInCache(
-            std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
-            const details::PosRange<Trait> &pos) const
+            const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
+            const details::PosRange<Trait> &pos,
+            bool ordered = false) const
     {
         if (!m_currentItems.empty()) {
             return m_currentItems.top().get();
+        } else if (ordered) {
+            return nullptr;
         } else {
             const auto it = std::lower_bound(vec.begin(), vec.end(), pos, comparePosRangeLower<Trait>);
 
@@ -295,7 +300,9 @@ protected:
      *
      * \a sort Should we sord when insert top-level item, or we can be sure that this item is last?
      *
-     * \a insertInStack
+     * \a insertInStack Indicates that this item is some kind a block with children that should be
+     *                  added into stack for fast finding parent item for the next children. This
+     *                  techinque allows to have O(N) walking complexity.
      */
     void insertInCache(
             const details::PosRange<Trait> &item,
@@ -319,7 +326,7 @@ protected:
         if (!m_skipInCache) {
             assert(item.isValidPos());
 
-            auto pos = findInCache(m_cache, item);
+            auto pos = findInCache(m_cache, item, !sort);
 
             if (pos) {
                 pos->m_children.push_back(makeSharedPosRange(item));
