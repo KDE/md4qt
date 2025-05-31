@@ -9,6 +9,7 @@
 #include <md4qt/doc.h>
 #include <md4qt/parser.h>
 #include <md4qt/html.h>
+#include <md4qt/poscache.h>
 
 #include <QFile>
 #include <QTest>
@@ -83,6 +84,18 @@ private Q_SLOTS:
 
         QBENCHMARK {
             MD::toHtml(doc);
+        }
+    }
+
+    void md4qt_poscache_walk()
+    {
+        MD::Parser<MD::QStringTrait> parser;
+
+        const auto doc = parser.parse(QStringLiteral("tests/manual/complex.md"), false);
+
+        QBENCHMARK {
+            MD::PosCache<MD::QStringTrait> cache;
+            cache.initialize(doc);
         }
     }
 
