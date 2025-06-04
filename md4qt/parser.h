@@ -21,13 +21,6 @@
 
 #endif // MD4QT_QT_SUPPORT
 
-#ifdef MD4QT_ICU_STL_SUPPORT
-
-// C++ include.
-#include <exception>
-
-#endif // MD4QT_ICU_STL_SUPPORT
-
 // C++ include.
 #include <algorithm>
 #include <cassert>
@@ -1081,17 +1074,6 @@ template<class Trait>
 typename Trait::StringList
 splitString(const typename Trait::String &str, const typename Trait::Char &ch);
 
-#ifdef MD4QT_ICU_STL_SUPPORT
-
-template<>
-inline typename UnicodeStringTrait::StringList
-splitString<UnicodeStringTrait>(const UnicodeString &str, const UnicodeChar &ch)
-{
-    return str.split(ch);
-}
-
-#endif
-
 #ifdef MD4QT_QT_SUPPORT
 
 template<>
@@ -1824,31 +1806,6 @@ isGitHubAutolink<QStringTrait>(const QString &url)
             && ((!u.scheme().isEmpty() && !u.host().isEmpty())
                 || (url.startsWith(s_wwwString<QStringTrait>) && url.length() >= 7 &&
                     url.indexOf(s_dotChar<QStringTrait>, 4) != -1)));
-}
-
-#endif
-
-#ifdef MD4QT_ICU_STL_SUPPORT
-
-template<>
-inline bool
-isValidUrl<UnicodeStringTrait>(const UnicodeString &url)
-{
-    const UrlUri u(url);
-
-    return (u.isValid() && !u.isRelative());
-}
-
-template<>
-inline bool
-isGitHubAutolink<UnicodeStringTrait>(const UnicodeString &url)
-{
-    const UrlUri u(url);
-
-    return (u.isValid()
-            && ((!u.scheme().isEmpty() && !u.host().isEmpty())
-                || (url.startsWith(s_wwwString<UnicodeStringTrait>) && url.length() >= 7 &&
-                    url.indexOf(s_dotChar<UnicodeStringTrait>, 4) != -1)));
 }
 
 #endif
@@ -3083,69 +3040,6 @@ private:
 
 #endif
 
-#ifdef MD4QT_ICU_STL_SUPPORT
-
-template<>
-class TextStream<UnicodeStringTrait> : public TextStreamBase<UnicodeStringTrait>
-{
-public:
-    TextStream(std::istream &stream)
-    {
-        std::vector<unsigned char> content;
-
-        stream.seekg(0, std::ios::end);
-        const auto ssize = stream.tellg();
-        content.resize((size_t)ssize + 1);
-        stream.seekg(0, std::ios::beg);
-        stream.read((char *)&content[0], ssize);
-        content[(size_t)ssize] = 0;
-
-        const auto z = std::count(content.cbegin(), content.cend(), 0);
-
-        if (z > 1) {
-            std::vector<unsigned char> tmp;
-            tmp.resize(content.size() + (z - 1) * 2);
-
-            for (size_t i = 0, j = 0; i < content.size() - 1; ++i, ++j) {
-                if (content[i] == 0) {
-                    // 0xFFFD - replacement character in UTF-8.
-                    tmp[j++] = 0xEF;
-                    tmp[j++] = 0xBF;
-                    tmp[j] = 0xBD;
-                } else {
-                    tmp[j] = content[i];
-                }
-            }
-
-            tmp[tmp.size() - 1] = 0;
-
-            std::swap(content, tmp);
-        }
-
-        m_str = UnicodeString::fromUTF8((char *)&content[0]);
-    }
-
-    bool atEnd() const override
-    {
-        return m_pos == m_str.size();
-    }
-
-protected:
-    UnicodeChar getChar() override
-    {
-        if (!atEnd()) {
-            return m_str[m_pos++];
-        } else {
-            return UnicodeChar();
-        }
-    }
-
-private:
-    UnicodeString m_str;
-};
-
-#endif
-
 /*!
  * \inheaderfile md4qt/parser.h
  *
@@ -4013,79 +3907,6 @@ Parser<QStringTrait>::parseFile(const QString &fileName,
             }
 
             parseStream(s, wd, fn, recursive, doc, ext, parentLinks, workingDirectory);
-        }
-    }
-}
-
-#endif
-
-#ifdef MD4QT_ICU_STL_SUPPORT
-
-template<>
-inline void
-Parser<UnicodeStringTrait>::parseFile(const UnicodeString &fileName,
-                                      bool recursive,
-                                      std::shared_ptr<Document<UnicodeStringTrait>> doc,
-                                      const std::vector<UnicodeString> &ext,
-                                      std::vector<UnicodeString> *parentLinks,
-                                      UnicodeString workingDirectory)
-{
-    if (UnicodeStringTrait::fileExists(fileName)) {
-        std::string fn;
-        fileName.toUTF8String(fn);
-
-        try {
-            auto e = UnicodeString::fromUTF8(std::filesystem::u8path(fn).extension().u8string());
-
-            if (!e.isEmpty()) {
-                e.remove(0, 1);
-            }
-
-            if (std::find(ext.cbegin(), ext.cend(), e.toLower()) != ext.cend()) {
-                auto path = std::filesystem::canonical(std::filesystem::u8path(fn));
-                std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);
-
-                if (file.good()) {
-                    const auto fileNameS = path.filename().u8string();
-                    auto wd = path.remove_filename().u8string();
-                    auto ufn = UnicodeString::fromUTF8(fileNameS);
-
-                    if (!wd.empty()) {
-                        wd.erase(wd.size() - 1, 1);
-                    }
-
-                    std::replace(wd.begin(), wd.end(), '\\', '/');
-                    workingDirectory.findAndReplace(s_reverseSolidusString<UnicodeStringTrait>,
-                                                    s_solidusString<UnicodeStringTrait>);
-
-                    if (!workingDirectory.isEmpty() &&
-                        UnicodeStringTrait::String(UnicodeString::fromUTF8(wd)).contains(workingDirectory)) {
-                        std::string folderPath;
-                        workingDirectory.toUTF8String(folderPath);
-                        auto folder = std::filesystem::directory_entry(folderPath);
-
-                        if (folder.exists() && folder.is_directory()) {
-                            auto tmp = UnicodeString::fromUTF8(
-                                        std::filesystem::canonical(std::filesystem::u8path(fn)).u8string());
-                            path = std::filesystem::canonical(folder.path());
-                            wd = path.u8string();
-
-                            std::replace(wd.begin(), wd.end(), '\\', '/');
-                            tmp.findAndReplace(s_reverseSolidusString<UnicodeStringTrait>,
-                                               s_solidusString<UnicodeStringTrait>);
-
-                            ufn = tmp.findAndReplace(UnicodeString::fromUTF8(wd), {});
-                            ufn.remove(0, 1);
-                        }
-                    }
-
-                    parseStream(file, UnicodeString::fromUTF8(wd), ufn,
-                                recursive, doc, ext, parentLinks, workingDirectory);
-
-                    file.close();
-                }
-            }
-        } catch (const std::exception &) {
         }
     }
 }
