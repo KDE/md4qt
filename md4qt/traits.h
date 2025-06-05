@@ -11,6 +11,7 @@
 // C++ include.
 #include <map>
 #include <memory>
+#include <variant>
 
 // Qt include.
 #include <QFileInfo>
@@ -26,6 +27,81 @@ namespace MD
 {
 
 /*!
+ * \namespace MD::impl
+ * \inmodule md4qt
+ * \inheaderfile md4qt/traits.h
+ *
+ * \brief Namespace for some implemetation details, shouldn't be needed by a developers.
+ *
+ * Namespace with some implementation details, in most cases shouldn't be needed by developers.
+ */
+namespace impl
+{
+
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
+ * Returns a length of a string defined by string variant.
+ *
+ * \a v String variant.
+ */
+template<class StringVariant, class String, class StringView>
+inline long long int length(const StringVariant &v)
+{
+    if (std::holds_alternative<String>(v)) {
+        return std::get<String>(v).length();
+    } else {
+        return std::get<StringView>(v).length();
+    }
+}
+
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
+ * Returns a character at a given position.
+ *
+ * \a v String variant.
+ *
+ * \a position Position of a character.
+ */
+template<class StringVariant, class String, class StringView, class Char>
+inline Char getChar(const StringVariant &v, long long int position)
+{
+    if (std::holds_alternative<String>(v)) {
+        return std::get<String>(v).at(position);
+    } else {
+        return std::get<StringView>(v).at(position);
+    }
+}
+
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
+ * Returns a sliced string variant.
+ *
+ * \a v String variant.
+ *
+ * \a pos Start position.
+ *
+ * \a n Length.
+ */
+template<class StringVariant, class String, class StringView>
+inline StringVariant slice(const StringVariant &v, long long int pos, long long int n = -1)
+{
+    if(n == -1) {
+        n = length<StringVariant, String, StringView>(v) - pos;
+    }
+
+    if (std::holds_alternative<String>(v)) {
+        return std::get<String>(v).sliced(pos, n);
+    } else {
+        return std::get<StringView>(v).sliced(pos, n);
+    }
+}
+
+} /* namespace impl */
+
+/*!
  * \class MD::InternalStringT
  * \inmodule md4qt
  * \inheaderfile md4qt/traits.h
@@ -37,41 +113,41 @@ namespace MD
  * ask for virgin substring starting at position 0 and length 2, this class will give you virgin
  * "abc" string.
  */
-template<class String, class Char, class Latin1Char>
+template<class String, class StringView, class Char, class Latin1Char>
 class InternalStringT
 {
 public:
+    /*!
+     * Default constructor.
+     */
     InternalStringT()
     {
     }
-    InternalStringT(const String &s)
-        : m_str(s)
-        , m_virginStr(s)
-    {
-    }
 
     /*!
-     * Returns reference to string.
+     * Constructor from string view.
      */
-    String &asString()
+    InternalStringT(StringView s)
+        : m_virginStr(s)
     {
-        return m_str;
-    }
-
-    /*!
-     * Returns reference to string.
-     */
-    const String &asString() const
-    {
-        return m_str;
+        m_str.push_back(s);
+        m_pos.push_back(0);
     }
 
     /*!
      * Returns full virgin string.
      */
-    const String & fullVirginString() const
+    StringView fullVirginString() const
     {
         return m_virginStr;
+    }
+
+    /*!
+     * Returns a length of this string.
+     */
+    long long int length() const
+    {
+        return (m_str.empty() ? 0 : m_pos.back() + impl::length<StringVariant, String, StringView>(m_str.back()));
     }
 
     /*!
@@ -87,12 +163,12 @@ public:
             pos = 0;
         }
 
-        if (pos + len > m_str.length() || len < 0) {
-            len = m_str.length() - pos;
+        if (pos + len > length() || len < 0) {
+            len = length() - pos;
         }
 
         if (len == 0) {
-            return (m_str.isEmpty() ? m_virginStr : String());
+            return (isEmpty() ? m_virginStr : String());
         }
 
         auto virginStartPos = virginPos(pos);
@@ -147,13 +223,20 @@ public:
     }
 
     /*!
-     * Returns char at a given \a position position.
+     * Returns character at a given \a position position.
      *
      * \a position Position.
      */
     Char operator[](long long int position) const
     {
-        return m_str[position];
+        const auto it = std::prev(std::upper_bound(m_pos.cbegin(), m_pos.cend(), position));
+
+        if (it != m_pos.cend()) {
+            return impl::getChar<StringVariant, String, StringView, Char>(
+                        m_str[std::distance(m_pos.cbegin(), it)], position - (*it));
+        } else {
+            return {};
+        }
     }
 
     /*!
@@ -167,17 +250,141 @@ public:
      */
     InternalStringT &replaceOne(long long int pos, long long int size, const String &with)
     {
-        const auto len = m_str.length();
+        const auto oldLength = length();
 
-        m_str.remove(pos, size);
-        m_str.insert(pos, with);
+        auto it = std::prev(std::upper_bound(m_pos.begin(), m_pos.end(), pos));
 
-        if (with.length() != size) {
-            m_changedPos.push_back({{0, len}, {}});
-            m_changedPos.back().second.push_back({pos, size, with.size()});
+        if (size > length() - pos) {
+            size = length() - pos;
+        }
+
+        const auto replacedSize = size;
+
+        if (it != m_pos.end()) {
+            const auto start = std::distance(m_pos.begin(), it);
+            auto old = m_str[start];
+            auto idx = start;
+            auto end = -1;
+
+            if (pos > *it) {
+                m_str[idx] = impl::slice<StringVariant, String, StringView>(old, 0, pos - (*it));
+                ++idx;
+            }
+
+            old = impl::slice<StringVariant, String, StringView>(old, pos - (*it));
+
+            while (size > 0) {
+                const auto len = impl::length<StringVariant, String, StringView>(old);
+
+                if (len < size) {
+                    size -= len;
+
+                    if (end != -1) {
+                        ++end;
+                    } else {
+                        end = idx;
+                    }
+                } else if (len == size) {
+                    old = {};
+                    break;
+                } else if (len > size) {
+                    old = impl::slice<StringVariant, String, StringView>(old, size);
+                    break;
+                }
+
+                if (end < static_cast<long long int>(m_str.size())) {
+                    old = m_str[end];
+                } else {
+                    old = {};
+                    break;
+                }
+            }
+
+            if (end > idx && idx < static_cast<long long int>(m_pos.size())) {
+                m_pos.erase(m_pos.begin() + idx, m_pos.begin() + end + 1);
+                m_str.erase(m_str.begin() + idx, m_str.begin() + end + 1);
+            }
+
+            bool removed = false;
+
+            if (!with.isEmpty()) {
+                if (start != idx) {
+                    m_str.insert(m_str.begin() + idx, with);
+                    m_pos.insert(m_pos.begin() + idx, pos);
+                } else {
+                    m_str[idx] = with;
+                    m_pos[idx] = pos;
+                }
+
+                ++idx;
+            } else {
+                if (start == idx) {
+                    m_pos.erase(m_pos.begin() + idx);
+                    m_str.erase(m_str.begin() + idx);
+
+                    removed = true;
+                }
+            }
+
+            auto updatedPos = pos + with.length();
+
+            if (impl::length<StringVariant, String, StringView>(old)) {
+                m_pos.insert(m_pos.begin() + idx, updatedPos);
+                m_str.insert(m_str.begin() + idx, old);
+
+                ++idx;
+            } else {
+                updatedPos = (removed ? (idx - 1 >= 0 ? m_pos[idx - 1] : 0) : pos);
+            }
+
+            for (; idx < static_cast<long long int>(m_pos.size()); ++idx) {
+                updatedPos += (idx - 1 >= 0 ? impl::length<StringVariant, String, StringView>(m_str[idx - 1]) : 0);
+                m_pos[idx] = updatedPos;
+            }
+        }
+
+        if (with.length() != replacedSize) {
+            m_changedPos.push_back({{0, oldLength}, {}});
+            m_changedPos.back().second.push_back({pos, replacedSize, with.size()});
         }
 
         return *this;
+    }
+
+    /*!
+     * Find string.
+     *
+     * \a what What to find.
+     *
+     * \a from Start position.
+     */
+    long long int indexOf(const String &what, long long int from = 0)
+    {
+        if (from < 0 || from >= length()) {
+            return -1;
+        }
+
+        if (what.isEmpty()) {
+            return 0;
+        }
+
+        for (long long int i = from; i <= length() - what.length(); ++i) {
+            if (this->operator [](i) == what[0]) {
+                bool match = true;
+                for (long long int j = 1; j < what.length(); ++j) {
+                    if (this->operator [](i + j) != what[j]) {
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match) {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
     }
 
     /*!
@@ -189,35 +396,12 @@ public:
      */
     InternalStringT &replace(const String &what, const String &with)
     {
-        String tmp;
-        bool init = false;
-        const auto len = m_str.length();
+        long long int pos = 0;
 
-        for (long long int i = 0; i < m_str.size();) {
-            long long int p = m_str.indexOf(what, i);
-
-            if (p != -1) {
-                tmp.push_back(m_str.sliced(i, p - i));
-                tmp.push_back(with);
-
-                i = p + what.size();
-
-                if (what.size() != with.size()) {
-                    if (!init) {
-                        m_changedPos.push_back({{0, len}, {}});
-                        init = true;
-                    }
-
-                    m_changedPos.back().second.push_back({p, what.size(), with.size()});
-                }
-            } else {
-                tmp.push_back(m_str.sliced(i));
-
-                i = m_str.size();
-            }
+        while ((pos = indexOf(what, pos)) != -1) {
+            replaceOne(pos, what.length(), with);
+            pos += with.length();
         }
-
-        std::swap(m_str, tmp);
 
         return *this;
     }
@@ -231,14 +415,7 @@ public:
      */
     InternalStringT &remove(long long int pos, long long int size)
     {
-        const auto len = m_str.length();
-
-        m_str.remove(pos, size);
-
-        m_changedPos.push_back({{0, len}, {}});
-        m_changedPos.back().second.push_back({pos, size, 0});
-
-        return *this;
+        return replaceOne(pos, size, {});
     }
 
     /*!
@@ -246,15 +423,7 @@ public:
      */
     bool isEmpty() const
     {
-        return m_str.isEmpty();
-    }
-
-    /*!
-     * Returns length of the string.
-     */
-    long long int length() const
-    {
-        return m_str.length();
+        return m_str.empty();
     }
 
     /*!
@@ -439,13 +608,26 @@ public:
 
 private:
     /*!
+     * \typealias MD::InternalStringT::StringVariant
+     * \inmodule md4qt
+     * \inheaderfile md4qt/traits.h
+     *
+     * \brief Holder of actual string - variant with string or string view.
+     */
+    using StringVariant = std::variant<String, StringView>;
+
+    /*!
      * Transformed string.
      */
-    String m_str;
+    std::vector<StringVariant> m_str;
+    /*!
+     * Positions of sub-parts of transformed string.
+     */
+    std::vector<long long int> m_pos;
     /*!
      * Virgin (original) string.
      */
-    String m_virginStr;
+    StringView m_virginStr;
 
     /*!
      * Auxiliary struct to store information about transformation.
@@ -522,6 +704,33 @@ private:
     }
 }; // class InternalString
 
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
+ * Comparison of MD::InternalStringT with other string.
+ *
+ * \a str First string to compare.
+ *
+ * \a other Other string to compare.
+ */
+template<class String, class StringView, class Char, class Latin1Char, class T>
+bool operator == (const InternalStringT<String, StringView, Char, Latin1Char> &str, const T &other)
+{
+    const auto length = str.length();
+
+    if (length != other.length() ) {
+        return false;
+    }
+
+    for (long long int i = 0; i < length; ++i) {
+        if (str[i] != other[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 #ifdef MD4QT_QT_SUPPORT
 
 //
@@ -546,9 +755,11 @@ struct QStringTrait {
 
     using String = QString;
 
+    using StringView = QStringView;
+
     using Char = QChar;
 
-    using InternalString = InternalStringT<String, Char, QLatin1Char>;
+    using InternalString = InternalStringT<String, StringView, Char, QLatin1Char>;
 
     using InternalStringList = std::vector<InternalString>;
 
