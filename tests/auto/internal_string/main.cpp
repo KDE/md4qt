@@ -441,147 +441,156 @@ TEST_CASE("simplified")
     REQUIRE(s.isEmpty());
 }
 
-// TEST_CASE("split")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("|a|b|c|"));
+TEST_CASE("split")
+{
+    const auto str1 = TRAIT::latin1ToString("|a|b|c|");
+    TRAIT::InternalString s(str1);
 
-//     auto r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
+    auto r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
 
-//     REQUIRE(r.size() == 3);
+    REQUIRE(r.size() == 3);
 
-//     REQUIRE(r.at(0).asString() == TRAIT::latin1ToString("a"));
-//     REQUIRE(r.at(0).virginPos(0) == 1);
+    REQUIRE(r.at(0) == TRAIT::latin1ToString("a"));
+    REQUIRE(r.at(0).virginPos(0) == 1);
 
-//     REQUIRE(r.at(1).asString() == TRAIT::latin1ToString("b"));
-//     REQUIRE(r.at(1).virginPos(0) == 3);
+    REQUIRE(r.at(1) == TRAIT::latin1ToString("b"));
+    REQUIRE(r.at(1).virginPos(0) == 3);
 
-//     REQUIRE(r.at(2).asString() == TRAIT::latin1ToString("c"));
-//     REQUIRE(r.at(2).virginPos(0) == 5);
+    REQUIRE(r.at(2) == TRAIT::latin1ToString("c"));
+    REQUIRE(r.at(2).virginPos(0) == 5);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString(" | a | b | c | "));
+    const auto str2 = TRAIT::latin1ToString(" | a | b | c | ");
+    s = TRAIT::InternalString(str2);
 
-//     r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
+    r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
 
-//     REQUIRE(r.size() == 5);
+    REQUIRE(r.size() == 5);
 
-//     REQUIRE(r.at(0).asString() == TRAIT::latin1ToString(" "));
-//     REQUIRE(r.at(0).virginPos(0) == 0);
+    REQUIRE(r.at(0) == TRAIT::latin1ToString(" "));
+    REQUIRE(r.at(0).virginPos(0) == 0);
 
-//     REQUIRE(r.at(1).asString() == TRAIT::latin1ToString(" a "));
-//     REQUIRE(r.at(1).virginPos(1) == 3);
+    REQUIRE(r.at(1) == TRAIT::latin1ToString(" a "));
+    REQUIRE(r.at(1).virginPos(1) == 3);
 
-//     REQUIRE(r.at(2).asString() == TRAIT::latin1ToString(" b "));
-//     REQUIRE(r.at(2).virginPos(1) == 7);
+    REQUIRE(r.at(2) == TRAIT::latin1ToString(" b "));
+    REQUIRE(r.at(2).virginPos(1) == 7);
 
-//     REQUIRE(r.at(3).asString() == TRAIT::latin1ToString(" c "));
-//     REQUIRE(r.at(3).virginPos(1) == 11);
+    REQUIRE(r.at(3) == TRAIT::latin1ToString(" c "));
+    REQUIRE(r.at(3).virginPos(1) == 11);
 
-//     REQUIRE(r.at(4).asString() == TRAIT::latin1ToString(" "));
-//     REQUIRE(r.at(4).virginPos(0) == 14);
+    REQUIRE(r.at(4) == TRAIT::latin1ToString(" "));
+    REQUIRE(r.at(4).virginPos(0) == 14);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("abc"));
+    const auto str3 = TRAIT::latin1ToString("abc");
+    s = TRAIT::InternalString(str3);
 
-//     r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("")));
+    r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("")));
 
-//     REQUIRE(r.size() == 3);
+    REQUIRE(r.size() == 3);
 
-//     REQUIRE(r.at(0).asString() == TRAIT::latin1ToString("a"));
-//     REQUIRE(r.at(0).virginPos(0) == 0);
+    REQUIRE(r.at(0) == TRAIT::latin1ToString("a"));
+    REQUIRE(r.at(0).virginPos(0) == 0);
 
-//     REQUIRE(r.at(1).asString() == TRAIT::latin1ToString("b"));
-//     REQUIRE(r.at(1).virginPos(0) == 1);
+    REQUIRE(r.at(1) == TRAIT::latin1ToString("b"));
+    REQUIRE(r.at(1).virginPos(0) == 1);
 
-//     REQUIRE(r.at(2).asString() == TRAIT::latin1ToString("c"));
-//     REQUIRE(r.at(2).virginPos(0) == 2);
+    REQUIRE(r.at(2) == TRAIT::latin1ToString("c"));
+    REQUIRE(r.at(2).virginPos(0) == 2);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString(" | a | b | c | "));
-//     s = s.simplified();
+    const auto str4 = TRAIT::latin1ToString(" | a | b | c | ");
+    s = TRAIT::InternalString(str4);
+    s = s.simplified();
 
-//     r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
+    r = s.split(TRAIT::InternalString(TRAIT::latin1ToString("|")));
 
-//     REQUIRE(r.size() == 3);
+    REQUIRE(r.size() == 3);
 
-//     REQUIRE(r.at(0).asString() == TRAIT::latin1ToString(" a "));
-//     REQUIRE(r.at(0).virginPos(1) == 3);
+    REQUIRE(r.at(0) == TRAIT::latin1ToString(" a "));
+    REQUIRE(r.at(0).virginPos(1) == 3);
 
-//     REQUIRE(r.at(1).asString() == TRAIT::latin1ToString(" b "));
-//     REQUIRE(r.at(1).virginPos(1) == 7);
+    REQUIRE(r.at(1) == TRAIT::latin1ToString(" b "));
+    REQUIRE(r.at(1).virginPos(1) == 7);
 
-//     REQUIRE(r.at(2).asString() == TRAIT::latin1ToString(" c "));
-//     REQUIRE(r.at(2).virginPos(1) == 11);
-// }
+    REQUIRE(r.at(2) == TRAIT::latin1ToString(" c "));
+    REQUIRE(r.at(2).virginPos(1) == 11);
+}
 
-// TEST_CASE("sliced")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("aaabbbccc"));
+TEST_CASE("sliced")
+{
+    const auto str1 = TRAIT::latin1ToString("aaabbbccc");
+    TRAIT::InternalString s(str1);
 
-//     s = s.sliced(3, 3);
+    s = s.sliced(3, 3);
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("bbb"));
-//     REQUIRE(s.virginPos(0) == 3);
-//     REQUIRE(s.virginPos(1) == 4);
-//     REQUIRE(s.virginPos(2) == 5);
+    REQUIRE(s == TRAIT::latin1ToString("bbb"));
+    REQUIRE(s.virginPos(0) == 3);
+    REQUIRE(s.virginPos(1) == 4);
+    REQUIRE(s.virginPos(2) == 5);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("aaabbbccc"));
+    const auto str2 = TRAIT::latin1ToString("aaabbbccc");
+    s = TRAIT::InternalString(str2);
 
-//     s = s.sliced(3);
+    s = s.sliced(3);
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("bbbccc"));
-//     REQUIRE(s.virginPos(0) == 3);
-//     REQUIRE(s.virginPos(1) == 4);
-//     REQUIRE(s.virginPos(2) == 5);
-//     REQUIRE(s.virginPos(3) == 6);
-//     REQUIRE(s.virginPos(4) == 7);
-//     REQUIRE(s.virginPos(5) == 8);
-// }
+    REQUIRE(s == TRAIT::latin1ToString("bbbccc"));
+    REQUIRE(s.virginPos(0) == 3);
+    REQUIRE(s.virginPos(1) == 4);
+    REQUIRE(s.virginPos(2) == 5);
+    REQUIRE(s.virginPos(3) == 6);
+    REQUIRE(s.virginPos(4) == 7);
+    REQUIRE(s.virginPos(5) == 8);
+}
 
-// TEST_CASE("right")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("aaabbbccc"));
+TEST_CASE("right")
+{
+    const auto str = TRAIT::latin1ToString("aaabbbccc");
+    TRAIT::InternalString s(str);
 
-//     s = s.right(3);
+    s = s.right(3);
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("ccc"));
-//     REQUIRE(s.virginPos(0) == 6);
-//     REQUIRE(s.virginPos(1) == 7);
-//     REQUIRE(s.virginPos(2) == 8);
-// }
+    REQUIRE(s == TRAIT::latin1ToString("ccc"));
+    REQUIRE(s.virginPos(0) == 6);
+    REQUIRE(s.virginPos(1) == 7);
+    REQUIRE(s.virginPos(2) == 8);
+}
 
-// TEST_CASE("insert")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("a"));
+TEST_CASE("insert")
+{
+    const auto str = TRAIT::latin1ToString("a");
+    TRAIT::InternalString s(str);
 
-//     s = s.insert(0, TRAIT::latin1ToChar('b'));
+    s = s.insert(0, TRAIT::latin1ToChar('b'));
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("ba"));
-//     REQUIRE(s.virginPos(0) == 0);
-//     REQUIRE(s.virginPos(1) == 0);
-// }
+    REQUIRE(s == TRAIT::latin1ToString("ba"));
+    REQUIRE(s.virginPos(0) == 0);
+    REQUIRE(s.virginPos(1) == 0);
+}
 
-// TEST_CASE("double_remove")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("a b c d"));
+TEST_CASE("double_remove")
+{
+    const auto str1 = TRAIT::latin1ToString("a b c d");
+    TRAIT::InternalString s(str1);
 
-//     s.remove(2, 1);
+    s.remove(2, 1);
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a  c d"));
+    REQUIRE(s == TRAIT::latin1ToString("a  c d"));
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a c d"));
+    REQUIRE(s == TRAIT::latin1ToString("a c d"));
 
-//     s.remove(2, 1);
+    s.remove(2, 1);
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a  d"));
+    REQUIRE(s == TRAIT::latin1ToString("a  d"));
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a d"));
+    REQUIRE(s == TRAIT::latin1ToString("a d"));
 
-//     REQUIRE(s.virginPos(0) == 0);
-//     REQUIRE(s.virginPos(1) == 1);
-//     REQUIRE(s.virginPos(2) == 6);
-// }
+    REQUIRE(s.virginPos(0) == 0);
+    REQUIRE(s.virginPos(1) == 1);
+    REQUIRE(s.virginPos(2) == 6);
+}
 
 // TEST_CASE("replace_tabs")
 // {

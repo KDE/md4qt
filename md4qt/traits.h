@@ -99,6 +99,56 @@ inline StringVariant slice(const StringVariant &v, long long int pos, long long 
     }
 }
 
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
+ * Returns a sliced string.
+ *
+ * \a v String variants.
+ *
+ * \a p Positions.
+ *
+ * \a pos Start position.
+ *
+ * \a n Length.
+ *
+ * \a vRes Receiver of string variants.
+ *
+ * \a pRes Receiver of positions.
+ */
+template<class StringVariant, class String, class StringView>
+inline void slice(const std::vector<StringVariant> &v,
+                  const std::vector<long long int> &p,
+                  long long int pos,
+                  long long int n,
+                  std::vector<StringVariant> &vRes,
+                  std::vector<long long int> &pRes)
+{
+    long long int newPos = 0;
+    const auto it = std::prev(std::upper_bound(p.cbegin(), p.cend(), pos));
+    long long idx = 0;
+
+    if (it != p.cend()) {
+        const auto start = std::distance(p.cbegin(), it);
+
+        while(n > 0 && ((start + idx) < static_cast<long long int>(v.size()))) {
+            const auto &str = v[start + idx];
+            ++idx;
+            auto len = length<StringVariant, String, StringView>(str) - pos + (*it);
+
+            if (len > n) {
+                len = n;
+            }
+
+            vRes.push_back(slice<StringVariant, String, StringView>(str, pos - (*it), len));
+            pRes.push_back(newPos);
+
+            newPos += len;
+            n -= len;
+        }
+    }
+}
+
 } /* namespace impl */
 
 /*!
@@ -252,6 +302,7 @@ public:
      */
     InternalStringT &replaceOne(long long int pos, long long int size, const String &with)
     {
+        const auto insertion = (size == 0);
         const auto oldLength = length();
 
         auto it = std::prev(std::upper_bound(m_pos.begin(), m_pos.end(), pos));
@@ -347,7 +398,8 @@ public:
 
         if (with.length() != replacedSize) {
             m_changedPos.push_back({{0, oldLength}, {}});
-            m_changedPos.back().second.push_back({pos, replacedSize, with.size()});
+            m_changedPos.back().second.push_back({pos, replacedSize + (insertion ? 1 : 0),
+                                                  with.length() + (insertion ? 1 : 0)});
         }
 
         return *this;
@@ -360,7 +412,8 @@ public:
      *
      * \a from Start position.
      */
-    long long int indexOf(const String &what, long long int from = 0)
+    template<class T>
+    long long int indexOf(const T &what, long long int from = 0) const
     {
         if (from < 0 || from >= length()) {
             return -1;
@@ -514,12 +567,15 @@ public:
     std::vector<InternalStringT> split(const InternalStringT &sep) const
     {
         std::vector<InternalStringT> result;
-        const auto len = m_str.length();
+        const auto len = length();
 
         if (sep.isEmpty()) {
-            for (long long int i = 0; i < m_str.length(); ++i) {
+            for (long long int i = 0; i < len; ++i) {
                 auto is = *this;
-                is.m_str = m_str[i];
+                is.m_str.clear();
+                is.m_pos.clear();
+                is.m_str.push_back(this->operator [](i));
+                is.m_pos.push_back(0);
                 is.m_changedPos.push_back({{i, len}, {}});
 
                 result.push_back(is);
@@ -531,24 +587,16 @@ public:
         long long int pos = 0;
         long long int fpos = 0;
 
-        while ((fpos = m_str.indexOf(sep.asString(), pos)) != -1 && fpos < length()) {
+        while ((fpos = indexOf(sep, pos)) != -1 && fpos < len) {
             if (fpos - pos > 0) {
-                auto is = *this;
-                is.m_str = m_str.sliced(pos, fpos - pos);
-                is.m_changedPos.push_back({{pos, len}, {}});
-
-                result.push_back(is);
+                result.push_back(sliced(pos, fpos - pos));
             }
 
             pos = fpos + sep.length();
         }
 
-        if (pos < m_str.length()) {
-            auto is = *this;
-            is.m_str = m_str.sliced(pos, m_str.length() - pos);
-            is.m_changedPos.push_back({{pos, len}, {}});
-
-            result.push_back(is);
+        if (pos < len) {
+            result.push_back(sliced(pos, len - pos));
         }
 
         return result;
@@ -564,11 +612,13 @@ public:
     InternalStringT sliced(long long int pos, long long int len = -1) const
     {
         InternalStringT tmp = *this;
-        const auto oldLen = m_str.length();
-        tmp.m_str = tmp.m_str.sliced(pos, (len == -1 ? tmp.m_str.length() - pos : len));
+        tmp.m_str.clear();
+        tmp.m_pos.clear();
+        const auto oldLen = length();
+        impl::slice<StringVariant, String, StringView>(m_str, m_pos, pos, (len == -1 ? oldLen - pos : len), tmp.m_str, tmp.m_pos);
         tmp.m_changedPos.push_back({{pos, oldLen}, {}});
-        if (len != -1 && len < length() - pos) {
-            tmp.m_changedPos.back().second.push_back({pos + len, length() - pos - len, 0});
+        if (len != -1 && len < oldLen - pos) {
+            tmp.m_changedPos.back().second.push_back({pos + len, oldLen - pos - len, 0});
         }
 
         return tmp;
@@ -581,12 +631,7 @@ public:
      */
     InternalStringT right(long long int n) const
     {
-        InternalStringT tmp = *this;
-        const auto len = m_str.length();
-        tmp.m_str = tmp.m_str.right(n);
-        tmp.m_changedPos.push_back({{length() - n, len}, {}});
-
-        return tmp;
+        return sliced(length() - n, n);
     }
 
     /*!
@@ -610,15 +655,7 @@ public:
      */
     InternalStringT &insert(long long int pos, const String &s)
     {
-        const auto len = m_str.length();
-        const auto ilen = s.length();
-
-        m_str.insert(pos, s);
-
-        m_changedPos.push_back({{0, len}, {}});
-        m_changedPos.back().second.push_back({pos, 1, ilen + 1});
-
-        return *this;
+        return replaceOne(pos, 0, s);
     }
 
 private:
