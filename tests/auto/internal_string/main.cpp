@@ -4,7 +4,7 @@
     SPDX-License-Identifier: MIT
 */
 
-#include <md4qt/traits.h>
+#include <md4qt/parser.h>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 // doctest include.
@@ -592,64 +592,67 @@ TEST_CASE("double_remove")
     REQUIRE(s.virginPos(2) == 6);
 }
 
-// TEST_CASE("replace_tabs")
-// {
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode\t"));
+TEST_CASE("replace_tabs")
+{
+    {
+        const auto str = TRAIT::latin1ToString("\tcode\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginPos(0) == 0);
-//         REQUIRE(s.virginPos(1) == 0);
-//         REQUIRE(s.virginPos(2) == 0);
-//         REQUIRE(s.virginPos(3) == 0);
-//         REQUIRE(s.virginPos(4) == 1);
-//         REQUIRE(s.virginPos(5) == 2);
-//         REQUIRE(s.virginPos(6) == 3);
-//         REQUIRE(s.virginPos(7) == 4);
-//         REQUIRE(s.virginPos(8) == 5);
-//         REQUIRE(s.virginPos(9) == 5);
-//         REQUIRE(s.virginPos(10) == 5);
-//         REQUIRE(s.virginPos(11) == 5);
-//     }
+        REQUIRE(s.virginPos(0) == 0);
+        REQUIRE(s.virginPos(1) == 0);
+        REQUIRE(s.virginPos(2) == 0);
+        REQUIRE(s.virginPos(3) == 0);
+        REQUIRE(s.virginPos(4) == 1);
+        REQUIRE(s.virginPos(5) == 2);
+        REQUIRE(s.virginPos(6) == 3);
+        REQUIRE(s.virginPos(7) == 4);
+        REQUIRE(s.virginPos(8) == 5);
+        REQUIRE(s.virginPos(9) == 5);
+        REQUIRE(s.virginPos(10) == 5);
+        REQUIRE(s.virginPos(11) == 5);
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\tcode\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
+        s.remove(0, 2);
 
-//         REQUIRE(s.virginPos(0) == 0);
-//         REQUIRE(s.virginPos(1) == 0);
-//         REQUIRE(s.virginPos(2) == 1);
-//         REQUIRE(s.virginPos(3) == 2);
-//         REQUIRE(s.virginPos(4) == 3);
-//         REQUIRE(s.virginPos(5) == 4);
-//         REQUIRE(s.virginPos(6) == 5);
-//         REQUIRE(s.virginPos(7) == 5);
-//         REQUIRE(s.virginPos(8) == 5);
-//         REQUIRE(s.virginPos(9) == 5);
-//     }
+        REQUIRE(s.virginPos(0) == 0);
+        REQUIRE(s.virginPos(1) == 0);
+        REQUIRE(s.virginPos(2) == 1);
+        REQUIRE(s.virginPos(3) == 2);
+        REQUIRE(s.virginPos(4) == 3);
+        REQUIRE(s.virginPos(5) == 4);
+        REQUIRE(s.virginPos(6) == 5);
+        REQUIRE(s.virginPos(7) == 5);
+        REQUIRE(s.virginPos(8) == 5);
+        REQUIRE(s.virginPos(9) == 5);
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\tcode\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
-//         s.remove(8, 2);
+        s.remove(0, 2);
+        s.remove(8, 2);
 
-//         REQUIRE(s.virginPos(0) == 0);
-//         REQUIRE(s.virginPos(1) == 0);
-//         REQUIRE(s.virginPos(2) == 1);
-//         REQUIRE(s.virginPos(3) == 2);
-//         REQUIRE(s.virginPos(4) == 3);
-//         REQUIRE(s.virginPos(5) == 4);
-//         REQUIRE(s.virginPos(6) == 5);
-//         REQUIRE(s.virginPos(7) == 5);
-//     }
-// }
+        REQUIRE(s.virginPos(0) == 0);
+        REQUIRE(s.virginPos(1) == 0);
+        REQUIRE(s.virginPos(2) == 1);
+        REQUIRE(s.virginPos(3) == 2);
+        REQUIRE(s.virginPos(4) == 3);
+        REQUIRE(s.virginPos(5) == 4);
+        REQUIRE(s.virginPos(6) == 5);
+        REQUIRE(s.virginPos(7) == 5);
+    }
+}
 
 // TEST_CASE("replace_spaces")
 // {

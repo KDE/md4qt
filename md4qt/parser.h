@@ -167,9 +167,9 @@ indentInList(const std::vector<long long int> *indents,
  *
  * \sa MD::skipIfBackward
  */
-template<class Trait, class Pred>
+template<class String, class Pred>
 inline long long int
-skipIf(long long int startPos, const typename Trait::String &line,
+skipIf(long long int startPos, const String &line,
        Pred pred, long long int endPos = -1)
 {
     endPos = (endPos < line.length() && endPos > -1 ? endPos : line.length());
@@ -196,7 +196,7 @@ skipIf(long long int startPos, const typename Trait::String &line,
  *
  * \sa MD::skipIf
  */
-template<class String, class Char, class Pred>
+template<class String, class Pred>
 inline long long int
 skipIfBackward(long long int startPos, const String &line,
                Pred pred, long long int endPos = -1)
@@ -221,29 +221,6 @@ skipIfBackward(long long int startPos, const String &line,
 /*!
  * \inheaderfile md4qt/parser.h
  *
- * Returns first position of character not satisfying to predicate moving in backward order.
- *
- * \a startPos Start position.
- *
- * \a line String.
- *
- * \a pred Predicate.
- *
- * \a endPos End position. -1 means first character in the string. End position is inclusive.
- *
- * \sa MD::skipIf
- */
-template<class Trait, class Pred>
-inline long long int
-skipIfBackward(long long int startPos, const typename Trait::String &line,
-               Pred pred, long long int endPos = -1)
-{
-    return skipIfBackward<typename Trait::String, typename Trait::Char>(startPos, line, pred, endPos);
-}
-
-/*!
- * \inheaderfile md4qt/parser.h
- *
  * Skip spaces in line from position \a i.
  *
  * \a i Start position for skipping spaces.
@@ -252,11 +229,11 @@ skipIfBackward(long long int startPos, const typename Trait::String &line,
  *
  * \sa MD::skipIf, MD::skipIfBackward
  */
-template<class Trait>
+template<class String>
 inline long long int
-skipSpaces(long long int i, const typename Trait::String &line)
+skipSpaces(long long int i, const String &line)
 {
-    return skipIf<Trait>(i, line, [](const typename Trait::Char &ch) { return ch.isSpace(); });
+    return skipIf<String>(i, line, [](const typename String::value_type &ch) { return ch.isSpace(); });
 }
 
 /*!
@@ -266,11 +243,12 @@ skipSpaces(long long int i, const typename Trait::String &line)
  *
  * \a line String where to find last non-space character position.
  */
-template<class String, class Char>
+template<class String>
 inline long long int
 lastNonSpacePos(const String &line)
 {
-    return skipIfBackward<String, Char>(line.length() - 1, line, [](const Char &ch) { return ch.isSpace(); });
+    return skipIfBackward<String>(line.length() - 1, line,
+                                  [](const typename String::value_type &ch) { return ch.isSpace(); });
 }
 
 /*!
@@ -284,7 +262,7 @@ template<class String, class Char>
 inline void
 removeSpacesAtEnd(String &s)
 {
-    const auto i = lastNonSpacePos<String, Char>(s);
+    const auto i = lastNonSpacePos<String>(s);
 
     if (i != s.length() - 1) {
         s.remove(i + 1, s.length() - i - 1);
@@ -298,11 +276,11 @@ removeSpacesAtEnd(String &s)
  *
  * \a line String where to check for starting sequence.
  */
-template<class Trait>
-inline typename Trait::String
-startSequence(const typename Trait::String &line)
+template<class String>
+inline String
+startSequence(const String &line)
 {
-    auto pos = skipSpaces<Trait>(0, line);
+    auto pos = skipSpaces<String>(0, line);
 
     if (pos >= line.length()) {
         return {};
@@ -313,7 +291,7 @@ startSequence(const typename Trait::String &line)
 
     ++pos;
 
-    pos = skipIf<Trait>(pos, line, [&sch](const typename Trait::Char &ch) { return (ch == sch); });
+    pos = skipIf<String>(pos, line, [&sch](const typename String::value_type &ch) { return (ch == sch); });
 
     return line.sliced(start, pos - start);
 }
@@ -336,17 +314,17 @@ startSequence(const typename Trait::String &line)
  */
 template<class Trait>
 inline bool
-isOrderedList(const typename Trait::String &s,
+isOrderedList(const typename Trait::InternalString &s,
               int *num = nullptr,
               int *len = nullptr,
               typename Trait::Char *delim = nullptr,
               bool *isFirstLineEmpty = nullptr)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces(0, s);
 
     const auto dp = p;
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
+    p = skipIf(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
 
     if (dp != p && p < s.size()) {
         const auto digits = s.sliced(dp, p - dp);
@@ -2934,18 +2912,18 @@ public:
     /*!
      * Returns current line from stream and moves to next line.
      */
-    typename Trait::String readLine()
+    typename Trait::InternalString readLine()
     {
-        typename Trait::String line;
+        const auto start = m_pos;
         bool rFound = false;
 
         while (!atEnd()) {
-            const auto c = getChar();
+            const auto &c = getChar();
 
             if (rFound && c != s_newLineChar<Trait>) {
                 --m_pos;
 
-                return line;
+                return typename Trait::StringView(data() + start, m_pos - start + 1);
             }
 
             if (c == s_carriageReturnChar<Trait>) {
@@ -2953,22 +2931,32 @@ public:
 
                 continue;
             } else if (c == s_newLineChar<Trait>) {
-                return line;
-            }
-
-            if (!c.isNull()) {
-                line.push_back(c);
+                return typename Trait::StringView(data() + start, m_pos - start + 1);
             }
         }
 
-        return line;
+        if (!isEmpty()) {
+            return typename Trait::StringView(data() + start, m_pos - start + (atEnd() ? 0 : 1));
+        } else {
+            return {};
+        }
     }
 
 protected:
     /*!
      * Returns current character from stream and moves to next character.
      */
-    virtual typename Trait::Char getChar() = 0;
+    virtual typename Trait::Char &getChar() = 0;
+
+    /*!
+     * Returns data.
+     */
+    virtual const typename Trait::Char *data() const = 0;
+
+    /*!
+     * Returns whether this stream is empty.
+     */
+    virtual bool isEmpty() const = 0;
 
 protected:
     /*!
@@ -2996,46 +2984,39 @@ class TextStream<QStringTrait> : public TextStreamBase<QStringTrait>
 {
 public:
     TextStream(QTextStream &stream)
-        : m_stream(stream)
-        , m_lastBuf(false)
+        : m_data(stream.readAll())
     {
+        m_data.replace(QChar(), QChar(0xFFFD));
     }
 
     bool atEnd() const override
     {
-        return (m_lastBuf && m_pos == m_buf.size());
-    }
-
-private:
-    void fillBuf()
-    {
-        m_buf = m_stream.read(512);
-
-        if (m_stream.atEnd()) {
-            m_lastBuf = true;
-        }
-
-        m_pos = 0;
+        return (m_pos == m_data.length());
     }
 
 protected:
-    QChar getChar() override
+    QChar &getChar() override
     {
-        if (m_pos < m_buf.size()) {
-            return m_buf[m_pos++];
-        } else if (!atEnd()) {
-            fillBuf();
-
-            return getChar();
+        if (!atEnd()) {
+            return m_data[m_pos++];
         } else {
-            return QChar();
+            return m_eof;
         }
     }
 
+    const QChar *data() const override
+    {
+        return m_data.data();
+    }
+
+    bool isEmpty() const override
+    {
+        return m_data.isEmpty();
+    }
+
 private:
-    QTextStream &m_stream;
-    QString m_buf;
-    bool m_lastBuf;
+    QString m_data;
+    QChar m_eof;
 }; // class TextStream
 
 #endif
@@ -3479,7 +3460,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
 
         const auto currentIndent = ctx.m_indent;
 
-        const auto ns = skipSpaces<Trait>(0, line.asString());
+        const auto ns = skipSpaces(0, line);
 
         const auto indentInListValue = indentInList(&ctx.m_indents, ns, true);
 
@@ -3603,7 +3584,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
         else if (ctx.m_emptyLineInList) {
             if (indentInListValue || isListType(ctx.m_lineType) || ctx.m_lineType == BlockType::SomethingInList) {
                 for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
-                    ctx.m_fragment.push_back({typename Trait::String(),
+                    ctx.m_fragment.push_back({typename Trait::InternalString(),
                         {currentLineNumber - ctx.m_emptyLinesCount + i, {}, false}});
                 }
 
@@ -3633,10 +3614,10 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
         } else if (ctx.m_emptyLinesCount > 0) {
             if (ctx.m_type == BlockType::CodeIndentedBySpaces &&
                 ctx.m_lineType == BlockType::CodeIndentedBySpaces) {
-                const auto indent = skipSpaces<Trait>(0, ctx.m_fragment.front().first.asString());
+                const auto indent = skipSpaces(0, ctx.m_fragment.front().first);
 
                 for (long long int i = 0; i < ctx.m_emptyLinesCount; ++i) {
-                    ctx.m_fragment.push_back({typename Trait::String(indent, s_spaceChar<Trait>),
+                    ctx.m_fragment.push_back({typename Trait::InternalString(typename Trait::String(indent, s_spaceChar<Trait>)),
                         {currentLineNumber - ctx.m_emptyLinesCount + i, {}, false}});
                 }
 
@@ -3674,7 +3655,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
                     if (ctx.m_lineType != BlockType::ListWithFirstEmptyLine) {
                         int num = 0;
 
-                        if (isOrderedList<Trait>(line.asString(), &num)) {
+                        if (isOrderedList<Trait>(line, &num)) {
                             if (num != 1) {
                                 ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
@@ -3966,15 +3947,13 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
 
     typename MdBlock<Trait>::Data data;
 
-    {
-        TextStream<Trait> stream(s);
+    TextStream<Trait> linesStream(s);
 
-        long long int i = 0;
+    long long int i = 0;
 
-        while (!stream.atEnd()) {
-            data.push_back(std::pair<typename Trait::InternalString, MdLineData>(stream.readLine(), {i}));
-            ++i;
-        }
+    while (!linesStream.atEnd()) {
+        data.push_back(std::pair<typename Trait::InternalString, MdLineData>(linesStream.readLine(), {i}));
+        ++i;
     }
 
     StringListStream<Trait> stream(data);
