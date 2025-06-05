@@ -130,8 +130,10 @@ public:
     InternalStringT(StringView s)
         : m_virginStr(s)
     {
-        m_str.push_back(s);
-        m_pos.push_back(0);
+        if (!s.isEmpty()) {
+            m_str.push_back(s);
+            m_pos.push_back(0);
+        }
     }
 
     /*!
@@ -435,19 +437,22 @@ public:
             return *this;
         }
 
-        const auto len = m_str.length();
+        const auto len = length();
 
         InternalStringT result = *this;
         result.m_str.clear();
+        result.m_pos.clear();
+
         long long int i = 0;
         bool init = false;
         bool first = true;
         long long int spaces = 0;
+        long long int pos = 0;
 
         while (true) {
-            long long tmp = i;
+            long long int tmp = i;
 
-            while (i < length() && m_str[i].isSpace()) {
+            while (i < length() && this->operator [](i).isSpace()) {
                 ++i;
             }
 
@@ -466,25 +471,35 @@ public:
 
             first = false;
 
-            while (i != length() && !m_str[i].isSpace()) {
-                result.m_str.push_back(m_str[i]);
+            String word;
+
+            while (i != len && !this->operator [](i).isSpace()) {
+                word.push_back(this->operator [](i));
                 ++i;
             }
 
-            if (i == length()) {
+            if (!word.isEmpty()) {
+                result.m_str.push_back(word);
+                result.m_pos.push_back(pos);
+                pos += word.length();
+            }
+
+            if (i == len) {
                 break;
             }
 
-            result.m_str.push_back(Latin1Char(' '));
+            result.m_str.push_back(String(Latin1Char(' ')));
+            result.m_pos.push_back(pos);
+            ++pos;
         }
 
-        if (!result.isEmpty() && result.m_str[result.length() - 1] == Latin1Char(' ')) {
-            result.m_str.remove(result.length() - 1, 1);
+        if (!result.isEmpty() && result[result.length() - 1] == Latin1Char(' ')) {
+            result.remove(result.length() - 1, 1);
 
             if (spaces > 1) {
                 result.m_changedPos.back().second.back().m_len = 0;
             } else if (spaces == 1) {
-                result.m_changedPos.back().second.push_back({m_str.length() - spaces, spaces, 0});
+                result.m_changedPos.back().second.push_back({length() - spaces, spaces, 0});
             }
         }
 

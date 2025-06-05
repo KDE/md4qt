@@ -370,70 +370,76 @@ TEST_CASE("replace_remove_6")
     REQUIRE(s.virginPos(14) == 11);
 }
 
-// TEST_CASE("simplified")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("   a   b   c   "));
+TEST_CASE("simplified")
+{
+    const auto str1 = TRAIT::latin1ToString("   a   b   c   ");
+    TRAIT::InternalString s(str1);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a b c"));
+    REQUIRE(s == TRAIT::latin1ToString("a b c"));
 
-//     REQUIRE(s.virginPos(0) == 3);
-//     REQUIRE(s.virginPos(1) == 4);
-//     REQUIRE(s.virginPos(2) == 7);
-//     REQUIRE(s.virginPos(3) == 8);
-//     REQUIRE(s.virginPos(4) == 11);
+    REQUIRE(s.virginPos(0) == 3);
+    REQUIRE(s.virginPos(1) == 4);
+    REQUIRE(s.virginPos(2) == 7);
+    REQUIRE(s.virginPos(3) == 8);
+    REQUIRE(s.virginPos(4) == 11);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("   a b c   "));
+    const auto str2 = TRAIT::latin1ToString("   a b c   ");
+    s = TRAIT::InternalString(str2);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a b c"));
+    REQUIRE(s == TRAIT::latin1ToString("a b c"));
 
-//     REQUIRE(s.virginPos(0) == 3);
-//     REQUIRE(s.virginPos(1) == 4);
-//     REQUIRE(s.virginPos(2) == 5);
-//     REQUIRE(s.virginPos(3) == 6);
-//     REQUIRE(s.virginPos(4) == 7);
+    REQUIRE(s.virginPos(0) == 3);
+    REQUIRE(s.virginPos(1) == 4);
+    REQUIRE(s.virginPos(2) == 5);
+    REQUIRE(s.virginPos(3) == 6);
+    REQUIRE(s.virginPos(4) == 7);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("a b c"));
+    const auto str3 = TRAIT::latin1ToString("a b c");
+    s = TRAIT::InternalString(str3);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a b c"));
+    REQUIRE(s == TRAIT::latin1ToString("a b c"));
 
-//     REQUIRE(s.virginPos(0) == 0);
-//     REQUIRE(s.virginPos(1) == 1);
-//     REQUIRE(s.virginPos(2) == 2);
-//     REQUIRE(s.virginPos(3) == 3);
-//     REQUIRE(s.virginPos(4) == 4);
+    REQUIRE(s.virginPos(0) == 0);
+    REQUIRE(s.virginPos(1) == 1);
+    REQUIRE(s.virginPos(2) == 2);
+    REQUIRE(s.virginPos(3) == 3);
+    REQUIRE(s.virginPos(4) == 4);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("a b  c"));
+    const auto str4 = TRAIT::latin1ToString("a b  c");
+    s = TRAIT::InternalString(str4);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString("a b c"));
+    REQUIRE(s == TRAIT::latin1ToString("a b c"));
 
-//     REQUIRE(s.virginPos(0) == 0);
-//     REQUIRE(s.virginPos(1) == 1);
-//     REQUIRE(s.virginPos(2) == 2);
-//     REQUIRE(s.virginPos(3) == 3);
-//     REQUIRE(s.virginPos(4) == 5);
+    REQUIRE(s.virginPos(0) == 0);
+    REQUIRE(s.virginPos(1) == 1);
+    REQUIRE(s.virginPos(2) == 2);
+    REQUIRE(s.virginPos(3) == 3);
+    REQUIRE(s.virginPos(4) == 5);
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString(""));
+    const auto str5 = TRAIT::latin1ToString("");
+    s = TRAIT::InternalString(str5);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString(""));
-//     REQUIRE(s.isEmpty());
+    REQUIRE(s == TRAIT::latin1ToString(""));
+    REQUIRE(s.isEmpty());
 
-//     s = TRAIT::InternalString(TRAIT::latin1ToString("   "));
+    const auto str6 = TRAIT::latin1ToString("   ");
+    s = TRAIT::InternalString(str6);
 
-//     s = s.simplified();
+    s = s.simplified();
 
-//     REQUIRE(s.asString() == TRAIT::latin1ToString(""));
-//     REQUIRE(s.isEmpty());
-// }
+    REQUIRE(s == TRAIT::latin1ToString(""));
+    REQUIRE(s.isEmpty());
+}
 
 // TEST_CASE("split")
 // {
