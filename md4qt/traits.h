@@ -77,6 +77,23 @@ inline Char getChar(const StringVariant &v, long long int position)
 /*!
  * \inheaderfile md4qt/traits.h
  *
+ * Returns underlying string.
+ *
+ * \a v String variant.
+ */
+template<class StringVariant, class String, class StringView>
+inline String getString(const StringVariant &v)
+{
+    if (std::holds_alternative<String>(v)) {
+        return std::get<String>(v);
+    } else {
+        return std::get<StringView>(v).toString();
+    }
+}
+
+/*!
+ * \inheaderfile md4qt/traits.h
+ *
  * Returns a sliced string variant.
  *
  * \a v String variant.
@@ -168,6 +185,15 @@ class InternalStringT
 {
 public:
     /*!
+     * \typealias MD::InternalString::value_type
+     * \inmodule md4qt
+     * \inheaderfile md4qt/traits.h
+     *
+     * \brief Value type of a symbol in string.
+     */
+    using value_type = Char;
+
+    /*!
      * Default constructor.
      */
     InternalStringT()
@@ -195,11 +221,36 @@ public:
     }
 
     /*!
+     * Returns copy of string view as string
+     */
+    String copyToString() const
+    {
+        String res;
+
+        for (const auto &str: m_str) {
+            res.push_back(impl::getString<StringVariant, String, StringView>(str));
+        }
+
+        return res;
+    }
+
+    /*!
      * Returns a length of this string.
      */
     long long int length() const
     {
         return (m_str.empty() ? 0 : m_pos.back() + impl::length<StringVariant, String, StringView>(m_str.back()));
+    }
+
+    /*!
+     * Clear string.
+     */
+    void clear()
+    {
+        m_str.clear();
+        m_pos.clear();
+        m_virginStr = {};
+        m_changedPos.clear();
     }
 
     /*!
@@ -220,7 +271,7 @@ public:
         }
 
         if (len == 0) {
-            return (isEmpty() ? m_virginStr : String());
+            return (isEmpty() ? m_virginStr.toString() : String());
         }
 
         auto virginStartPos = virginPos(pos);
@@ -440,6 +491,69 @@ public:
         }
 
         return -1;
+    }
+
+    /*!
+     * Returns whether this string contains a given string.
+     *
+     * \a what What to find.
+     */
+    template<class T>
+    bool contains(const T &what) const
+    {
+        return (indexOf(what) != -1);
+    }
+
+    /*!
+     * Returns whether this string starts with a given string.
+     *
+     * \a what What to find.
+     */
+    template<class T>
+    bool startsWith(const T &what) const
+    {
+        if (what.isEmpty()) {
+            return true;
+        }
+
+        if (what.length() > length()) {
+            return false;
+        }
+
+        for (long long int i = 0; i < what.length(); ++i) {
+            if (this->operator [](i) != what[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /*!
+     * Returns whether this string ends with a given string.
+     *
+     * \a what What to find.
+     */
+    template<class T>
+    bool endsWith(const T &what) const
+    {
+        if (what.isEmpty()) {
+            return true;
+        }
+
+        const auto l = length();
+
+        if (what.length() > l) {
+            return false;
+        }
+
+        for (long long int i = 0; i < what.length(); ++i) {
+            if (this->operator [](l - i - 1) != what[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /*!

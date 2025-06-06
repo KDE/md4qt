@@ -81,6 +81,9 @@ template<class Trait> static const auto s_circumflexAccentifString = Trait::lati
 template<class Trait> static const auto s_leftSquareBracketString = Trait::latin1ToString("[");
 template<class Trait> static const auto s_rightSquareBracketString = Trait::latin1ToString("]");
 template<class Trait> static const auto s_mathString = Trait::latin1ToString("math");
+template<class Trait> static const auto s_dotString = Trait::latin1ToString(".");
+template<class Trait> static const auto s_equalSignString = Trait::latin1ToString("=");
+template<class Trait> static const auto s_rightCurlyBracketString = Trait::latin1ToString("}");
 
 template<class Trait> static const auto s_numberSignChar = Trait::latin1ToChar('#');
 template<class Trait> static const auto s_spaceChar = Trait::latin1ToChar(' ');
@@ -119,7 +122,7 @@ template<class Trait> static const auto s_questionMarkChar = Trait::latin1ToChar
 template<class Trait> static const auto s_plusSignChar = Trait::latin1ToChar('+');
 
 template<class Trait> static const typename Trait::InternalString s_verticalLineInternalString =
-    typename Trait::InternalString(s_verticalLineChar<Trait>);
+    typename Trait::InternalString(s_verticalLineString<Trait>);
 
 /*!
  * \inheaderfile md4qt/parser.h
@@ -258,7 +261,7 @@ lastNonSpacePos(const String &line)
  *
  * \a s String where to remove last spaces.
  */
-template<class String, class Char>
+template<class String>
 inline void
 removeSpacesAtEnd(String &s)
 {
@@ -326,14 +329,14 @@ isOrderedList(const typename Trait::InternalString &s,
 
     p = skipIf(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
 
-    if (dp != p && p < s.size()) {
+    if (dp != p && p < s.length()) {
         const auto digits = s.sliced(dp, p - dp);
 
-        if (digits.size() > 9) {
+        if (digits.length() > 9) {
             return false;
         }
 
-        const auto i = digits.toInt();
+        const auto i = digits.copyToString().toInt();
 
         if (num) {
             *num = i;
@@ -350,13 +353,13 @@ isOrderedList(const typename Trait::InternalString &s,
 
             ++p;
 
-            long long int tmp = skipSpaces<Trait>(p, s);
+            long long int tmp = skipSpaces(p, s);
 
             if (isFirstLineEmpty) {
-                *isFirstLineEmpty = (tmp == s.size());
+                *isFirstLineEmpty = (tmp == s.length());
             }
 
-            if ((p < s.size() && s[p] == s_spaceChar<Trait>) || p == s.size()) {
+            if ((p < s.length() && s[p] == s_spaceChar<Trait>) || p == s.length()) {
                 return true;
             }
         }
@@ -589,7 +592,7 @@ public:
     }
 
 private:
-    typename MdBlock<Trait>::Data &m_stream;
+    const typename MdBlock<Trait>::Data &m_stream;
     long long int m_pos;
 }; // class StringListStream
 
@@ -600,13 +603,13 @@ private:
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isFootnote(const typename Trait::String &s)
+isFootnote(const String &s)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces<String>(0, s);
 
-    if (s.size() - p < 5) {
+    if (s.length() - p < 5) {
         return false;
     }
 
@@ -622,7 +625,7 @@ isFootnote(const typename Trait::String &s)
         return false;
     }
 
-    for (; p < s.size(); ++p) {
+    for (; p < s.length(); ++p) {
         if (s[p] == s_rightSquareBracketChar<Trait>) {
             break;
         } else if (s[p].isSpace()) {
@@ -632,7 +635,7 @@ isFootnote(const typename Trait::String &s)
 
     ++p;
 
-    if (p < s.size() && s[p] == s_colonChar<Trait>) {
+    if (p < s.length() && s[p] == s_colonChar<Trait>) {
         return true;
     } else {
         return false;
@@ -648,11 +651,11 @@ isFootnote(const typename Trait::String &s)
  *
  * \a closing Flag telling that check should be done for closing code fences.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isCodeFences(const typename Trait::String &s, bool closing = false)
+isCodeFences(const String &s, bool closing = false)
 {
-    auto p = skipSpaces<Trait>(0, s);
+    auto p = skipSpaces<String>(0, s);
 
     if (p > 3 || p == s.length()) {
         return false;
@@ -692,7 +695,7 @@ isCodeFences(const typename Trait::String &s, bool closing = false)
     }
 
     if (ch == s_graveAccentChar<Trait>) {
-        p = s.indexOf(s_graveAccentChar<Trait>, p);
+        p = s.indexOf(s_graveAccentString<Trait>, p);
 
         if (p != -1) {
             return false;
@@ -805,10 +808,10 @@ private:
  *
  * \a endPos Receiver of last character's position in sequence.
  */
-template<class Trait>
-inline typename Trait::String
+template<class Trait, class String>
+inline String
 readEscapedSequence(long long int i,
-                    const typename Trait::String &str,
+                    const String &str,
                     long long int *endPos = nullptr)
 {
     const auto start = i;
@@ -844,7 +847,7 @@ template<class Trait> static const auto s_canBeEscaped =
  *
  * \a s String for modification.
  */
-template<class String, class Trait>
+template<class Trait, class String>
 inline String
 removeBackslashes(const String &s)
 {
@@ -878,14 +881,14 @@ removeBackslashes(const String &s)
  *
  * \a syntaxPos Receiver of position of syntax string.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isStartOfCode(const typename Trait::String &str,
+isStartOfCode(const String &str,
               typename Trait::String *syntax = nullptr,
               WithPosition *delim = nullptr,
               WithPosition *syntaxPos = nullptr)
 {
-    long long int p = skipSpaces<Trait>(0, str);
+    long long int p = skipSpaces<String>(0, str);
 
     if (delim) {
         delim->setStartColumn(p);
@@ -895,7 +898,7 @@ isStartOfCode(const typename Trait::String &str,
         return false;
     }
 
-    if (str.size() - p < 3) {
+    if (str.length() - p < 3) {
         return false;
     }
 
@@ -907,8 +910,8 @@ isStartOfCode(const typename Trait::String &str,
         long long int c = 1;
 
         const auto skipCh = (c96 ? s_graveAccentChar<Trait> : s_tildeChar<Trait>);
-        const auto delta = skipIf<Trait>(p, str,
-            [&skipCh](const typename Trait::Char &ch) { return (ch == skipCh); }) - p;
+        const auto delta = skipIf<String>(p, str,
+            [&skipCh](const typename String::value_type &ch) { return (ch == skipCh); }) - p;
 
         p += delta;
         c += delta;
@@ -922,12 +925,12 @@ isStartOfCode(const typename Trait::String &str,
         }
 
         if (syntax) {
-            p = skipSpaces<Trait>(p, str);
+            p = skipSpaces<String>(p, str);
             long long int endSyntaxPos = p;
 
-            if (p < str.size()) {
-                *syntax = removeBackslashes<typename Trait::String, Trait>(
-					readEscapedSequence<Trait>(p, str, &endSyntaxPos));
+            if (p < str.length()) {
+                *syntax = removeBackslashes<Trait, String>(
+                    readEscapedSequence<Trait, String>(p, str, &endSyntaxPos)).copyToString();
 
                 if (syntaxPos) {
                     syntaxPos->setStartColumn(p);
@@ -949,15 +952,15 @@ isStartOfCode(const typename Trait::String &str,
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isHorizontalLine(const typename Trait::String &s)
+isHorizontalLine(const String &s)
 {
-    if (s.size() < 3) {
+    if (s.length() < 3) {
         return false;
     }
 
-    typename Trait::Char c;
+    typename String::value_type c;
 
     if (s[0] == s_asteriskChar<Trait>) {
         c = s_asteriskChar<Trait>;
@@ -972,7 +975,7 @@ isHorizontalLine(const typename Trait::String &s)
     long long int p = 1;
     long long int count = 1;
 
-    for (; p < s.size(); ++p) {
+    for (; p < s.length(); ++p) {
         if (s[p] != c && !s[p].isSpace()) {
             break;
         } else if (s[p] == c) {
@@ -984,7 +987,7 @@ isHorizontalLine(const typename Trait::String &s)
         return false;
     }
 
-    if (p == s.size()) {
+    if (p == s.length()) {
         return true;
     }
 
@@ -998,11 +1001,11 @@ isHorizontalLine(const typename Trait::String &s)
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isColumnAlignment(const typename Trait::String &s)
+isColumnAlignment(const String &s)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces(0, s);
 
     static const auto s_legitime = Trait::latin1ToString(":-");
 
@@ -1018,7 +1021,7 @@ isColumnAlignment(const typename Trait::String &s)
         ++p;
     }
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return (ch == s_minusChar<Trait>); });
+    p = skipIf<String>(p, s, [](const typename String::value_type &ch) { return (ch == s_minusChar<Trait>); });
 
     if (p == s.size()) {
         return true;
@@ -1030,7 +1033,7 @@ isColumnAlignment(const typename Trait::String &s)
 
     ++p;
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isSpace(); });
+    p = skipIf<String>(p, s, [](const typename String::value_type &ch) { return ch.isSpace(); });
 
     if (p < s.size()) {
         return false;
@@ -1048,20 +1051,12 @@ isColumnAlignment(const typename Trait::String &s)
  *
  * \a ch Splitting character.
  */
-template<class Trait>
-typename Trait::StringList
-splitString(const typename Trait::String &str, const typename Trait::Char &ch);
-
-#ifdef MD4QT_QT_SUPPORT
-
-template<>
-inline typename QStringTrait::StringList
-splitString<QStringTrait>(const QString &str, const QChar &ch)
+template<class Trait, class String>
+typename Trait::InternalStringList
+splitString(const String &str, const String &sep)
 {
-    return str.split(ch, Qt::SkipEmptyParts);
+    return str.split(sep);
 }
-
-#endif
 
 /*!
  * \inheaderfile md4qt/parser.h
@@ -1070,11 +1065,11 @@ splitString<QStringTrait>(const QString &str, const QChar &ch)
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline int
-isTableAlignment(const typename Trait::String &s)
+isTableAlignment(const String &s)
 {
-    const auto columns = splitString<Trait>(s.simplified(), s_verticalLineChar<Trait>);
+    const auto columns = splitString<Trait>(s.simplified().copyToString(), s_verticalLineString<Trait>);
 
     for (const auto &c : columns) {
         if (!isColumnAlignment<Trait>(c)) {
@@ -1092,9 +1087,9 @@ isTableAlignment(const typename Trait::String &s)
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isHtmlComment(const typename Trait::String &s)
+isHtmlComment(const String &s)
 {
     auto c = s;
 
@@ -1131,9 +1126,9 @@ isHtmlComment(const typename Trait::String &s)
  *
  * \a s String for modifications.
  */
-template<class Trait>
+template<class Trait, class String>
 inline typename Trait::String
-replaceEntity(const typename Trait::String &s)
+replaceEntity(const String &s)
 {
     long long int p1 = 0;
 
@@ -1227,7 +1222,7 @@ removeBackslashes(const typename MdBlock<Trait>::Data &d)
     auto tmp = d;
 
     for (auto &line : tmp) {
-        line.first = removeBackslashes<typename Trait::InternalString, Trait>(line.first);
+        line.first = removeBackslashes<Trait, typename Trait::InternalString>(line.first);
     }
 
     return tmp;
@@ -1419,7 +1414,7 @@ struct TextParsingOpts {
         /*!
          * String.
          */
-        typename Trait::String m_str;
+        typename Trait::InternalString m_str;
         /*!
          * Local start position of string.
          */
@@ -1576,19 +1571,19 @@ virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
     }
 
     typename Trait::String str =
-        (linesCount ? fr.m_data.at(startLine).first.sliced(spos).asString() :
-            fr.m_data.at(startLine).first.sliced(spos, epos - spos).asString());
+        (linesCount ? fr.m_data.at(startLine).first.sliced(spos) :
+            fr.m_data.at(startLine).first.sliced(spos, epos - spos));
 
     long long int i = startLine + 1;
 
     for (; i < startLine + linesCount; ++i) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first.asString());
+        str.push_back(fr.m_data.at(i).first);
     }
 
     if (linesCount) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first.sliced(0, epos).asString());
+        str.push_back(fr.m_data.at(i).first.sliced(0, epos));
     }
 
     return str;
@@ -1653,17 +1648,17 @@ localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long lo
  *
  * \a url String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isEmail(const typename Trait::String &url)
+isEmail(const String &url)
 {
-    static const auto isAllowed = [](const typename Trait::Char &ch) -> bool {
+    static const auto isAllowed = [](const typename String::value_type &ch) -> bool {
         const auto unicode = ch.unicode();
         return ((unicode >= 48 && unicode <= 57) || (unicode >= 97 && unicode <= 122) ||
                 (unicode >= 65 && unicode <= 90));
     };
 
-    static const auto isAdditional = [](const typename Trait::Char &ch) -> bool {
+    static const auto isAdditional = [](const typename String::value_type &ch) -> bool {
         const auto unicode = ch.unicode();
         return (unicode == 33 || (unicode >= 35 && unicode <= 39) ||
                 unicode == 42 || unicode == 43 || (unicode >= 45 && unicode <= 47) ||
@@ -1680,7 +1675,7 @@ isEmail(const typename Trait::String &url)
         }
 
         i = skipIf<Trait>(i, url,
-            [](const typename Trait::Char &ch) { return (isAllowed(ch) || isAdditional(ch)); },
+            [](const typename String::value_type &ch) { return (isAllowed(ch) || isAdditional(ch)); },
             dogPos);
 
         if (i != dogPos) {
@@ -1706,7 +1701,7 @@ isEmail(const typename Trait::String &url)
             }
 
             start = skipIf<Trait>(start, url,
-                [](const typename Trait::Char &ch) { return (isAllowed(ch) || ch == s_minusChar<Trait>); },
+                [](const typename String::value_type &ch) { return (isAllowed(ch) || ch == s_minusChar<Trait>); },
                 dotPos);
 
             if (start != dotPos) {
@@ -1748,9 +1743,9 @@ isEmail(const typename Trait::String &url)
  *
  * \a url String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isValidUrl(const typename Trait::String &url);
+isValidUrl(const String &url);
 
 /*!
  * \inheaderfile md4qt/parser.h
@@ -1759,31 +1754,31 @@ isValidUrl(const typename Trait::String &url);
  *
  * \a url String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isGitHubAutolink(const typename Trait::String &url);
+isGitHubAutolink(const String &url);
 
 #ifdef MD4QT_QT_SUPPORT
 
 template<>
 inline bool
-isValidUrl<QStringTrait>(const QString &url)
+isValidUrl<QStringTrait, typename QStringTrait::InternalString>(const typename QStringTrait::InternalString &url)
 {
-    const QUrl u(url, QUrl::StrictMode);
+    const QUrl u(url.copyToString(), QUrl::StrictMode);
 
     return (u.isValid() && !u.isRelative());
 }
 
 template<>
 inline bool
-isGitHubAutolink<QStringTrait>(const QString &url)
+isGitHubAutolink<QStringTrait, typename QStringTrait::InternalString>(const typename QStringTrait::InternalString &url)
 {
-    const QUrl u(url, QUrl::StrictMode);
+    const QUrl u(url.copyToString(), QUrl::StrictMode);
 
     return (u.isValid()
             && ((!u.scheme().isEmpty() && !u.host().isEmpty())
                 || (url.startsWith(s_wwwString<QStringTrait>) && url.length() >= 7 &&
-                    url.indexOf(s_dotChar<QStringTrait>, 4) != -1)));
+                    url.indexOf(s_dotString<QStringTrait>, 4) != -1)));
 }
 
 #endif
@@ -1819,11 +1814,11 @@ isGitHubAutolink<QStringTrait>(const QString &url)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-template<class Trait>
+template<class Trait, class String>
 inline long long int
-autolinkEnd(const typename Trait::String &url)
+autolinkEnd(const String &url)
 {
-    typename Trait::Char cclose, copen;
+    typename String::value_type cclose, copen;
     long long int i;
 
     long long int linkEnd = url.length();
@@ -2240,7 +2235,7 @@ private:
                   bool inList = false,
                   bool inListWithFirstEmptyLine = false,
                   bool fensedCodeInList = false,
-                  typename Trait::String *startOfCode = nullptr,
+                  typename Trait::InternalString *startOfCode = nullptr,
                   ListIndent *indent = nullptr,
                   bool emptyLinePreceded = false,
                   bool calcIndent = false,
@@ -2377,8 +2372,8 @@ private:
         RawHtmlBlock<Trait> m_html;
         long long int m_emptyLinesBefore = 0;
         MdLineData::CommentDataMap m_htmlCommentData;
-        typename Trait::String m_startOfCode;
-        typename Trait::String m_startOfCodeInList;
+        typename Trait::InternalString m_startOfCode;
+        typename Trait::InternalString m_startOfCodeInList;
         BlockType m_type = BlockType::EmptyLine;
         BlockType m_lineType = BlockType::Unknown;
         BlockType m_prevLineType = BlockType::Unknown;
@@ -3063,12 +3058,10 @@ checkForHtmlComments(const typename Trait::InternalString &line,
 {
     long long int p = 0, l = stream.currentStreamPos();
 
-    const auto &str = line.asString();
-
-    while ((p = str.indexOf(s_startCommentString<Trait>, p)) != -1) {
+    while ((p = line.indexOf(s_startCommentString<Trait>, p)) != -1) {
         bool addNegative = false;
 
-        auto c = str.sliced(p);
+        auto c = line.sliced(p).copyToString();
 
         if (c.startsWith(s_comment1String<Trait>)) {
             res.insert({line.virginPos(p), {0, true}});
@@ -3091,7 +3084,7 @@ checkForHtmlComments(const typename Trait::InternalString &line,
 
             for (; l < stream.size(); ++l) {
                 c.push_back(s_spaceChar<Trait>);
-                c.push_back(stream.lineAt(l).asString());
+                c.push_back(stream.lineAt(l).copyToString());
 
                 if (checkForEndHtmlComments<Trait>(c, 4)) {
                     res.insert({line.virginPos(p), {2, true}});
@@ -3158,7 +3151,7 @@ Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
 
             long long int emptyLines = 0;
 
-            while (!tmp.m_data.empty() && tmp.m_data.back().first.asString().simplified().isEmpty()) {
+            while (!tmp.m_data.empty() && tmp.m_data.back().first.simplified().isEmpty()) {
                 tmp.m_data.pop_back();
                 tmp.m_emptyLineAfter = true;
                 ++emptyLines;
@@ -3239,9 +3232,9 @@ Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
 
         replaceTabs<Trait>(line);
 
-        const auto ns = skipSpaces<Trait>(0, line.asString());
+        const auto ns = skipSpaces(0, line);
 
-        if (ns == line.length() || line.asString().startsWith(s_4spacesString<Trait>)) {
+        if (ns == line.length() || line.startsWith(s_4spacesString<Trait>)) {
             if (ns == line.length()) {
                 ++emptyLinesCount;
                 wasEmptyLine = true;
@@ -3251,7 +3244,7 @@ Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ctx,
 
             ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
         } else if (!wasEmptyLine) {
-            if (isFootnote<Trait>(line.sliced(ns).asString())) {
+            if (isFootnote<Trait>(line.sliced(ns))) {
                 parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
                 ctx.m_lineType = BlockType::Footnote;
@@ -3349,7 +3342,7 @@ Parser<Trait>::makeLineMain(ParserContext &ctx,
     } break;
 
     case BlockType::Code:
-        ctx.m_startOfCode = startSequence<Trait>(line.asString());
+        ctx.m_startOfCode = startSequence(line);
         break;
 
     default:
@@ -3689,8 +3682,8 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
         // End of code block.
         else if (ctx.m_type == BlockType::Code && ctx.m_type == ctx.m_lineType &&
                  !ctx.m_startOfCode.isEmpty() &&
-                 startSequence<Trait>(line.asString()).contains(ctx.m_startOfCode) &&
-                 isCodeFences<Trait>(line.asString(), true)) {
+                 startSequence(line).contains(ctx.m_startOfCode) &&
+                 isCodeFences<Trait>(line, true)) {
             ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
 
             if (!stream.atEnd()) {
@@ -3698,7 +3691,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
 
                 std::tie(line, std::ignore) = readLine(ctx, stream);
 
-                if (line.asString().simplified().isEmpty()) {
+                if (line.simplified().isEmpty()) {
                     ++ctx.m_emptyLinesCount;
                 }
 
@@ -4010,20 +4003,19 @@ Parser<Trait>::parseStream(typename Trait::TextStream &s,
  *
  * \a ordered A flag whether list is ordered.
  */
-template<class Trait>
+template<class String>
 inline long long int
-posOfListItem(const typename Trait::String &s,
-              bool ordered)
+posOfListItem(const String &s, bool ordered)
 {
-    auto p = skipSpaces<Trait>(0, s);
+    auto p = skipSpaces<String>(0, s);
 
     if (ordered) {
-        p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isDigit(); });
+        p = skipIf<String>(p, s, [](const typename String::value_type &ch) { return ch.isDigit(); });
     }
 
     ++p;
 
-    const auto sc = skipSpaces<Trait>(p, s) - p;
+    const auto sc = skipSpaces<String>(p, s) - p;
 
     p += sc;
 
@@ -4068,7 +4060,7 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
                              bool inList,
                              bool inListWithFirstEmptyLine,
                              bool fensedCodeInList,
-                             typename Trait::String *startOfCode,
+                             typename Trait::InternalString *startOfCode,
                              ListIndent *indent,
                              bool emptyLinePreceded,
                              bool calcIndent,
@@ -4076,22 +4068,22 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
 {
     replaceTabs<Trait>(str);
 
-    const auto first = skipSpaces<Trait>(0, str.asString());
+    const auto first = skipSpaces<typename Trait::InternalString>(0, str);
 
     if (first < str.length()) {
         auto s = str.sliced(first);
 
-        const bool isBlockquote = s.asString().startsWith(s_greaterSignString<Trait>);
+        const bool isBlockquote = s.startsWith(s_greaterSignString<Trait>);
         const bool indentIn = indentInList(indents, first, false);
         bool isHeading = false;
 
-        if (first < 4 && isFootnote<Trait>(s.asString())) {
+        if (first < 4 && isFootnote<Trait, typename Trait::InternalString>(s)) {
             return BlockType::Footnote;
         }
 
-        if (s.asString().startsWith(s_numberSignString<Trait>) &&
+        if (s.startsWith(s_numberSignString<Trait>) &&
             (indent ? first - indent->m_indent < 4 : first < 4)) {
-            const auto c = skipIf<Trait>(0, s.asString(),
+            const auto c = skipIf<typename Trait::InternalString>(0, s,
                 [](const typename Trait::Char &ch) { return ch == s_numberSignChar<Trait>; });
 
             if (c <= 6 && ((c < s.length() && s[c].isSpace()) || c == s.length())) {
@@ -4101,16 +4093,16 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
 
         if (inList) {
             bool isFirstLineEmpty = false;
-            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr,
+            const auto orderedList = isOrderedList<Trait>(str, nullptr, nullptr, nullptr,
                 &isFirstLineEmpty);
-            const bool fensedCode = isCodeFences<Trait>(s.asString());
+            const bool fensedCode = isCodeFences<Trait>(s);
             const auto codeIndentedBySpaces = emptyLinePreceded && first >= 4 &&
                 !indentInList(indents, first, true);
 
             if (fensedCodeInList) {
                 if (indentInList(indents, first, true)) {
                     if (fensedCode) {
-                        if (startOfCode && startSequence<Trait>(s.asString()).contains(*startOfCode)) {
+                        if (startOfCode && startSequence(s).contains(*startOfCode)) {
                             return BlockType::FensedCodeInList;
                         }
                     }
@@ -4121,13 +4113,13 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
 
             if (fensedCode && indentIn) {
                 if (startOfCode) {
-                    *startOfCode = startSequence<Trait>(s.asString());
+                    *startOfCode = startSequence(s);
                 }
 
                 return BlockType::FensedCodeInList;
-            } else if ((((s.asString().startsWith(s_minusSignString<Trait>) ||
-                          s.asString().startsWith(s_plusSignString<Trait>) ||
-                          s.asString().startsWith(s_asteriskString<Trait>)) &&
+            } else if ((((s.startsWith(s_minusSignString<Trait>) ||
+                          s.startsWith(s_plusSignString<Trait>) ||
+                          s.startsWith(s_asteriskString<Trait>)) &&
                          ((s.length() > 1 && s[1] == s_spaceChar<Trait>) || s.length() == 1)) ||
                          orderedList) && (first < 4 || indentIn)) {
                 if (codeIndentedBySpaces) {
@@ -4135,7 +4127,7 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
                 }
 
                 if (indent && calcIndent) {
-                    indent->m_indent = posOfListItem<Trait>(str.asString(), orderedList);
+                    indent->m_indent = posOfListItem(str, orderedList);
                     indent->m_level = (indents ? listLevel(*indents, first) : -1);
                 }
 
@@ -4156,17 +4148,17 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
         } else {
             bool isFirstLineEmpty = false;
 
-            const auto orderedList = isOrderedList<Trait>(str.asString(), nullptr, nullptr, nullptr,
+            const auto orderedList = isOrderedList<Trait>(str, nullptr, nullptr, nullptr,
                 &isFirstLineEmpty);
-            const bool isHLine = first < 4 && isHorizontalLine<Trait>(s.asString());
+            const bool isHLine = first < 4 && isHorizontalLine<Trait>(s);
 
             if (!isHLine &&
-                (((s.asString().startsWith(s_minusSignString<Trait>) || s.asString().startsWith(s_plusSignString<Trait>) ||
-                      s.asString().startsWith(s_asteriskString<Trait>)) &&
+                (((s.startsWith(s_minusSignString<Trait>) || s.startsWith(s_plusSignString<Trait>) ||
+                      s.startsWith(s_asteriskString<Trait>)) &&
                      ((s.length() > 1 && s[1] == s_spaceChar<Trait>) || s.length() == 1)) ||
                     orderedList) && first < 4) {
                 if (indent && calcIndent) {
-                    indent->m_indent = posOfListItem<Trait>(str.asString(), orderedList);
+                    indent->m_indent = posOfListItem(str, orderedList);
                     indent->m_level = (indents ? listLevel(*indents, first) : -1);
                 }
 
@@ -4178,9 +4170,9 @@ Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
             }
         }
 
-        if (str.asString().startsWith(typename Trait::String(4, s_spaceChar<Trait>))) {
+        if (str.startsWith(typename Trait::String(4, s_spaceChar<Trait>))) {
             return BlockType::CodeIndentedBySpaces;
-        } else if (isCodeFences<Trait>(str.asString())) {
+        } else if (isCodeFences<Trait>(str)) {
             return BlockType::Code;
         } else if (isBlockquote) {
             return BlockType::Blockquote;
@@ -4236,7 +4228,7 @@ Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
         case BlockType::CodeIndentedBySpaces: {
             int indent = 1;
 
-            if (fr.m_data.front().first.asString().startsWith(s_4spacesString<Trait>)) {
+            if (fr.m_data.front().first.startsWith(s_4spacesString<Trait>)) {
                 indent = 4;
             }
 
@@ -4273,16 +4265,16 @@ Parser<Trait>::clearCache()
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline int
-isTableHeader(const typename Trait::String &s)
+isTableHeader(const String &s)
 {
-    if (s.contains(s_verticalLineChar<Trait>)) {
+    if (s.contains(s_verticalLineString<Trait>)) {
         int c = 1;
 
         const auto tmp = s.simplified();
         const auto p = tmp.startsWith(s_verticalLineString<Trait>) ? 1 : 0;
-        const auto n = tmp.size() - p - (tmp.endsWith(s_verticalLineString<Trait>) && tmp.size() > 1 ? 1 : 0);
+        const auto n = tmp.length() - p - (tmp.endsWith(s_verticalLineString<Trait>) && tmp.length() > 1 ? 1 : 0);
         const auto v = tmp.sliced(p, n);
 
         ReverseSolidusHandler<Trait> reverseSolidus;
@@ -4312,8 +4304,8 @@ Parser<Trait>::parseText(MdBlock<Trait> &fr,
                          bool collectRefLinks,
                          RawHtmlBlock<Trait> &html)
 {
-    const auto h = isTableHeader<Trait>(fr.m_data.front().first.asString());
-    const auto c = fr.m_data.size() > 1 ? isTableAlignment<Trait>(fr.m_data[1].first.asString()) : 0;
+    const auto h = isTableHeader<Trait>(fr.m_data.front().first);
+    const auto c = fr.m_data.size() > 1 ? isTableAlignment<Trait>(fr.m_data[1].first) : 0;
 
     if (c && h && c == h && !html.m_continueHtml) {
         parseTable(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, c);
@@ -4339,17 +4331,17 @@ template<class Trait>
 inline std::pair<typename Trait::String, WithPosition>
 findAndRemoveHeaderLabel(typename Trait::InternalString &s)
 {
-    const auto start = s.asString().indexOf(s_startIdString<Trait>);
+    const auto start = s.indexOf(s_startIdString<Trait>);
 
     if (start >= 0) {
-        const auto p = s.asString().indexOf(s_rightCurlyBracketChar<Trait>, start + 2);
+        const auto p = s.indexOf(s_rightCurlyBracketString<Trait>, start + 2);
 
         if (p >= start + 2 && s[p] == s_rightCurlyBracketChar<Trait>) {
             WithPosition pos;
             pos.setStartColumn(s.virginPos(start));
             pos.setEndColumn(s.virginPos(p));
 
-            const auto label = s.sliced(start, p - start + 1).asString();
+            const auto label = s.sliced(start, p - start + 1).copyToString();
             s.remove(start, p - start + 1);
             return {label, pos};
         }
@@ -4509,19 +4501,19 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         auto line = fr.m_data.front().first;
 
         std::shared_ptr<Heading<Trait>> h(new Heading<Trait>);
-        h->setStartColumn(line.virginPos(skipSpaces<Trait>(0, line.asString())));
+        h->setStartColumn(line.virginPos(skipSpaces(0, line)));
         h->setStartLine(fr.m_data.front().second.m_lineNumber);
         h->setEndColumn(line.virginPos(line.length() - 1));
         h->setEndLine(h->startLine());
 
         long long int pos = 0;
-        pos = skipSpaces<Trait>(pos, line.asString());
+        pos = skipSpaces(pos, line);
 
         if (pos > 0) {
             line = line.sliced(pos);
         }
 
-        pos = skipIf<Trait>(0, line.asString(),
+        pos = skipIf(0, line,
             [](const typename Trait::Char &ch) { return ch == s_numberSignChar<Trait>; });
 
         const int lvl = pos;
@@ -4529,7 +4521,7 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         WithPosition startDelim = {h->startColumn(), h->startLine(),
             line.virginPos(pos - 1), h->startLine()};
 
-        pos = skipSpaces<Trait>(pos, line.asString());
+        pos = skipSpaces(pos, line);
 
         if (pos > 0) {
             fr.m_data.front().first = line.sliced(pos);
@@ -4566,7 +4558,7 @@ Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
 
         typename MdBlock<Trait>::Data tmp;
-        removeSpacesAtEnd<typename Trait::InternalString, typename Trait::Char>(fr.m_data.front().first);
+        removeSpacesAtEnd(fr.m_data.front().first);
         tmp.push_back(fr.m_data.front());
         MdBlock<Trait> block = {tmp, 0};
 
@@ -4679,12 +4671,12 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
         const auto parseTableRow = [&](const typename MdBlock<Trait>::Line &lineData) -> bool {
             const auto &row = lineData.first;
 
-            if (row.asString().startsWith(s_4spacesString<Trait>)) {
+            if (row.startsWith(s_4spacesString<Trait>)) {
                 return false;
             }
 
             auto line = row;
-            auto p = skipSpaces<Trait>(0, line.asString());
+            auto p = skipSpaces(0, line);
 
             if (p == line.length()) {
                 return false;
@@ -4694,7 +4686,7 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                 line.remove(0, p + 1);
             }
 
-            p = lastNonSpacePos<typename Trait::String, typename Trait::Char>(line.asString());
+            p = lastNonSpacePos(line);
 
             if (p < 0) {
                 return false;
@@ -4785,10 +4777,10 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                 if (!it->isEmpty()) {
                     typename Table<Trait>::Alignment a = Table<Trait>::AlignLeft;
 
-                    if (it->asString().endsWith(s_colonString<Trait>) &&
-                        it->asString().startsWith(s_colonString<Trait>)) {
+                    if (it->endsWith(s_colonString<Trait>) &&
+                        it->startsWith(s_colonString<Trait>)) {
                         a = Table<Trait>::AlignCenter;
-                    } else if (it->asString().endsWith(s_colonString<Trait>)) {
+                    } else if (it->endsWith(s_colonString<Trait>)) {
                         a = Table<Trait>::AlignRight;
                     }
 
@@ -4826,12 +4818,11 @@ Parser<Trait>::parseTable(MdBlock<Trait> &fr,
  *
  * \a c Character of heading's sequence.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isH(const typename Trait::String &s,
-    const typename Trait::Char &c)
+isH(const String &s, const typename String::value_type &c)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces(0, s);
 
     if (p > 3) {
         return false;
@@ -4839,13 +4830,13 @@ isH(const typename Trait::String &s,
 
     const auto start = p;
 
-    p = skipIf<Trait>(p, s, [&c](const typename Trait::Char &ch) { return (ch == c); });
+    p = skipIf(p, s, [&c](const typename String::value_type &ch) { return (ch == c); });
 
     if (p - start < 1) {
         return false;
     }
 
-    p = skipIf<Trait>(p, s, [](const typename Trait::Char &ch) { return ch.isSpace(); });
+    p = skipIf(p, s, [](const typename String::value_type &ch) { return ch.isSpace(); });
 
     if (p < s.length()) {
         return false;
@@ -4861,11 +4852,11 @@ isH(const typename Trait::String &s,
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isH1(const typename Trait::String &s)
+isH1(const String &s)
 {
-    return isH<Trait>(s, s_equalSignChar<Trait>);
+    return isH<Trait, String>(s, s_equalSignChar<Trait>);
 }
 
 /*!
@@ -4875,11 +4866,11 @@ isH1(const typename Trait::String &s)
  *
  * \a s String for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isH2(const typename Trait::String &s)
+isH2(const String &s)
 {
-    return isH<Trait>(s, s_minusChar<Trait>);
+    return isH<Trait, String>(s, s_minusChar<Trait>);
 }
 
 /*!
@@ -4984,8 +4975,8 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
     Delims d;
 
     for (long long int line = 0; line < (long long int)fr.size(); ++line) {
-        const typename Trait::String &str = fr.at(line).first.asString();
-        const auto p = skipSpaces<Trait>(0, str);
+        const auto &str = fr.at(line).first;
+        const auto p = skipSpaces(0, str);
         const auto withoutSpaces = str.sliced(p);
 
         if (isHorizontalLine<Trait>(withoutSpaces) && p < 4) {
@@ -4998,7 +4989,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
             ReverseSolidusHandler<Trait> reverseSolidus;
             bool word = false;
 
-            for (long long int i = p; i < str.size(); ++i) {
+            for (long long int i = p; i < str.length(); ++i) {
 
                 if(reverseSolidus.process(str[i])) {
                 }
@@ -5014,7 +5005,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
 
                     const auto ch = str[i];
 
-                    const auto count = skipIf<Trait>(i, str,
+                    const auto count = skipIf(i, str,
                         [&ch](const typename Trait::Char &c) { return (ch == c); }) - i;
 
                     style.push_back(typename Trait::String(count, ch));
@@ -5057,7 +5048,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                     const bool uWhitespaceBefore = (i > 0 ? Trait::isUnicodeWhitespace(str[i - 1]) : true);
                     const bool uWhitespaceOrPunctBefore = uWhitespaceBefore || punctBefore;
 
-                    const auto count = skipIf<Trait>(i, str,
+                    const auto count = skipIf(i, str,
                         [](const typename Trait::Char &ch) { return (ch == s_tildeChar<Trait>); }) - i;
 
                     style.push_back(typename Trait::String(count, s_tildeChar<Trait>));
@@ -5145,7 +5136,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                 else if (str[i] == s_graveAccentChar<Trait>) {
                     typename Trait::String code;
 
-                    const auto count = skipIf<Trait>(i, str,
+                    const auto count = skipIf(i, str,
                         [](const typename Trait::Char &ch) { return (ch == s_graveAccentChar<Trait>); }) - i;
 
                     code.push_back(typename Trait::String(count, s_graveAccentChar<Trait>));
@@ -5166,7 +5157,7 @@ Parser<Trait>::collectDelimiters(const typename MdBlock<Trait>::Data &fr)
                 else if (str[i] == s_dollarSignChar<Trait>) {
                     typename Trait::String m;
 
-                    const auto count = skipIf<Trait>(i, str,
+                    const auto count = skipIf(i, str,
                         [](const typename Trait::Char &ch) { return (ch == s_dollarSignChar<Trait>); }) - i;
 
                     m.push_back(typename Trait::String(count, s_dollarSignChar<Trait>));
@@ -7214,7 +7205,7 @@ Parser<Trait>::toSingleLine(const typename MdBlock<Trait>::Data &d)
         if (!first) {
             res.push_back(s_spaceChar<Trait>);
         }
-        res.push_back(s.first.asString().simplified());
+        res.push_back(s.first.simplified().copyToString());
         first = false;
     }
 
@@ -9880,7 +9871,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
             std::tie(id, it) = checkForLinkText(delims.begin(), delims.end(), po);
 
             if (!toSingleLine(id).isEmpty() &&
-                id.front().first.asString().startsWith(s_circumflexAccentifString<Trait>) &&
+                id.front().first.startsWith(s_circumflexAccentifString<Trait>) &&
                 it != delims.cend() &&
                 fr.m_data.at(it->m_line).first.length() > it->m_pos + 2 &&
                 fr.m_data.at(it->m_line).first[it->m_pos + 1] == s_colonChar<Trait> &&
@@ -9900,7 +9891,7 @@ Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
                 fr.m_data.front().first = fr.m_data.front().first.sliced(it->m_pos + 3);
 
                 for (auto it = fr.m_data.begin(), last = fr.m_data.end(); it != last; ++it) {
-                    if (it->first.asString().startsWith(s_4spacesString<Trait>)) {
+                    if (it->first.startsWith(s_4spacesString<Trait>)) {
                         it->first = it->first.sliced(4);
                     }
                 }
@@ -9931,7 +9922,7 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                                bool collectRefLinks,
                                RawHtmlBlock<Trait> &)
 {
-    const long long int pos = fr.m_data.front().first.asString().indexOf(s_greaterSignChar<Trait>);
+    const long long int pos = fr.m_data.front().first.indexOf(s_greaterSignString<Trait>);
     long long int extra = 0;
 
     long long int line = -1;
@@ -9944,7 +9935,7 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
         auto it = fr.m_data.begin();
 
         for (auto last = fr.m_data.end(); it != last; ++it) {
-            const auto ns = skipSpaces<Trait>(0, it->first.asString());
+            const auto ns = skipSpaces(0, it->first);
             const auto gt = (ns < it->first.length() ? (it->first[ns] == s_greaterSignChar<Trait> ? ns : -1) : -1);
 
             if (gt > -1) {
@@ -9963,7 +9954,7 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
             }
             // Process lazyness...
             else {
-                if (ns < 4 && isHorizontalLine<Trait>(it->first.asString().sliced(ns))) {
+                if (ns < 4 && isHorizontalLine<Trait>(it->first.sliced(ns))) {
                     line = it->second.m_lineNumber;
                     break;
                 }
@@ -9976,14 +9967,14 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                 }
 
                 if (bt == BlockType::Text) {
-                    if (isH1<Trait>(it->first.asString())) {
-                        const auto p = it->first.asString().indexOf(s_equalSignChar<Trait>);
+                    if (isH1<Trait>(it->first)) {
+                        const auto p = it->first.indexOf(s_equalSignString<Trait>);
 
                         it->first.insert(p, s_reverseSolidusChar<Trait>);
 
                         continue;
-                    } else if (isH2<Trait>(it->first.asString())) {
-                        const auto p = it->first.asString().indexOf(s_minusChar<Trait>);
+                    } else if (isH2<Trait>(it->first)) {
+                        const auto p = it->first.indexOf(s_minusSignString<Trait>);
 
                         it->first.insert(p, s_reverseSolidusChar<Trait>);
 
@@ -10039,12 +10030,11 @@ Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
  *
  * \a indent Indent for checking.
  */
-template<class Trait>
+template<class Trait, class String>
 inline bool
-isListItemAndNotNested(const typename Trait::String &s,
-                       long long int indent)
+isListItemAndNotNested(const String &s, long long int indent)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces(0, s);
 
     if (p >= indent || p == s.size()) {
         return false;
@@ -10098,12 +10088,11 @@ calculateIndent(const typename Trait::String &s,
  *
  * \a wasText Was a text before?
  */
-template<class Trait>
+template<class Trait, class String>
 inline std::tuple<bool, long long int, typename Trait::Char, bool>
-listItemData(const typename Trait::String &s,
-             bool wasText)
+listItemData(const String &s, bool wasText)
 {
-    long long int p = skipSpaces<Trait>(0, s);
+    long long int p = skipSpaces(0, s);
 
     if (p == s.size()) {
         return {false, 0, typename Trait::Char(), false};
@@ -10210,7 +10199,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
         resetTopParent = true;
     }
 
-    const auto p = skipSpaces<Trait>(0, fr.m_data.front().first.asString());
+    const auto p = skipSpaces(0, fr.m_data.front().first);
 
     if (p != fr.m_data.front().first.length()) {
         std::shared_ptr<List<Trait>> list(new List<Trait>);
@@ -10226,7 +10215,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
         typename Trait::Char marker;
 
         std::tie(std::ignore, indent, marker, std::ignore) =
-            listItemData<Trait>(listItem.front().first.asString(), false);
+            listItemData<Trait>(listItem.front().first, false);
 
         html.m_blocks.push_back({list, list->startColumn() + indent});
 
@@ -10301,7 +10290,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
         for (auto last = fr.m_data.end(); it != last; ++it) {
             if (updateIndent) {
                 std::tie(std::ignore, indent, marker, std::ignore) =
-                    listItemData<Trait>(it->first.asString(), false);
+                    listItemData<Trait>(it->first, false);
 
                 if (!collectRefLinks) {
                     html.m_blocks.back().second = indent;
@@ -10310,13 +10299,13 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
                 updateIndent = false;
             }
 
-            const auto ns = skipSpaces<Trait>(0, it->first.asString());
+            const auto ns = skipSpaces(0, it->first);
 
-            if (isH1<Trait>(it->first.asString().sliced(ns)) && ns < indent && !listItem.empty()) {
-                const auto p = it->first.asString().indexOf(s_equalSignChar<Trait>);
+            if (isH1<Trait>(it->first.sliced(ns)) && ns < indent && !listItem.empty()) {
+                const auto p = it->first.indexOf(s_equalSignString<Trait>);
 
                 it->first.insert(p, s_reverseSolidusChar<Trait>);
-            } else if (isHorizontalLine<Trait>(it->first.asString().sliced(ns)) &&
+            } else if (isHorizontalLine<Trait>(it->first.sliced(ns)) &&
                 ns < indent && !listItem.empty()) {
                 updateIndent = true;
 
@@ -10331,11 +10320,11 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
                 }
 
                 continue;
-            } else if (isListItemAndNotNested<Trait>(it->first.asString(), indent) &&
+            } else if (isListItemAndNotNested<Trait>(it->first, indent) &&
                 !listItem.empty() && !it->second.m_mayBreakList) {
                 typename Trait::Char tmpMarker;
                 std::tie(std::ignore, indent, tmpMarker, std::ignore) =
-                    listItemData<Trait>(it->first.asString(), false);
+                    listItemData<Trait>(it->first, false);
 
                 processListItem();
 
@@ -10357,7 +10346,7 @@ Parser<Trait>::parseList(MdBlock<Trait> &fr,
             if (list->startColumn() == -1) {
                 list->setStartColumn(
                     it->first.virginPos(std::min(it->first.length() ?
-                        it->first.length() - 1 : 0, skipSpaces<Trait>(0, it->first.asString()))));
+                        it->first.length() - 1 : 0, skipSpaces(0, it->first))));
                 list->setStartLine(it->second.m_lineNumber);
 
                 if (!collectRefLinks) {
@@ -10810,12 +10799,12 @@ Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                          std::shared_ptr<Block<Trait>> parent,
                          bool collectRefLinks)
 {
-    const auto indent = skipSpaces<Trait>(0, fr.m_data.front().first.asString());
+    const auto indent = skipSpaces(0, fr.m_data.front().first);
 
     if (indent != fr.m_data.front().first.length()) {
         WithPosition startDelim, endDelim, syntaxPos;
         typename Trait::String syntax;
-        isStartOfCode<Trait>(fr.m_data.front().first.asString(), &syntax, &startDelim, &syntaxPos);
+        isStartOfCode<Trait>(fr.m_data.front().first, &syntax, &startDelim, &syntaxPos);
         syntax = replaceEntity<Trait>(syntax);
         startDelim.setStartLine(fr.m_data.front().second.m_lineNumber);
         startDelim.setEndLine(startDelim.startLine());
@@ -10841,7 +10830,7 @@ Parser<Trait>::parseCode(MdBlock<Trait> &fr,
             const auto it = std::prev(fr.m_data.cend());
 
             if (it->second.m_lineNumber > -1) {
-                endDelim.setStartColumn(it->first.virginPos(skipSpaces<Trait>(0, it->first.asString())));
+                endDelim.setStartColumn(it->first.virginPos(skipSpaces(0, it->first)));
                 endDelim.setStartLine(it->second.m_lineNumber);
                 endDelim.setEndLine(endDelim.startLine());
                 endDelim.setEndColumn(it->first.virginPos(it->first.length() - 1));
@@ -10931,7 +10920,7 @@ Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr,
         }
 
         if (!collectRefLinks) {
-            const auto ns = skipSpaces<Trait>(0, it->first.asString());
+            const auto ns = skipSpaces(0, it->first);
             if (first) {
                 startPos = ns;
             }
