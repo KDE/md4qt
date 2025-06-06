@@ -654,158 +654,174 @@ TEST_CASE("replace_tabs")
     }
 }
 
-// TEST_CASE("replace_spaces")
-// {
-//     TRAIT::InternalString s(TRAIT::latin1ToString("    code    c"));
+TEST_CASE("replace_spaces")
+{
+    const auto str = TRAIT::latin1ToString("    code    c");
+    TRAIT::InternalString s(str);
 
-//     s.remove(0, 4);
-//     s.remove(4, 4);
+    s.remove(0, 4);
+    s.remove(4, 4);
 
-//     REQUIRE(s.virginPos(0) == 4);
-//     REQUIRE(s.virginPos(1) == 5);
-//     REQUIRE(s.virginPos(2) == 6);
-//     REQUIRE(s.virginPos(3) == 7);
-//     REQUIRE(s.virginPos(4) == 12);
-// }
+    REQUIRE(s.virginPos(0) == 4);
+    REQUIRE(s.virginPos(1) == 5);
+    REQUIRE(s.virginPos(2) == 6);
+    REQUIRE(s.virginPos(3) == 7);
+    REQUIRE(s.virginPos(4) == 12);
+}
 
-// TEST_CASE("virgin_string")
-// {
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode"));
+TEST_CASE("virgin_string")
+{
+    {
+        const auto str = TRAIT::latin1ToString("\tcode");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\tcode"));
-//     }
+        REQUIRE(s.virginSubString() == str);
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode"));
+    {
+        const auto str = TRAIT::latin1ToString("\tcode");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
+        s.remove(0, 2);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
+        s.remove(0, 2);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\tcode\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\tcode\t"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\tcode\t"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\tcode\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\tcode\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
+        s.remove(0, 2);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code\t"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  code\t"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode\t\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, 2);
-//         s.remove(s.length() - 2, 2);
+        s.remove(0, 2);
+        s.remove(s.length() - 2, 2);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode\t  "));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("  \tcode\t  "));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode\t\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
+        TRAIT::InternalString s(str);
 
-//         s.remove(3, 2);
+        s.remove(3, 2);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode\t\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, s.length());
+        s.remove(0, s.length());
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode\t\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         s.remove(0, s.length());
+        s.remove(0, s.length());
 
-//         REQUIRE(s.virginSubString(-1, s.length() + 1) == TRAIT::latin1ToString("\t\tcode\t\t"));
-//     }
+        REQUIRE(s.virginSubString(-1, s.length() + 1) == TRAIT::latin1ToString("\t\tcode\t\t"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("text"));
+    {
+        const auto str = TRAIT::latin1ToString("text");
+        TRAIT::InternalString s(str);
 
-//         s.remove(0, 2);
-//         s.remove(s.length() - 1, 1);
+        s.remove(0, 2);
+        s.remove(s.length() - 1, 1);
 
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("x"));
-//     }
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("x"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("text"));
+    {
+        const auto str = TRAIT::latin1ToString("text");
+        TRAIT::InternalString s(str);
 
-//         REQUIRE(s.virginSubString(1, 1) == TRAIT::latin1ToString("e"));
-//     }
+        REQUIRE(s.virginSubString(1, 1) == TRAIT::latin1ToString("e"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\t\tcode\t\t"));
+    {
+        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginSubString(0, 12) == TRAIT::latin1ToString("\t\tcode"));
-//     }
+        REQUIRE(s.virginSubString(0, 12) == TRAIT::latin1ToString("\t\tcode"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\ta\t\tb"));
+    {
+        const auto str = TRAIT::latin1ToString("\ta\t\tb");
+        TRAIT::InternalString s(str);
 
-//         MD::replaceTabs<TRAIT>(s);
+        MD::replaceTabs<TRAIT>(s);
 
-//         REQUIRE(s.virginSubString(4) == TRAIT::latin1ToString("a\t\tb"));
-//     }
-// }
+        REQUIRE(s.virginSubString(4) == TRAIT::latin1ToString("a\t\tb"));
+    }
+}
 
-// TEST_CASE("backslash")
-// {
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("\\|"));
+TEST_CASE("backslash")
+{
+    {
+        const auto str = TRAIT::latin1ToString("\\|");
+        TRAIT::InternalString s(str);
 
-//         s = MD::removeBackslashes<typename TRAIT::InternalString, TRAIT>(s);
+        s = MD::removeBackslashes<TRAIT>(s);
 
-//         REQUIRE(s.virginPos(0) == 1);
-//         REQUIRE(s.virginSubString() == TRAIT::latin1ToString("|"));
-//     }
+        REQUIRE(s.virginPos(0) == 1);
+        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("|"));
+    }
 
-//     {
-//         TRAIT::InternalString s(TRAIT::latin1ToString("abcde\\|"));
+    {
+        const auto str = TRAIT::latin1ToString("abcde\\|");
+        TRAIT::InternalString s(str);
 
-//         s.replace(TRAIT::latin1ToString("\\|"), TRAIT::latin1ToString("|"));
+        s.replace(TRAIT::latin1ToString("\\|"), TRAIT::latin1ToString("|"));
 
-//         REQUIRE(s.virginPos(5) == 5);
-//         REQUIRE(s.virginSubString(5) == TRAIT::latin1ToString("\\|"));
-//     }
-// }
+        REQUIRE(s.virginPos(5) == 5);
+        REQUIRE(s.virginSubString(5) == TRAIT::latin1ToString("\\|"));
+    }
+}
