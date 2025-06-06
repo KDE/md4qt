@@ -1556,19 +1556,19 @@ virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
     }
 
     typename Trait::String str =
-        (linesCount ? fr.m_data.at(startLine).first.sliced(spos) :
-            fr.m_data.at(startLine).first.sliced(spos, epos - spos));
+        (linesCount ? fr.m_data.at(startLine).first.sliced(spos).copyToString() :
+            fr.m_data.at(startLine).first.sliced(spos, epos - spos).copyToString());
 
     long long int i = startLine + 1;
 
     for (; i < startLine + linesCount; ++i) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first);
+        str.push_back(fr.m_data.at(i).first.copyToString());
     }
 
     if (linesCount) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first.sliced(0, epos));
+        str.push_back(fr.m_data.at(i).first.sliced(0, epos).copyToString());
     }
 
     return str;

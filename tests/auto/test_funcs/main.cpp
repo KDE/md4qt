@@ -29,8 +29,12 @@ TEST_CASE("is_code_fences")
 
 TEST_CASE("is_start_of_code")
 {
-    REQUIRE(!MD::isStartOfCode<TRAIT>(TRAIT::latin1ToString("~~")));
-    REQUIRE(!MD::isStartOfCode<TRAIT>(TRAIT::latin1ToString("~~`")));
+    const auto str1 = TRAIT::latin1ToString("~~");
+    const auto str2 = TRAIT::latin1ToString("~~`");
+    typename TRAIT::InternalString s1(str1);
+    typename TRAIT::InternalString s2(str2);
+    REQUIRE(!MD::isStartOfCode<TRAIT>(s1));
+    REQUIRE(!MD::isStartOfCode<TRAIT>(s2));
 }
 
 TEST_CASE("is_horizontal_line")
@@ -152,35 +156,43 @@ TEST_CASE("paragraph_to_label")
 
 TEST_CASE("replace_tabs")
 {
-    typename TRAIT::InternalString s1(TRAIT::latin1ToString("-\ttext"));
-    typename TRAIT::InternalString s2(TRAIT::latin1ToString(" >\ttext"));
-    typename TRAIT::InternalString s3(TRAIT::latin1ToString("> >\ttext"));
-    typename TRAIT::InternalString s4(TRAIT::latin1ToString("\ttext"));
+    const auto str1 = TRAIT::latin1ToString("-\ttext");
+    const auto str2 = TRAIT::latin1ToString(" >\ttext");
+    const auto str3 = TRAIT::latin1ToString("> >\ttext");
+    const auto str4 = TRAIT::latin1ToString("\ttext");
+    typename TRAIT::InternalString s1(str1);
+    typename TRAIT::InternalString s2(str2);
+    typename TRAIT::InternalString s3(str3);
+    typename TRAIT::InternalString s4(str4);
 
     MD::replaceTabs<TRAIT>(s1);
     MD::replaceTabs<TRAIT>(s2);
     MD::replaceTabs<TRAIT>(s3);
     MD::replaceTabs<TRAIT>(s4);
 
-    REQUIRE(s1.asString() == TRAIT::latin1ToString("-   text"));
-    REQUIRE(s2.asString() == TRAIT::latin1ToString(" >  text"));
-    REQUIRE(s3.asString() == TRAIT::latin1ToString("> > text"));
-    REQUIRE(s4.asString() == TRAIT::latin1ToString("    text"));
+    REQUIRE(s1 == TRAIT::latin1ToString("-   text"));
+    REQUIRE(s2 == TRAIT::latin1ToString(" >  text"));
+    REQUIRE(s3 == TRAIT::latin1ToString("> > text"));
+    REQUIRE(s4 == TRAIT::latin1ToString("    text"));
 
-    typename TRAIT::InternalString s5(TRAIT::latin1ToString("\t-\ttext"));
-    typename TRAIT::InternalString s6(TRAIT::latin1ToString("\t >\ttext"));
-    typename TRAIT::InternalString s7(TRAIT::latin1ToString("\t> >\ttext"));
-    typename TRAIT::InternalString s8(TRAIT::latin1ToString("\t\ttext"));
+    const auto str5 = TRAIT::latin1ToString("\t-\ttext");
+    const auto str6 = TRAIT::latin1ToString("\t >\ttext");
+    const auto str7 = TRAIT::latin1ToString("\t> >\ttext");
+    const auto str8 = TRAIT::latin1ToString("\t\ttext");
+    typename TRAIT::InternalString s5(str5);
+    typename TRAIT::InternalString s6(str6);
+    typename TRAIT::InternalString s7(str7);
+    typename TRAIT::InternalString s8(str8);
 
     MD::replaceTabs<TRAIT>(s5);
     MD::replaceTabs<TRAIT>(s6);
     MD::replaceTabs<TRAIT>(s7);
     MD::replaceTabs<TRAIT>(s8);
 
-    REQUIRE(s5.asString() == TRAIT::latin1ToString("    -   text"));
-    REQUIRE(s6.asString() == TRAIT::latin1ToString("     >  text"));
-    REQUIRE(s7.asString() == TRAIT::latin1ToString("    > > text"));
-    REQUIRE(s8.asString() == TRAIT::latin1ToString("        text"));
+    REQUIRE(s5 == TRAIT::latin1ToString("    -   text"));
+    REQUIRE(s6 == TRAIT::latin1ToString("     >  text"));
+    REQUIRE(s7 == TRAIT::latin1ToString("    > > text"));
+    REQUIRE(s8 == TRAIT::latin1ToString("        text"));
 }
 
 TEST_CASE("is_email")
@@ -547,11 +559,21 @@ TEST_CASE("semi_optimization")
 TEST_CASE("virgin_substr")
 {
     MD::MdBlock<TRAIT> data;
-    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {1}});
-    data.m_data.push_back({TRAIT::latin1ToString("__text__"), {2}});
-    data.m_data.push_back({TRAIT::latin1ToString("text"), {3}});
-    data.m_data.push_back({TRAIT::latin1ToString("~~text~~"), {4}});
-    data.m_data.push_back({TRAIT::latin1ToString("~text*"), {5}});
+    const auto str1 = TRAIT::latin1ToString("**text**");
+    const auto str2 = TRAIT::latin1ToString("__text__");
+    const auto str3 = TRAIT::latin1ToString("text");
+    const auto str4 = TRAIT::latin1ToString("~~text~~");
+    const auto str5 = TRAIT::latin1ToString("~text*");
+    typename TRAIT::InternalString s1(str1);
+    typename TRAIT::InternalString s2(str2);
+    typename TRAIT::InternalString s3(str3);
+    typename TRAIT::InternalString s4(str4);
+    typename TRAIT::InternalString s5(str5);
+    data.m_data.push_back({s1, {1}});
+    data.m_data.push_back({s2, {2}});
+    data.m_data.push_back({s3, {3}});
+    data.m_data.push_back({s4, {4}});
+    data.m_data.push_back({s5, {5}});
 
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 0, 1, 0}).isEmpty());
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 1, 1, 1}) == TRAIT::latin1ToString("**"));
@@ -584,9 +606,15 @@ TEST_CASE("virgin_substr")
 TEST_CASE("local_pos_from_virgin")
 {
     MD::MdBlock<TRAIT> data;
-    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {1}});
-    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {2}});
-    data.m_data.push_back({TRAIT::latin1ToString("**text**"), {3}});
+    const auto str1 = TRAIT::latin1ToString("**text**");
+    const auto str2 = TRAIT::latin1ToString("**text**");
+    const auto str3 = TRAIT::latin1ToString("**text**");
+    typename TRAIT::InternalString s1(str1);
+    typename TRAIT::InternalString s2(str2);
+    typename TRAIT::InternalString s3(str3);
+    data.m_data.push_back({s1, {1}});
+    data.m_data.push_back({s2, {2}});
+    data.m_data.push_back({s3, {3}});
 
     using pair = std::pair<long long int, long long int>;
 
@@ -611,7 +639,10 @@ TEST_CASE("local_pos_from_virgin")
 
         REQUIRE(MD::localPosFromVirgin<TRAIT>(dd, 0, 0) == pair{-1, -1});
 
-        dd.m_data.push_back({TRAIT::latin1ToString(""), {1}});
+        const auto str = TRAIT::latin1ToString("");
+        typename TRAIT::InternalString s(str);
+
+        dd.m_data.push_back({s, {1}});
 
         REQUIRE(MD::localPosFromVirgin<TRAIT>(dd, 0, 1) == pair{-1, -1});
     }

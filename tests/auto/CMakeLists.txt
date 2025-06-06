@@ -6,7 +6,7 @@ project(tests)
 kde_enable_exceptions()
 
 if(BUILD_MD4QT_QT_TESTS)
-    # add_subdirectory(test_funcs)
+    add_subdirectory(test_funcs)
     # add_subdirectory(test_parser)
     # add_subdirectory(commonmark)
     # add_subdirectory(gfm)
