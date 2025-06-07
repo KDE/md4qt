@@ -1756,9 +1756,9 @@ isValidUrl<QStringTrait, typename QStringTrait::InternalString>(const typename Q
 
 template<>
 inline bool
-isGitHubAutolink<QStringTrait, typename QStringTrait::InternalString>(const typename QStringTrait::InternalString &url)
+isGitHubAutolink<QStringTrait, typename QStringTrait::String>(const typename QStringTrait::String &url)
 {
-    const QUrl u(url.copyToString(), QUrl::StrictMode);
+    const QUrl u(url, QUrl::StrictMode);
 
     return (u.isValid()
             && ((!u.scheme().isEmpty() && !u.host().isEmpty())
@@ -1947,7 +1947,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 t->closeStyles() = {};
                                 po.m_rawTextData[idx].m_str = tmp;
                                 ++idx;
-                                t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(tmp)));
+                                t->setText(removeBackslashes<Trait>(replaceEntity<Trait>(tmp)));
                                 ++ti;
                             }
 
@@ -1988,7 +1988,7 @@ processGitHubAutolinkExtension(std::shared_ptr<Paragraph<Trait>> p,
                                 t->setStartLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                                 t->setEndLine(po.m_fr.m_data.at(s.m_line).second.m_lineNumber);
                                 t->setEndColumn(po.m_fr.m_data.at(s.m_line).first.virginPos(s.m_pos + s.m_str.length() - 1));
-                                t->setText(removeBackslashes<typename Trait::String, Trait>(replaceEntity<Trait>(s.m_str)));
+                                t->setText(removeBackslashes<Trait>(replaceEntity<Trait>(s.m_str)));
                                 t->closeStyles() = closeStyles;
                                 p->insertItem(ti + 1, t);
                             } else {
