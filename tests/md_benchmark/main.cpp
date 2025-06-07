@@ -5,7 +5,6 @@
 */
 
 #define MD4QT_QT_SUPPORT
-#define MD4QT_ICU_STL_SUPPORT
 #include <md4qt/doc.h>
 #include <md4qt/parser.h>
 #include <md4qt/html.h>
@@ -26,14 +25,6 @@ class MdBenchmark : public QObject
 private Q_SLOTS:
     void initTestCase()
     {
-        m_stdStream.open("tests/manual/complex.md", std::ios::in | std::ios::binary);
-        m_stdWd = std::filesystem::canonical(std::filesystem::current_path()).u8string();
-        m_stdFileName = MD::UnicodeStringTrait::latin1ToString("tests/manual/complex.md");
-
-        if (!m_stdStream.good()) {
-            QFAIL("Unable to open file with STL.");
-        }
-
         m_qtFileName = MD::QStringTrait::latin1ToString("tests/manual/complex.md");
         m_qtWd = QDir().absolutePath();
 
@@ -44,24 +35,6 @@ private Q_SLOTS:
             file.close();
         } else {
             QFAIL("Unable to open file with Qt.");
-        }
-    }
-
-    void cleanupTestCase()
-    {
-        m_stdStream.close();
-    }
-
-    void md4qt_with_icu()
-    {
-        QBENCHMARK {
-            if (m_stdStream.good()) {
-                MD::Parser<MD::UnicodeStringTrait> parser;
-
-                parser.parse(m_stdStream, m_stdWd, m_stdFileName, false);
-
-                m_stdStream.seekg(std::ios::beg);
-            }
         }
     }
 
@@ -125,9 +98,6 @@ private Q_SLOTS:
     }
 
 private:
-    std::ifstream m_stdStream;
-    MD::UnicodeString m_stdWd;
-    MD::UnicodeString m_stdFileName;
     QString m_qtWd;
     QString m_qtFileName;
     QByteArray m_qtData;
