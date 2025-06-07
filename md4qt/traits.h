@@ -218,7 +218,7 @@ public:
         bool init = false;
         const auto len = m_str.length();
 
-        for (long long int i = 0; i < m_str.size();) {
+        for (long long int i = 0; i < len;) {
             long long int p = m_str.indexOf(what, i);
 
             if (p != -1) {
@@ -303,7 +303,7 @@ public:
         while (true) {
             long long tmp = i;
 
-            while (i < length() && m_str[i].isSpace()) {
+            while (i < len && m_str[i].isSpace()) {
                 ++i;
             }
 
@@ -322,7 +322,7 @@ public:
 
             first = false;
 
-            while (i != length() && !m_str[i].isSpace()) {
+            while (i != len && !m_str[i].isSpace()) {
                 result.m_str.push_back(m_str[i]);
                 ++i;
             }
@@ -340,7 +340,7 @@ public:
             if (spaces > 1) {
                 result.m_changedPos.back().second.back().m_len = 0;
             } else if (spaces == 1) {
-                result.m_changedPos.back().second.push_back({m_str.length() - spaces, spaces, 0});
+                result.m_changedPos.back().second.push_back({len - spaces, spaces, 0});
             }
         }
 
@@ -358,7 +358,7 @@ public:
         const auto len = m_str.length();
 
         if (sep.isEmpty()) {
-            for (long long int i = 0; i < m_str.length(); ++i) {
+            for (long long int i = 0; i < len; ++i) {
                 auto is = *this;
                 is.m_str = m_str[i];
                 is.m_changedPos.push_back({{i, len}, {}});
@@ -372,7 +372,7 @@ public:
         long long int pos = 0;
         long long int fpos = 0;
 
-        while ((fpos = m_str.indexOf(sep.asString(), pos)) != -1 && fpos < length()) {
+        while ((fpos = m_str.indexOf(sep.asString(), pos)) != -1 && fpos < len) {
             if (fpos - pos > 0) {
                 auto is = *this;
                 is.m_str = m_str.sliced(pos, fpos - pos);
@@ -384,9 +384,9 @@ public:
             pos = fpos + sep.length();
         }
 
-        if (pos < m_str.length()) {
+        if (pos < len) {
             auto is = *this;
-            is.m_str = m_str.sliced(pos, m_str.length() - pos);
+            is.m_str = m_str.sliced(pos, len - pos);
             is.m_changedPos.push_back({{pos, len}, {}});
 
             result.push_back(is);
@@ -406,10 +406,10 @@ public:
     {
         InternalStringT tmp = *this;
         const auto oldLen = m_str.length();
-        tmp.m_str = tmp.m_str.sliced(pos, (len == -1 ? tmp.m_str.length() - pos : len));
+        tmp.m_str = tmp.m_str.sliced(pos, (len == -1 ? oldLen - pos : len));
         tmp.m_changedPos.push_back({{pos, oldLen}, {}});
         if (len != -1 && len < length() - pos) {
-            tmp.m_changedPos.back().second.push_back({pos + len, length() - pos - len, 0});
+            tmp.m_changedPos.back().second.push_back({pos + len, oldLen - pos - len, 0});
         }
 
         return tmp;
@@ -425,7 +425,7 @@ public:
         InternalStringT tmp = *this;
         const auto len = m_str.length();
         tmp.m_str = tmp.m_str.right(n);
-        tmp.m_changedPos.push_back({{length() - n, len}, {}});
+        tmp.m_changedPos.push_back({{len - n, len}, {}});
 
         return tmp;
     }
