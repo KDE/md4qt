@@ -141,26 +141,33 @@ inline void slice(const std::vector<StringVariant> &v,
                   std::vector<StringVariant> &vRes,
                   std::vector<long long int> &pRes)
 {
-    long long int newPos = 0;
+    if (p.empty()) {
+        return;
+    }
+
     const auto it = std::prev(std::upper_bound(p.cbegin(), p.cend(), pos));
+
     long long idx = 0;
+    long long int newPos = 0;
 
     if (it != p.cend()) {
+        pos -= *it;
         const auto start = std::distance(p.cbegin(), it);
 
         while(n > 0 && ((start + idx) < static_cast<long long int>(v.size()))) {
             const auto &str = v[start + idx];
+            auto len = length<StringVariant, String, StringView>(str) - pos;
             ++idx;
-            auto len = length<StringVariant, String, StringView>(str) - pos + (*it);
 
             if (len > n) {
                 len = n;
             }
 
-            vRes.push_back(slice<StringVariant, String, StringView>(str, pos - (*it), len));
+            vRes.push_back(slice<StringVariant, String, StringView>(str, pos, len));
             pRes.push_back(newPos);
 
             newPos += len;
+            pos = 0;
             n -= len;
         }
     }
@@ -365,29 +372,29 @@ public:
         const auto replacedSize = size;
 
         if (it != m_pos.end()) {
-            const auto start = std::distance(m_pos.begin(), it);
+            auto start = std::distance(m_pos.begin(), it);
             auto old = m_str[start];
-            auto idx = start;
-            auto end = -1;
+            bool remove = false;
+            bool skip = false;
 
             if (pos > *it) {
-                m_str[idx] = impl::slice<StringVariant, String, StringView>(old, 0, pos - (*it));
-                ++idx;
+                m_str[start] = impl::slice<StringVariant, String, StringView>(old, 0, pos - (*it));
+                ++start;
+                skip = true;
             }
+
+            auto end = start;
 
             old = impl::slice<StringVariant, String, StringView>(old, pos - (*it));
 
             while (size > 0) {
                 const auto len = impl::length<StringVariant, String, StringView>(old);
 
+                remove = (skip ? false : true);
+                end += (skip ? 0 : 1);
+
                 if (len < size) {
                     size -= len;
-
-                    if (end != -1) {
-                        ++end;
-                    } else {
-                        end = idx;
-                    }
                 } else if (len == size) {
                     old = {};
                     break;
@@ -402,48 +409,36 @@ public:
                     old = {};
                     break;
                 }
+
+                skip = false;
             }
 
-            if (end > idx && idx < static_cast<long long int>(m_pos.size())) {
-                m_pos.erase(m_pos.begin() + idx, m_pos.begin() + end + 1);
-                m_str.erase(m_str.begin() + idx, m_str.begin() + end + 1);
+            if (remove) {
+                m_pos.erase(m_pos.begin() + start, m_pos.begin() + end);
+                m_str.erase(m_str.begin() + start, m_str.begin() + end);
             }
-
-            bool removed = false;
 
             if (!with.isEmpty()) {
-                if (start != idx) {
-                    m_str.insert(m_str.begin() + idx, with);
-                    m_pos.insert(m_pos.begin() + idx, pos);
-                } else {
-                    m_str[idx] = with;
-                    m_pos[idx] = pos;
-                }
+                m_str.insert(m_str.begin() + start, with);
+                m_pos.insert(m_pos.begin() + start, pos);
 
-                ++idx;
-            } else {
-                if (start == idx) {
-                    m_pos.erase(m_pos.begin() + idx);
-                    m_str.erase(m_str.begin() + idx);
-
-                    removed = true;
-                }
+                ++start;
             }
 
             auto updatedPos = pos + with.length();
 
-            if (impl::length<StringVariant, String, StringView>(old)) {
-                m_pos.insert(m_pos.begin() + idx, updatedPos);
-                m_str.insert(m_str.begin() + idx, old);
+            if (impl::length<StringVariant, String, StringView>(old) && !insertion) {
+                m_pos.insert(m_pos.begin() + start, updatedPos);
+                m_str.insert(m_str.begin() + start, old);
 
-                ++idx;
-            } else {
-                updatedPos = (removed ? (idx - 1 >= 0 ? m_pos[idx - 1] : 0) : pos);
+                ++start;
+
+                updatedPos += impl::length<StringVariant, String, StringView>(old);
             }
 
-            for (; idx < static_cast<long long int>(m_pos.size()); ++idx) {
-                updatedPos += (idx - 1 >= 0 ? impl::length<StringVariant, String, StringView>(m_str[idx - 1]) : 0);
-                m_pos[idx] = updatedPos;
+            for (; start < static_cast<long long int>(m_pos.size()); ++start) {
+                m_pos[start] = updatedPos;
+                updatedPos += impl::length<StringVariant, String, StringView>(m_str[start]);
             }
         }
 

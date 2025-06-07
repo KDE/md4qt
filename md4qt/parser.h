@@ -2847,9 +2847,9 @@ Parser<Trait>::parse(const typename Trait::String &fileName,
     typename Trait::String wd;
     auto i = workingDirectory.length() - 1;
 
-    i = skipIfBackward<Trait>(workingDirectory.length() - 1, workingDirectory,
-                              [](const typename Trait::Char &ch) { return (ch == s_reverseSolidusChar<Trait> ||
-                                                                          ch == s_solidusChar<Trait>); });
+    i = skipIfBackward(workingDirectory.length() - 1, workingDirectory,
+                       [](const typename Trait::Char &ch) { return (ch == s_reverseSolidusChar<Trait> ||
+                                                                    ch == s_solidusChar<Trait>); });
 
     if (i < 0) {
         i = 0;
@@ -2903,7 +2903,7 @@ public:
             if (rFound && c != s_newLineChar<Trait>) {
                 --m_pos;
 
-                return typename Trait::StringView(data() + start, m_pos - start + 1);
+                return typename Trait::StringView(data() + start, m_pos - start - 1);
             }
 
             if (c == s_carriageReturnChar<Trait>) {
@@ -2911,12 +2911,12 @@ public:
 
                 continue;
             } else if (c == s_newLineChar<Trait>) {
-                return typename Trait::StringView(data() + start, m_pos - start + 1);
+                return typename Trait::StringView(data() + start, m_pos - start - 1 - (rFound ? 1 : 0));
             }
         }
 
         if (!isEmpty()) {
-            return typename Trait::StringView(data() + start, m_pos - start + (atEnd() ? 0 : 1));
+            return typename Trait::StringView(data() + start, m_pos - start - (rFound ? 1 : 0));
         } else {
             return {};
         }
