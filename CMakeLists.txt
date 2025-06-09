@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-project(md4qt VERSION "4.1.4")
+project(md4qt VERSION "4.2.0")
 
 set(MD4QT_VERSION ${PROJECT_VERSION})
 
@@ -11,7 +11,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(BUILD_MD4QT_BENCHMARK "Build benchmark? Default OFF." OFF)
 option(BUILD_MD4QT_QT_TESTS "Build tests with Qt support? Default ON." ON)
-option(BUILD_MD4QT_STL_TESTS "Build tests with STL support? Default OFF." OFF)
 option(BUILD_MD2HTML_APP "Build md2html utility? Default OFF." OFF)
 option(BUILD_MD2QDOC_APP "Build md2qdoc utility? Default OFF." OFF)
 option(BUILD_TEST_BENCH "Build test benchmark? Default ON." ON)
@@ -49,7 +48,7 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
 
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
-    if(BUILD_MD4QT_QT_TESTS OR BUILD_MD4QT_STL_TESTS OR BUILD_TEST_BENCH)
+    if(BUILD_MD4QT_QT_TESTS OR BUILD_TEST_BENCH)
         enable_testing()
 
         add_subdirectory(tests)

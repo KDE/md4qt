@@ -30,19 +30,3 @@ if(BUILD_MD4QT_QT_TESTS)
         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../../../bin/test.md_parser.gfm.qt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../bin)
 endif()
-
-if(BUILD_MD4QT_STL_TESTS)
-    find_package(ICU REQUIRED COMPONENTS data dt uc i18n io in tu)
-    find_package(uriparser REQUIRED)
-
-    add_executable(test.md_parser.gfm.stl ${SRC})
-    target_compile_definitions(test.md_parser.gfm.stl PUBLIC TRAIT=MD::UnicodeStringTrait)
-    target_compile_definitions(test.md_parser.gfm.stl PUBLIC MD4QT_ICU_STL_SUPPORT)
-
-    target_link_libraries(test.md_parser.gfm.stl
-        ICU::data ICU::dt ICU::uc ICU::i18n ICU::io ICU::in ICU::tu uriparser::uriparser)
-
-    add_test(NAME test.md_parser.gfm.stl
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../../../bin/test.md_parser.gfm.stl
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../bin)
-endif()

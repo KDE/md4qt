@@ -10,7 +10,7 @@
 `md4qt` supports CommonMark 0.31.2 Spec, and some GitHub extensions, such as
 tables, footnotes, tasks lists, strikethroughs, LaTeX Maths injections, GitHub's auto-links.
 
-`md4qt` can be built with Qt6 or with ICU.
+`md4qt` can be built with Qt6 or you can implement your own custom traits for other libraries.
 
 This library parses Markdown into tree structure.
 
@@ -26,13 +26,11 @@ This library parses Markdown into tree structure.
 * [What is an `MD::Anchor`?](#what-is-an-mdanchor)
 * [Does the library throw exceptions?](#does-the-library-throw-exceptions)
 * [Why `MD::Parser` and `MD::Document` are templates?](#why-mdparser-and-mddocument-are-templates)
-* [So, how can I use `md4qt` with `Qt6` and `ICU`?](#so-how-can-i-use-md4qt-with-qt6-and-icu)
-* [`ICU` is slower than `Qt6`? Really?](#icu-is-slower-than-qt6-really)
+* [So, how can I use `md4qt` with `Qt6`?](#so-how-can-i-use-md4qt-with-qt6)
 * [Why is parsing wrong on Windows with `std::ifstream`?](#why-is-parsing-wrong-on-windows-with-stdifstream)
 * [How can I convert `MD::Document` into `HTML`?](#how-can-i-convert-mddocument-into-html)
 * [How can I obtain positions of blocks/elements in `Markdown` file?](#how-can-i-obtain-positions-of-blockselements-in-markdown-file)
 * [How can I easily traverse through the `MD::Document`?](#how-can-i-easily-traverse-through-the-mddocument)
-* [Why don't you have an implementation for pure `STL` with `std::string`?](#why-dont-you-have-an-implementation-for-pure-stl-with-stdstring)
 * [Is it possible to write custom text plugin for this parser?](#is-it-possible-to-write-custom-text-plugin-for-this-parser)
 * [What is a `ID` of a plugin?](#what-is-a-id-of-a-plugin)
 * [What is a `MD::TextPluginFunc<Trait>`?](#what-is-a-mdtextpluginfunctrait)
@@ -44,7 +42,6 @@ This library parses Markdown into tree structure.
 * [Is it possible to find `Markdown` item by its position?](#is-it-possible-to-find-markdown-item-by-its-position)
 * [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
 * [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
-
 
 # Example
 
@@ -95,9 +92,9 @@ major extensions and sugar and cherry on the cake.
 
 | Markdown library | Result |
 | --- | --- |
-| [cmark-gfm](https://github.com/github/cmark-gfm) | 0.21 ms |
-| `md4qt` with `Qt6` | 2.7 ms |
-| `md4qt` with `Qt6` without `GitHub` auto-links extension | 2.3 ms |
+| [cmark-gfm](https://github.com/github/cmark-gfm) | ~0.2 ms |
+| `md4qt` with `Qt6` | ~2.5 ms |
+| `md4qt` with `Qt6` without `GitHub` auto-links extension | ~2.1 ms |
 
 # Playground
 
@@ -182,32 +179,15 @@ ready traits to support different C++ worlds. With `STL` I use `ICU` library
 for Unicode handling, and `uriparser` library to parse and check URLs.
 These dependencies can be installed with the Conan package manager.
 
-# So, how can I use `md4qt` with `Qt6` and `ICU`?
+   Since version `4.2.0` `ICU` support was dropped. This version uses string views,
+   that `ICU` doesn't support.
 
- * To build with `ICU` support you need to define `MD4QT_ICU_STL_SUPPORT`
-before including `parser.h`. In this case you will get access to
-`MD::UnicodeStringTrait`, that can be passed to `MD::Parser` as template
-parameter. You will receive in dependencies `C++ STL`, `ICU` and
-`uriparser`.
+# So, how can I use `md4qt` with `Qt6`?
 
-   To build with `Qt6` support you need to define `MD4QT_QT_SUPPORT`.
+ * To build with `Qt6` support you need to define `MD4QT_QT_SUPPORT`.
    In this case you will get access to `MD::QStringTrait` to work with
    Qt's classes and functions. In this case in dependencies you will
    receive `Qt6`.
-   
-   You can define both to have ability to use `md4qt` with `Qt6` and
-   `ICU`.
-
-# `ICU` is slower than `Qt6`? Really?
-
- * Don't believe anybody, just build built-in `md_benchamrk` and have a
-look. Dry numbers say, that `Qt6` `QString` is ~2 times faster than
-`icu::UnicodeString` in such tasks. Markdown parsing implies to check
-every symbol, and tied to use access to every character in the string
-with `operator [] (...)`, or member `at(...)`. I do it very often in the
-parser's code and the profiler says that most of the run-time is spent
-on such operations. `QString` is just more optimized for accessing separate
-characters than `icu::UnicodeString`...
 
 # Why is parsing wrong on Windows with `std::ifstream`?
 
@@ -256,13 +236,6 @@ virtual methods to handle that or another element in the document, like:
       //! Heading.
       MD::Heading<Trait> *h) = 0;
   ```
-
-# Why don't you have an implementation for pure `STL` with `std::string`?
-
-* Because of performance, I did a pure `STL` implementation where the string class
-was an `std::string` with some small third-party library to handle `UTF8`, and
-benchmark said that the performance was like with `Qt6` `QString`, so I decided
-to not support third trait. Maybe because I am lazy?
 
 # Is it possible to write custom text plugin for this parser?
 
