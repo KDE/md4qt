@@ -243,6 +243,20 @@ skipSpaces(long long int i, const String &line)
 /*!
  * \inheaderfile md4qt/parser.h
  *
+ * Returns whether string contains only spaces or empty.
+ *
+ * \a s String to check.
+ */
+template<class String>
+inline bool
+isSpacesOrEmpty(const String &s)
+{
+    return (skipSpaces(0, s) == s.length());
+}
+
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
  * Returns last non-space character position.
  *
  * \a line String where to find last non-space character position.
@@ -482,7 +496,7 @@ emptyLinesBeforeCount(typename MdBlock<Trait>::Data::iterator begin,
     const auto rbegin = std::make_reverse_iterator(it);
 
     const auto firstNonEmpty = std::find_if(rbegin, std::make_reverse_iterator(begin),
-                                 [](const auto &line) { return (!line.first.simplified().isEmpty()); });
+                                 [](const auto &line) { return !isSpacesOrEmpty(line.first); });
 
     return std::distance(rbegin, firstNonEmpty);
 }
@@ -2694,7 +2708,7 @@ private:
         WithPosition labelPos;
         std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-        if (it != start && !toSingleLine(text).simplified().isEmpty()) {
+        if (it != start && !isSpacesOrEmpty(toSingleLine(text))) {
             if ((this->*functor)(text, po, start->m_line, start->m_pos, start->m_line,
                 start->m_pos + start->m_len, it, {}, false, labelPos, {})) {
                 return it;
@@ -3136,7 +3150,7 @@ Parser<Trait>::parseFragment(typename Parser<Trait>::ParserContext &ctx,
 
             long long int emptyLines = 0;
 
-            while (!tmp.m_data.empty() && tmp.m_data.back().first.simplified().isEmpty()) {
+            while (!tmp.m_data.empty() && isSpacesOrEmpty(tmp.m_data.back().first)) {
                 tmp.m_data.pop_back();
                 tmp.m_emptyLineAfter = true;
                 ++emptyLines;
@@ -3672,7 +3686,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
 
                 std::tie(line, std::ignore) = readLine(ctx, stream);
 
-                if (line.simplified().isEmpty()) {
+                if (isSpacesOrEmpty(line)) {
                     ++ctx.m_emptyLinesCount;
                 }
 
@@ -6212,7 +6226,7 @@ Parser<Trait>::eatRawHtmlTillEmptyLine(typename Delims::iterator it,
     }
 
     for (auto it = po.m_fr.m_data.cbegin() + line, last = po.m_fr.m_data.cend(); it != last; ++it) {
-        if (it->first.simplified().isEmpty()) {
+        if (isSpacesOrEmpty(it->first)) {
             break;
         }
 
@@ -7989,7 +8003,7 @@ Parser<Trait>::checkForLink(typename Delims::iterator it,
 
                     std::tie(text, it) = checkForLinkLabel(start, last, po, &labelPos);
 
-                    if (it != start && !toSingleLine(text).simplified().isEmpty()) {
+                    if (it != start && !isSpacesOrEmpty(toSingleLine(text))) {
                         WithPosition urlPos;
                         std::tie(url, title, iit, ok) = checkForRefLink(it, last, po, &urlPos);
 
@@ -9240,7 +9254,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
     if (!collectRefLinks) {
         if (p->items().back()->type() == ItemType::LineBreak) {
             auto lb = std::static_pointer_cast<LineBreak<Trait>>(p->items().back());
-            const auto lineBreakBySpaces = lb->text().simplified().isEmpty();
+            const auto lineBreakBySpaces = isSpacesOrEmpty(lb->text());
 
             p = makeParagraph<Trait>(p->items().cbegin(), std::prev(p->items().cend()));
             const auto lineBreakPos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
@@ -9300,7 +9314,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                 if (!label.first.isEmpty()) {
                     label.first = label.first.sliced(1, label.first.length() - 2);
 
-                    if (tmp.simplified().isEmpty()) {
+                    if (isSpacesOrEmpty(tmp)) {
                         p->removeItemAt(p->items().size() - 1);
                         po.m_rawTextData.pop_back();
 
@@ -9350,7 +9364,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
 
                             auto text = po.m_rawTextData.back().m_str;
 
-                            if (!text.simplified().isEmpty()) {
+                            if (!isSpacesOrEmpty(text)) {
                                 if (p->items().size() == 1) {
                                     const auto ns = skipSpaces(0, text);
 
