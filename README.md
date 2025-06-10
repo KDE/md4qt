@@ -167,9 +167,7 @@ the document you reached new file.
  * No. This library doesn't use exceptions. Any text is a valid Markdown, so I
 don't need to inform user about errors. Qt itself doesn't use exceptions either.
 So you can catch only standard C++ exceptions, like `std::bad_alloc`, for
-example. Possibly with `MD::UnicodeStringTrait` you will catch more standard
-exceptions, possibly I missed something somewhere, but I tried to negotiate
-all possible exceptions.
+example.
 
 # Why `MD::Parser` and `MD::Document` are templates?
 
