@@ -85,7 +85,7 @@ int main()
 \section1 Benchmark
 
 Approximate benchmark with \l {https://github.com/github/cmark-gfm} {cmark-gfm} says,
-that Qt6 version of \c {md4qt} is slower ~13 times.
+that Qt6 version of \c {md4qt} is slower ~10 times.
 But you will get complete C++ tree structure of the Markdown document with all
 major extensions and sugar and cherry on the cake.
 
@@ -108,13 +108,13 @@ major extensions and sugar and cherry on the cake.
 
         \li \c {md4qt} with \c {Qt6}
 
-        \li ~2.5 ms
+        \li ~2.2 ms
 
     \row
 
         \li \c {md4qt} with \c {Qt6} without \c {GitHub} auto-links extension
 
-        \li ~2.1 ms
+        \li ~1.9 ms
 
 \endtable
 
