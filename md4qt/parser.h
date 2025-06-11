@@ -1068,15 +1068,21 @@ template<class Trait, class String>
 inline int
 isTableAlignment(const String &s)
 {
-    const auto columns = s.simplified().split(String(s_verticalLineString<Trait>));
+    const auto nsStart = skipSpaces(0, s);
 
-    for (const auto &c : columns) {
-        if (!isColumnAlignment<Trait>(c)) {
-            return 0;
+    if (nsStart != s.length()) {
+        const auto columns = s.sliced(nsStart, lastNonSpacePos(s) - nsStart + 1).split(String(s_verticalLineString<Trait>));
+
+        for (const auto &c : columns) {
+            if (!isColumnAlignment<Trait>(c)) {
+                return 0;
+            }
         }
-    }
 
-    return columns.size();
+        return columns.size();
+    } else {
+        return 0;
+    }
 }
 
 /*!
