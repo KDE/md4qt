@@ -74,3 +74,19 @@ Whereas in `md4qt` it will be.
 Interesting question. And I decided to keep it as is now.
 
 **Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/6).**
+
+# 3. Autolinks.
+
+In this library autolinks are checked by `QUrl` for validity. CommonMark is not so strict,
+his rules are much more simpler for it. As example.
+
+```md
+<made-up-scheme://foo,bar>
+```
+
+In CommonMark will be a valid autolink, whereas in `md4qt` won't be.
+
+I can say that I will won very much in performance if to replace `QUrl` with
+simple functions in corresponding with Markdown standard, but...
+
+**Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/7).**
