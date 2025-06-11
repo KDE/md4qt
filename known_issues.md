@@ -86,7 +86,7 @@ his rules are much more simpler for it. As example.
 
 In CommonMark will be a valid autolink, whereas in `md4qt` won't be.
 
-I can say that I will won very much in performance if to replace `QUrl` with
+I can say that I will win very much in performance if to replace `QUrl` with
 simple functions in corresponding with Markdown standard, but...
 
 **Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/7).**
