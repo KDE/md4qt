@@ -100,7 +100,7 @@ public:
      *
      * \a n Count of characters.
      */
-    StringVariant sliced(long long int pos, long long int n = -1) const
+    StringVariant sliced(long long int pos, long long int n) const
     {
         return (m_isView ? StringVariant(m_view.sliced(pos, n)) : StringVariant(m_string.sliced(pos, n)));
     }
@@ -230,7 +230,7 @@ public:
     /*!
      * Returns copy of string view as string
      */
-    String copyToString() const
+    String toString() const
     {
         return m_string.toString();
     }

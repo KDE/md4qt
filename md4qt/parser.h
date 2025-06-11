@@ -351,7 +351,7 @@ isOrderedList(const typename Trait::InternalString &s,
             return false;
         }
 
-        const auto i = digits.copyToString().toInt();
+        const auto i = digits.toString().toInt();
 
         if (num) {
             *num = i;
@@ -945,7 +945,7 @@ isStartOfCode(const String &str,
 
             if (p < str.length()) {
                 *syntax = removeBackslashes<Trait>(
-                    readEscapedSequence<Trait>(p, str, &endSyntaxPos)).copyToString();
+                    readEscapedSequence<Trait>(p, str, &endSyntaxPos)).toString();
 
                 if (syntaxPos) {
                     syntaxPos->setStartColumn(p);
@@ -1576,19 +1576,19 @@ virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos)
     }
 
     typename Trait::String str =
-        (linesCount ? fr.m_data.at(startLine).first.sliced(spos).copyToString() :
-            fr.m_data.at(startLine).first.sliced(spos, epos - spos).copyToString());
+        (linesCount ? fr.m_data.at(startLine).first.sliced(spos).toString() :
+            fr.m_data.at(startLine).first.sliced(spos, epos - spos).toString());
 
     long long int i = startLine + 1;
 
     for (; i < startLine + linesCount; ++i) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first.copyToString());
+        str.push_back(fr.m_data.at(i).first.toString());
     }
 
     if (linesCount) {
         str.push_back(s_newLineString<Trait>);
-        str.push_back(fr.m_data.at(i).first.sliced(0, epos).copyToString());
+        str.push_back(fr.m_data.at(i).first.sliced(0, epos).toString());
     }
 
     return str;
@@ -1769,7 +1769,7 @@ template<>
 inline bool
 isValidUrl<QStringTrait, typename QStringTrait::InternalString>(const typename QStringTrait::InternalString &url)
 {
-    const QUrl u(url.copyToString(), QUrl::StrictMode);
+    const QUrl u(url.toString(), QUrl::StrictMode);
 
     return (u.isValid() && !u.isRelative());
 }
@@ -3066,7 +3066,7 @@ checkForHtmlComments(const typename Trait::InternalString &line,
     while ((p = line.indexOf(s_startCommentString<Trait>, p)) != -1) {
         bool addNegative = false;
 
-        auto c = line.sliced(p).copyToString();
+        auto c = line.sliced(p).toString();
 
         if (c.startsWith(s_comment1String<Trait>)) {
             res.insert({line.virginPos(p), {0, true}});
@@ -3089,7 +3089,7 @@ checkForHtmlComments(const typename Trait::InternalString &line,
 
             for (; l < stream.size(); ++l) {
                 c.push_back(s_spaceChar<Trait>);
-                c.push_back(stream.lineAt(l).copyToString());
+                c.push_back(stream.lineAt(l).toString());
 
                 if (checkForEndHtmlComments<Trait>(c, 4)) {
                     res.insert({line.virginPos(p), {2, true}});
@@ -4342,7 +4342,7 @@ findAndRemoveHeaderLabel(typename Trait::InternalString &s)
             pos.setStartColumn(s.virginPos(start));
             pos.setEndColumn(s.virginPos(p));
 
-            const auto label = s.sliced(start, p - start + 1).copyToString();
+            const auto label = s.sliced(start, p - start + 1).toString();
             s.remove(start, p - start + 1);
             return {label, pos};
         }
@@ -5376,7 +5376,7 @@ makeTextObjectWithLineBreak(const typename Trait::String &text,
 
     if (!po.m_collectRefLinks) {
         hr.reset(new LineBreak<Trait>);
-        hr->setText(po.m_fr.m_data.at(endLine).first.sliced(endPos + 1).copyToString());
+        hr->setText(po.m_fr.m_data.at(endLine).first.sliced(endPos + 1).toString());
         hr->setStartColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos + 1));
         hr->setStartLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
         hr->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(po.m_fr.m_data.at(endLine).first.length() - 1));
@@ -5730,7 +5730,7 @@ readHtmlAttr(long long int &l,
         [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
                 ch != s_equalSignChar<Trait>); });
 
-    const typename Trait::String name = fr[l].first.sliced(start, p - start).copyToString().toLower();
+    const typename Trait::String name = fr[l].first.sliced(start, p - start).toString().toLower();
 
     if (!name.startsWith(s_lowLineString<Trait>) && !name.startsWith(s_colonString<Trait>) &&
         !name.isEmpty() && !(name[0].unicode() >= 97 && name[0].unicode() <= 122)) {
@@ -5939,7 +5939,7 @@ isHtmlTag(long long int line,
         [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait> &&
                 ch != s_solidusChar<Trait>); });
 
-    tag.push_back(po.m_fr.m_data[l].first.sliced(start, p - start).copyToString());
+    tag.push_back(po.m_fr.m_data[l].first.sliced(start, p - start).toString());
 
     if (p < po.m_fr.m_data[l].first.length() && po.m_fr.m_data[l].first[p] == s_solidusChar<Trait>) {
         if (p + 1 < po.m_fr.m_data[l].first.length() &&
@@ -6067,7 +6067,7 @@ Parser<Trait>::readHtmlTag(typename Delims::iterator it,
     i = skipIf(i, po.m_fr.m_data[it->m_line].first,
         [](const typename Trait::Char &ch) { return (!ch.isSpace() && ch != s_greaterSignChar<Trait>); });
 
-    return {po.m_fr.m_data[it->m_line].first.sliced(start, i - start).copyToString(),
+    return {po.m_fr.m_data[it->m_line].first.sliced(start, i - start).toString(),
             (i < po.m_fr.m_data[it->m_line].first.length() ?
                 (po.m_fr.m_data[it->m_line].first[i] == s_greaterSignChar<Trait>) : false)};
 }
@@ -6145,20 +6145,20 @@ eatRawHtml(long long int line,
         }
 
         if (!first.isEmpty()) {
-            h.push_back(first.copyToString());
+            h.push_back(first.toString());
         }
 
         ++line;
 
         for (; line < toLine; ++line) {
             h.push_back(s_newLineChar<Trait>);
-            h.push_back(po.m_fr.m_data[line].first.copyToString());
+            h.push_back(po.m_fr.m_data[line].first.toString());
         }
 
         if (line == toLine && toPos != 0) {
             h.push_back(s_newLineChar<Trait>);
             h.push_back(po.m_fr.m_data[line].first.sliced(0, toPos > 0 ?
-                toPos : po.m_fr.m_data[line].first.length()).copyToString());
+                toPos : po.m_fr.m_data[line].first.length()).toString());
         }
 
         auto endColumn = toPos;
@@ -6786,17 +6786,17 @@ Parser<Trait>::checkForMath(typename Delims::iterator it,
 
         if (it->m_line == end->m_line) {
             math = po.m_fr.m_data[it->m_line].first.sliced(
-                it->m_pos + it->m_len, end->m_pos - (it->m_pos + it->m_len)).copyToString();
+                it->m_pos + it->m_len, end->m_pos - (it->m_pos + it->m_len)).toString();
         } else {
-            math = po.m_fr.m_data[it->m_line].first.sliced(it->m_pos + it->m_len).copyToString();
+            math = po.m_fr.m_data[it->m_line].first.sliced(it->m_pos + it->m_len).toString();
 
             for (long long int i = it->m_line + 1; i < end->m_line; ++i) {
                 math.push_back(s_newLineChar<Trait>);
-                math.push_back(po.m_fr.m_data[i].first.copyToString());
+                math.push_back(po.m_fr.m_data[i].first.toString());
             }
 
             math.push_back(s_newLineChar<Trait>);
-            math.push_back(po.m_fr.m_data[end->m_line].first.sliced(0, end->m_pos).copyToString());
+            math.push_back(po.m_fr.m_data[end->m_line].first.sliced(0, end->m_pos).toString());
         }
 
         if (!po.m_collectRefLinks) {
@@ -6889,7 +6889,7 @@ Parser<Trait>::checkForAutolinkHtml(typename Delims::iterator it,
                     lnk->setStartLine(po.m_fr.m_data.at(it->m_line).second.m_lineNumber);
                     lnk->setEndColumn(po.m_fr.m_data.at(nit->m_line).first.virginPos(nit->m_pos + nit->m_len - 1));
                     lnk->setEndLine(po.m_fr.m_data.at(nit->m_line).second.m_lineNumber);
-                    lnk->setUrl(url.copyToString());
+                    lnk->setUrl(url.toString());
                     lnk->setOpts(po.m_opts);
                     lnk->setTextPos({po.m_fr.m_data[it->m_line].first.virginPos(it->m_pos + 1),
                                      po.m_fr.m_data[it->m_line].second.m_lineNumber,
@@ -6934,7 +6934,7 @@ Parser<Trait>::makeInlineCode(long long int startLine,
     for (; po.m_line <= lastLine; ++po.m_line) {
         c.push_back(po.m_fr.m_data.at(po.m_line).first.sliced(
             po.m_pos, (po.m_line == lastLine ? lastPos - po.m_pos :
-                po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos)).copyToString());
+                po.m_fr.m_data.at(po.m_line).first.length() - po.m_pos)).toString());
 
         if (po.m_line < lastLine) {
             c.push_back(s_spaceChar<Trait>);
@@ -7206,7 +7206,7 @@ Parser<Trait>::toSingleLine(const typename MdBlock<Trait>::Data &d)
         if (!first) {
             res.push_back(s_spaceChar<Trait>);
         }
-        res.push_back(s.first.simplified().copyToString());
+        res.push_back(s.first.simplified().toString());
         first = false;
     }
 
@@ -7605,7 +7605,7 @@ readLinkDestination(long long int line,
 
                 ++pos;
 
-                return {line, pos, true, s.sliced(start, pos - start - 1).copyToString(), destLine};
+                return {line, pos, true, s.sliced(start, pos - start - 1).toString(), destLine};
             } else {
                 return {line, pos, false, {}, destLine};
             }
@@ -7631,7 +7631,7 @@ readLinkDestination(long long int line,
                                 urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
                             }
 
-                            return {line, pos, true, s.sliced(start, pos - start).copyToString(), destLine};
+                            return {line, pos, true, s.sliced(start, pos - start).toString(), destLine};
                         } else {
                             return {line, pos, false, {}, destLine};
                         }
@@ -7644,7 +7644,7 @@ readLinkDestination(long long int line,
                                 urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
                             }
 
-                            return {line, pos, true, s.sliced(start, pos - start).copyToString(), destLine};
+                            return {line, pos, true, s.sliced(start, pos - start).toString(), destLine};
                         } else {
                             --pc;
                         }
@@ -7659,7 +7659,7 @@ readLinkDestination(long long int line,
                 urlPos->setEndLine(po.m_fr.m_data[line].second.m_lineNumber);
             }
 
-            return {line, pos, true, s.sliced(start, pos - start).copyToString(), destLine};
+            return {line, pos, true, s.sliced(start, pos - start).toString(), destLine};
         }
     } else {
         return {line, pos, false, {}, destLine};
@@ -7982,7 +7982,7 @@ Parser<Trait>::checkForLink(typename Delims::iterator it,
 
                     firstFnrText = false;
 
-                    fnrText.push_back(t.first.copyToString());
+                    fnrText.push_back(t.first.toString());
                 }
 
                 fnrText.push_back(s_rightSquareBracketString<Trait>);
@@ -9357,7 +9357,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                                 t->setEndLine(virginLine);
                                 p->appendItem(t);
 
-                                po.m_rawTextData.push_back({po.m_fr.m_data[pos.second].first.sliced(pos.first).copyToString(),
+                                po.m_rawTextData.push_back({po.m_fr.m_data[pos.second].first.sliced(pos.first).toString(),
                                                             pos.first, pos.second});
                             }
                         }
@@ -9365,7 +9365,7 @@ makeHeading(std::shared_ptr<Block<Trait>> parent,
                         const auto pos = localPosFromVirgin(po.m_fr, label.second.endColumn() + 1, virginLine);
 
                         if (pos.first != -1) {
-                            po.m_rawTextData.back() = {po.m_fr.m_data[pos.second].first.sliced(pos.first).copyToString(),
+                            po.m_rawTextData.back() = {po.m_fr.m_data[pos.second].first.sliced(pos.first).toString(),
                                                        pos.first, pos.second};
 
                             auto text = po.m_rawTextData.back().m_str;
