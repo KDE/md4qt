@@ -75,7 +75,7 @@ Interesting question. And I decided to keep it as is now.
 
 **Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/6).**
 
-# 3. Autolinks.
+# 3. Autolinks
 
 In this library autolinks are checked by `QUrl` for validity. CommonMark is not so strict,
 his rules are much more simpler for it. As example.
