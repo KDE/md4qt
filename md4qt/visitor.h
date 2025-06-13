@@ -153,10 +153,13 @@ protected:
      *
      * \a wrap Wrap this paragraph with something or no? It's useful to not wrap standalone
      *         paragraph in list item, for example.
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    virtual void onParagraph(Paragraph<Trait> *p, bool wrap)
+    virtual void onParagraph(Paragraph<Trait> *p, bool wrap, bool skipOpeningWrap = false)
     {
         MD_UNUSED(wrap)
+        MD_UNUSED(skipOpeningWrap)
 
         long long int l = (!p->items().empty() ? p->items().at(0)->startLine() : -1);
 
@@ -344,8 +347,10 @@ protected:
      * \a i List item.
      *
      * \a first Is this item first in the list?
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    virtual void onListItem(ListItem<Trait> *i, bool first)
+    virtual void onListItem(ListItem<Trait> *i, bool first,  bool skipOpeningWrap = false)
     {
         MD_UNUSED(first)
 
@@ -359,7 +364,8 @@ protected:
                     break;
 
                 case ItemType::Paragraph:
-                    onParagraph(static_cast<Paragraph<Trait> *>(it->get()), (i->items().size() > 1 && i->items().at(1)->type() != ItemType::List));
+                    onParagraph(static_cast<Paragraph<Trait> *>(it->get()),
+                                wrapFirstParagraphInListItem(i), skipOpeningWrap);
                     break;
 
                 case ItemType::Code:
@@ -390,6 +396,8 @@ protected:
                     break;
                 }
             }
+
+            skipOpeningWrap = false;
         }
     }
 
@@ -488,6 +496,16 @@ protected:
                 }
             }
         }
+    }
+
+    /*!
+     * Returns whether first paragraph in list item should be wrapped.
+     *
+     * \a i List item.
+     */
+    virtual bool wrapFirstParagraphInListItem(ListItem<Trait> *i) const
+    {
+        return (i->items().size() > 1 && i->items().at(1)->type() != ItemType::List);
     }
 
 protected:

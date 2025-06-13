@@ -120,8 +120,10 @@ protected:
         m_qdoc.append(QStringLiteral("\\br "));
     }
 
-    void onParagraph(MD::Paragraph<MD::QStringTrait> *p, bool wrap) override
+    void onParagraph(MD::Paragraph<MD::QStringTrait> *p, bool wrap, bool skipOpeningWrap = false) override
     {
+        MD_UNUSED(skipOpeningWrap)
+
         if (wrap && !m_firstInListItem) {
             m_qdoc.append(currentOffset());
         }
@@ -420,8 +422,10 @@ protected:
         printWhereInfo(r);
     }
 
-    void onListItem(MD::ListItem<MD::QStringTrait> *i, bool first) override
+    void onListItem(MD::ListItem<MD::QStringTrait> *i, bool first, bool skipOpeningWrap = false) override
     {
+        MD_UNUSED(skipOpeningWrap)
+
         m_qdoc.append(QStringLiteral("%1\\li ").arg(currentOffset()));
         incrementOffset();
 

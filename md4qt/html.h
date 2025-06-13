@@ -206,10 +206,12 @@ protected:
      *
      * \a wrap Wrap this paragraph with something or no? It's useful to not wrap standalone
      *         paragraph in list item, for example.
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool wrap) override
+    void onParagraph(Paragraph<Trait> *p, bool wrap,  bool skipOpeningWrap = false) override
     {
-        if (wrap && !m_justCollectFootnoteRefs) {
+        if (wrap && !m_justCollectFootnoteRefs && !skipOpeningWrap) {
             m_html.push_back(Trait::latin1ToString("<p dir=\"auto\">"));
         }
 
@@ -646,16 +648,25 @@ protected:
      * \a i List item.
      *
      * \a first Is this item first in the list?
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *i, bool first) override
+    void onListItem(ListItem<Trait> *i, bool first,  bool skipOpeningWrap = false) override
     {
         if (!m_justCollectFootnoteRefs) {
             m_html.push_back(Trait::latin1ToString("<li"));
 
             if (i->isTaskList()) {
-                m_html.push_back(
-                    Trait::latin1ToString(" class=\"task-list-item\"><input "
-                                          "type=\"checkbox\" id=\"\" disabled=\"\" class=\"task-list-item-checkbox\""));
+                skipOpeningWrap = Visitor<Trait>::wrapFirstParagraphInListItem(i);
+
+                m_html.push_back(Trait::latin1ToString(" class=\"task-list-item\">"));
+
+                if (skipOpeningWrap && !i->isEmpty() && i->items().at(0)->type() == MD::ItemType::Paragraph) {
+                    m_html.push_back(Trait::latin1ToString("<p dir=\"auto\">"));
+                }
+
+                m_html.push_back(Trait::latin1ToString("<input "
+                    "type=\"checkbox\" id=\"\" disabled=\"\" class=\"task-list-item-checkbox\""));
 
                 if (i->isChecked()) {
                     m_html.push_back(Trait::latin1ToString(" checked=\"\""));
@@ -671,7 +682,7 @@ protected:
             m_html.push_back(Trait::latin1ToString(">\n"));
         }
 
-        Visitor<Trait>::onListItem(i, first);
+        Visitor<Trait>::onListItem(i, first, skipOpeningWrap);
 
         if (!m_justCollectFootnoteRefs) {
             m_html.push_back(Trait::latin1ToString("</li>\n"));

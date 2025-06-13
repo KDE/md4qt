@@ -157,9 +157,13 @@ protected:
      * Process paragraph.
      *
      * \a p Paragraph.
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool) override
+    void onParagraph(Paragraph<Trait> *p, bool,  bool skipOpeningWrap = false) override
     {
+        MD_UNUSED(skipOpeningWrap)
+
         IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
         if (inc.allowed(ItemType::Paragraph)) {
@@ -167,7 +171,7 @@ protected:
         }
 
         if (inc.nextAllowed()) {
-            Visitor<Trait>::onParagraph(p, true);
+            Visitor<Trait>::onParagraph(p, true, skipOpeningWrap);
         }
     }
 
@@ -389,9 +393,13 @@ protected:
      * Process list item.
      *
      * \a i List item.
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *i, bool) override
+    void onListItem(ListItem<Trait> *i, bool, bool skipOpeningWrap = false) override
     {
+        MD_UNUSED(skipOpeningWrap)
+
         IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 
         if (inc.allowed(ItemType::ListItem)) {

@@ -435,14 +435,16 @@ protected:
      *
      * \a wrap Wrap this paragraph with something or no? It's useful to not wrap standalone
      *         paragraph in list item, for example.
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool wrap) override
+    void onParagraph(Paragraph<Trait> *p, bool wrap,  bool skipOpeningWrap = false) override
     {
         details::PosRange<Trait> r{p->startColumn(), p->startLine(), p->endColumn(), p->endLine(), p};
 
         insertInCache(r, false, true);
 
-        Visitor<Trait>::onParagraph(p, wrap);
+        Visitor<Trait>::onParagraph(p, wrap, skipOpeningWrap);
 
         if (!m_skipInCache) {
             m_currentItems.pop();
@@ -730,14 +732,16 @@ protected:
      * \a l List item.
      *
      * \a first Is this item first in the list?
+     *
+     * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *l, bool first) override
+    void onListItem(ListItem<Trait> *l, bool first,  bool skipOpeningWrap = false) override
     {
         details::PosRange<Trait> r{l->startColumn(), l->startLine(), l->endColumn(), l->endLine(), l};
 
         insertInCache(r, false, true);
 
-        Visitor<Trait>::onListItem(l, first);
+        Visitor<Trait>::onListItem(l, first, skipOpeningWrap);
 
         m_currentItems.pop();
     }
