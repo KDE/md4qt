@@ -92,9 +92,25 @@ enum class ItemType : int {
 class WithPosition
 {
 public:
+    /*!
+     * Default constructor.
+     *
+     * All positions will be set to -1.
+     */
     WithPosition() = default;
     virtual ~WithPosition() = default;
 
+    /*!
+     * Initializing constructor with all positions.
+     *
+     * \a startColumn Start column.
+     *
+     * \a startLine Start line.
+     *
+     * \a endColumn End column.
+     *
+     * \a endLine End line.
+     */
     WithPosition(long long int startColumn,
                  long long int startLine,
                  long long int endColumn,
@@ -249,6 +265,9 @@ template<class Trait>
 class Item : public WithPosition
 {
 protected:
+    /*!
+     * Default constructor.
+     */
     Item() = default;
 
 public:
@@ -319,6 +338,19 @@ enum TextOption {
 class StyleDelim final : public WithPosition
 {
 public:
+    /*!
+     * Initializing constructor.
+     *
+     * \a s Style. Actualy it's an ORed combination of MD::TextOption.
+     *
+     * \a startColumn Start column.
+     *
+     * \a startLine Start line.
+     *
+     * \a endColumn End column.
+     *
+     * \a endLine End line.
+     */
     StyleDelim(int s,
                long long int startColumn,
                long long int startLine,
@@ -386,6 +418,9 @@ template<class Trait>
 class ItemWithOpts : public Item<Trait>
 {
 protected:
+    /*!
+     * Default constructor.
+     */
     ItemWithOpts() = default;
 
 public:
@@ -500,6 +535,9 @@ template<class Trait>
 class PageBreak final : public Item<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     PageBreak() = default;
     ~PageBreak() override = default;
 
@@ -544,6 +582,9 @@ template<class Trait>
 class HorizontalLine final : public Item<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     HorizontalLine() = default;
     ~HorizontalLine() override = default;
 
@@ -595,6 +636,11 @@ template<class Trait>
 class Anchor final : public Item<Trait>
 {
 public:
+    /*!
+     * Initializing constructor.
+     *
+     * \a l Label.
+     */
     explicit Anchor(const typename Trait::String &l)
         : m_label(l)
     {
@@ -657,6 +703,9 @@ template<class Trait>
 class RawHtml final : public ItemWithOpts<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     RawHtml() = default;
     ~RawHtml() override = default;
 
@@ -763,6 +812,9 @@ template<typename Trait>
 class Text : public ItemWithOpts<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Text() = default;
     ~Text() override = default;
 
@@ -846,6 +898,9 @@ template<class Trait>
 class LineBreak final : public Text<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     LineBreak() = default;
     ~LineBreak() override = default;
 
@@ -895,6 +950,9 @@ template<class Trait>
 class Block : public Item<Trait>
 {
 protected:
+    /*!
+     * Default constructor.
+     */
     Block() = default;
 
 public:
@@ -1018,6 +1076,9 @@ template<class Trait>
 class Paragraph final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Paragraph() = default;
     ~Paragraph() override = default;
 
@@ -1063,6 +1124,9 @@ template<class Trait>
 class Heading final : public Item<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Heading()
         : m_text(new Paragraph<Trait>)
     {
@@ -1293,6 +1357,9 @@ template<class Trait>
 class Blockquote final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Blockquote() = default;
     ~Blockquote() override = default;
 
@@ -1369,6 +1436,9 @@ template<class Trait>
 class ListItem final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     ListItem() = default;
     ~ListItem() override = default;
 
@@ -1603,6 +1673,9 @@ template<class Trait>
 class List final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     List() = default;
     ~List() override = default;
 
@@ -1650,6 +1723,9 @@ template<class Trait>
 class LinkBase : public ItemWithOpts<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     LinkBase()
         : m_p(new Paragraph<Trait>)
     {
@@ -1823,6 +1899,9 @@ template<class Trait>
 class Image final : public LinkBase<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Image() = default;
     ~Image() override = default;
 
@@ -1869,6 +1948,9 @@ template<class Trait>
 class Link final : public LinkBase<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Link()
         : LinkBase<Trait>()
         , m_img(new Image<Trait>)
@@ -1951,6 +2033,15 @@ template<class Trait>
 class Code : public ItemWithOpts<Trait>
 {
 public:
+    /*!
+     * Initializing constructor.
+     *
+     * \a t Code's text.
+     *
+     * \a fensedCode Whether this code is a fensed code block.
+     *
+     * \a inl Whether this code is an inline code.
+     */
     explicit Code(const typename Trait::String &t, bool fensedCode, bool inl)
         : ItemWithOpts<Trait>()
         , m_text(t)
@@ -2179,6 +2270,9 @@ template<class Trait>
 class Math final : public Code<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Math()
         : Code<Trait>(typename Trait::String(), false, true)
     {
@@ -2250,6 +2344,9 @@ template<class Trait>
 class TableCell final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     TableCell() = default;
     ~TableCell() override = default;
 
@@ -2297,6 +2394,9 @@ template<class Trait>
 class TableRow final : public Item<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     TableRow() = default;
     ~TableRow() override = default;
 
@@ -2392,6 +2492,9 @@ template<class Trait>
 class Table final : public Item<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Table() = default;
     ~Table() override = default;
 
@@ -2551,6 +2654,11 @@ template<class Trait>
 class FootnoteRef final : public Text<Trait>
 {
 public:
+    /*!
+     * Initializing constructor.
+     *
+     * \a i ID.
+     */
     explicit FootnoteRef(const typename Trait::String &i)
         : m_id(i)
     {
@@ -2638,6 +2746,9 @@ template<class Trait>
 class Footnote final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Footnote() = default;
     ~Footnote() override = default;
 
@@ -2707,6 +2818,9 @@ template<class Trait>
 class Document final : public Block<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Document() = default;
     ~Document() override = default;
 

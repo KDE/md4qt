@@ -2082,6 +2082,11 @@ template<class Trait>
 class Parser final
 {
 public:
+    /*!
+     * Default constructor.
+     *
+     * GitHub's autolinks extension will be added by default.
+     */
     Parser()
     {
         addTextPlugin(GitHubAutoLinkPluginID, githubAutolinkPlugin<Trait>, false, {});

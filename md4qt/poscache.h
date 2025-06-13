@@ -37,6 +37,17 @@ namespace details
  */
 template<class Trait>
 struct PosRange {
+    /*!
+     * Initializing constructor.
+     *
+     * \a startColumn Start column.
+     *
+     * \a startLine Start line.
+     *
+     * \a endColumn End column.
+     *
+     * \a endLine End line.
+     */
     PosRange(long long int startColumn, long long int startLine,
              long long int endColumn, long long int endLine)
         : m_startColumn(startColumn)
@@ -46,6 +57,19 @@ struct PosRange {
     {
     }
 
+    /*!
+     * Initializing constructor.
+     *
+     * \a startColumn Start column.
+     *
+     * \a startLine Start line.
+     *
+     * \a endColumn End column.
+     *
+     * \a endLine End line.
+     *
+     * \a item This item.
+     */
     PosRange(long long int startColumn, long long int startLine,
              long long int endColumn, long long int endLine,
              Item<Trait> *item)
@@ -57,6 +81,21 @@ struct PosRange {
     {
     }
 
+    /*!
+     * Initializing constructor.
+     *
+     * \a startColumn Start column.
+     *
+     * \a startLine Start line.
+     *
+     * \a endColumn End column.
+     *
+     * \a endLine End line.
+     *
+     * \a item This item.
+     *
+     * \a children Children items.
+     */
     PosRange(long long int startColumn, long long int startLine,
              long long int endColumn, long long int endLine,
              Item<Trait> *item, const std::vector<std::shared_ptr<PosRange<Trait>>> &children)
@@ -177,6 +216,9 @@ template<class Trait>
 class PosCache : public MD::Visitor<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     PosCache() = default;
     ~PosCache() override = default;
 

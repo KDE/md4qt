@@ -63,6 +63,9 @@ template<class Trait>
 class HtmlVisitor : public Visitor<Trait>
 {
 public:
+    /*!
+     * Default constructor.
+     */
     HtmlVisitor() = default;
     ~HtmlVisitor() override = default;
 

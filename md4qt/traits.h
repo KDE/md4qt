@@ -64,7 +64,13 @@ public:
     {
     }
 
+    /*!
+     * Copy operator.
+     */
     StringVariant & operator = (const StringVariant &) = default;
+    /*!
+     * Copy constructor.
+     */
     StringVariant(const StringVariant &) = default;
 
     /*!

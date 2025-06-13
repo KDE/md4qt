@@ -36,6 +36,9 @@ template<class Trait>
 class Visitor
 {
 public:
+    /*!
+     * Default constructor.
+     */
     Visitor() = default;
     virtual ~Visitor() = default;
 
