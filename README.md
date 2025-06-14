@@ -230,9 +230,12 @@ with which you can easily walk through the document, all you need is implement/o
 virtual methods to handle that or another element in the document, like:
 
   ```cpp
-  virtual void onHeading(
-      //! Heading.
-      MD::Heading<Trait> *h) = 0;
+  /*!
+   * Handle heading.
+   *
+   * \a h Heading.
+   */
+  virtual void onHeading(Heading<Trait> *h) = 0;
   ```
 
 # Is it possible to write custom text plugin for this parser?
@@ -241,16 +244,22 @@ virtual methods to handle that or another element in the document, like:
 text plugins.
 
   ```cpp
-  //! Add text plugin.
-  void addTextPlugin(
-      //! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
-      int id,
-      //! Function of a plugin, that will be invoked to processs raw text.
-      MD::TextPluginFunc<Trait> plugin,
-      //! Should this plugin be used in parsing of internals of links?
-      bool processInLinks,
-      //! User data that will be passed to plugin function.
-      const typename Trait::StringList &userData);
+  /*!
+   * Add text plugin.
+   *
+   * \a id ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
+   *
+   * \a plugin Function of a plugin, that will be invoked to processs raw text.
+   *
+   * \a processInLinks Should this plugin be used in parsing of internals of links?
+   *
+   * \a userData User data that will be passed to plugin function.
+   */
+  void
+  addTextPlugin(int id,
+                TextPluginFunc<Trait> plugin,
+                bool processInLinks,
+                const typename Trait::StringList &userData);
   ```
 
 # What is a `ID` of a plugin?
@@ -258,6 +267,17 @@ text plugins.
 * `ID` of a plugin is a regular `int` that should be (but not mandatory) started from
 
   ```cpp
+  /*!
+   * \enum MD::TextPlugin
+   * \inmodule md4qt
+   * \inheaderfile md4qt/parser.h
+   *
+   * \brief ID of text plugin.
+   *
+   * \value UnknownPluginID Unknown plugin.
+   * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
+   * \value UserDefinedPluginID First user defined plugin ID.
+   */
   enum TextPlugin : int {
       UnknownPluginID = 0,
       GitHubAutoLinkPluginID = 1,
@@ -274,9 +294,17 @@ text plugins.
 * Text plugin is a usual function with a signature
 
   ```cpp
+  /*!
+   * \typealias MD::TextPluginFunc
+   * \inmodule md4qt
+   * \inheaderfile md4qt/parser.h
+   *
+   * \brief Functor type for text plugin.
+   */
   template<class Trait>
   using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
-      TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
+                                            TextParsingOpts<Trait> &,
+                                            const typename Trait::StringList &)>;
   ```
 
   You will get already parsed `MD::Paragraph` with all items in it. And you are
@@ -307,9 +335,28 @@ text plugins.
   Note, that `MD::TextData` is
 
   ```cpp
+  /*!
+   * \class MD::TextParsingOpts::TextData
+   * \inmodule md4qt
+   * \inheaderfile md4qt/parser.h
+   *
+   * \brief Raw text data.
+   *
+   * Raw text data for corresponding text item in paragraph. Here text is not pre-processed
+   * with anything.
+   */
   struct TextData {
+      /*!
+       * String.
+       */
       typename Trait::String m_str;
+      /*!
+       * Local start position of string.
+       */
       long long int m_pos = -1;
+      /*!
+       * Local line number.
+       */
       long long int m_line = -1;
   };
   ```
@@ -343,15 +390,25 @@ that can be handy for plugin implementation.
   plugin function is quite simple, look.
 
   ```cpp
+  /*!
+   * \inheaderfile md4qt/parser.h
+   *
+   * GitHub autolinks plugin.
+   *
+   * \a p Paragraph.
+   *
+   * \a po Text parsing options.
+   */
   template<class Trait>
   inline void
   githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
-    TextParsingOpts< Trait > &po)
+                       TextParsingOpts<Trait> &po,
+                       const typename Trait::StringList &)
   {
-      if (!po.collectRefLinks) {
+      if (!po.m_collectRefLinks) {
           long long int i = 0;
 
-          while (i >= 0 && i < (long long int) po.rawTextData.size()) {
+          while (i >= 0 && i < (long long int)po.m_rawTextData.size()) {
               i = processGitHubAutolinkExtension(p, po, i);
 
               ++i;
@@ -385,6 +442,15 @@ that can be handy for plugin implementation.
 virgin positions.
 
   ```cpp
+  /*!
+   * \inheaderfile md4qt/parser.h
+   *
+   * Returns substring from fragment with given virgin positions.
+   *
+   * \a fr Text fragment (list of lines).
+   *
+   * \a virginPos Virgin coordinates of text in fragment.
+   */
   template<class Trait>
   inline typename Trait::String
   virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos);
@@ -393,11 +459,21 @@ virgin positions.
   And a function to get local position from virgin one.
 
   ```cpp
+  /*!
+   * \inheaderfile md4qt/parser.h
+   *
+   * Returns local position ( { column, line } ) in fragment for given virgin position if exists.
+   * Returns { -1, -1 } if there is no given position.
+   *
+   * \a fr Text fragment (list of lines).
+   *
+   * \a virginColumn Virgin position of character.
+   *
+   * \a virginLine Virgin line number.
+   */
   template<class Trait>
   inline std::pair<long long int, long long int>
-  localPosFromVirgin(const MdBlock<Trait> &fr,
-      long long int virginColumn,
-      long long int virginLine)
+  localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine);
   ```
 
 # Is it possible to find `Markdown` item by its position?
@@ -411,18 +487,24 @@ nested first children by given position with `MD::PosCache::findFirstInCache()` 
  * Since version `3.0.0` was added algorithm `MD::forEach()`.
 
    ```cpp
-   //! Calls function for each item in the document with the given type.
+   /*!
+    * \inheaderfile md4qt/algo.h
+    *
+    * \brief Calls function for each item in the document with the given type.
+    *
+    * \a types Vector of item's types to be processed.
+    *
+    * \a doc Document.
+    *
+    * \a func Functor object.
+    *
+    * \a maxNestingLevel Maximun nesting level. 0 means infinity, 1 - only top level items...
+    */
    template<class Trait>
-   inline void
-   forEach(
-       //! Vector of item's types to be processed.
+   inline void forEach(
        const typename Trait::template Vector<ItemType> &types,
-       //! Document.
        std::shared_ptr<Document<Trait>> doc,
-       //! Functor object.
        ItemFunctor<Trait> func,
-       //! Maximun nesting level.
-       //! 0 means infinity, 1 - only top level items...
        unsigned int maxNestingLevel = 0);
    ```
 

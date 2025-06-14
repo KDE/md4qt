@@ -309,9 +309,12 @@ resolved, welcome to discussion.
         virtual methods to handle that or another element in the document, like:
 
         \code /
-        virtual void onHeading(
-            \1\1! Heading.
-            MD::Heading<Trait> *h) = 0;
+        \1*!
+         * Handle heading.
+         *
+         * \a h Heading.
+         *\1
+        virtual void onHeading(Heading<Trait> *h) = 0;
         \endcode
 
 
@@ -326,16 +329,22 @@ resolved, welcome to discussion.
         text plugins.
 
         \code /
-        \1\1! Add text plugin.
-        void addTextPlugin(
-            \1\1! ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
-            int id,
-            \1\1! Function of a plugin, that will be invoked to processs raw text.
-            MD::TextPluginFunc<Trait> plugin,
-            \1\1! Should this plugin be used in parsing of internals of links?
-            bool processInLinks,
-            \1\1! User data that will be passed to plugin function.
-            const typename Trait::StringList &userData);
+        \1*!
+         * Add text plugin.
+         *
+         * \a id ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
+         *
+         * \a plugin Function of a plugin, that will be invoked to processs raw text.
+         *
+         * \a processInLinks Should this plugin be used in parsing of internals of links?
+         *
+         * \a userData User data that will be passed to plugin function.
+         *\1
+        void
+        addTextPlugin(int id,
+                      TextPluginFunc<Trait> plugin,
+                      bool processInLinks,
+                      const typename Trait::StringList &userData);
         \endcode
 
 
@@ -349,6 +358,17 @@ resolved, welcome to discussion.
     \li \c {ID} of a plugin is a regular \c {int} that should be (but not mandatory) started from
 
         \code /
+        \1*!
+         * \enum MD::TextPlugin
+         * \inmodule md4qt
+         * \inheaderfile md4qt\1parser.h
+         *
+         * \brief ID of text plugin.
+         *
+         * \value UnknownPluginID Unknown plugin.
+         * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
+         * \value UserDefinedPluginID First user defined plugin ID.
+         *\1
         enum TextPlugin : int {
             UnknownPluginID = 0,
             GitHubAutoLinkPluginID = 1,
@@ -371,9 +391,17 @@ resolved, welcome to discussion.
     \li Text plugin is a usual function with a signature
 
         \code /
+        \1*!
+         * \typealias MD::TextPluginFunc
+         * \inmodule md4qt
+         * \inheaderfile md4qt\1parser.h
+         *
+         * \brief Functor type for text plugin.
+         *\1
         template<class Trait>
         using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
-            TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
+                                                  TextParsingOpts<Trait> &,
+                                                  const typename Trait::StringList &)>;
         \endcode
 
         You will get already parsed \c {MD::Paragraph} with all items in it. And you are
@@ -404,9 +432,28 @@ resolved, welcome to discussion.
         Note, that \c {MD::TextData} is
 
         \code /
+        \1*!
+         * \class MD::TextParsingOpts::TextData
+         * \inmodule md4qt
+         * \inheaderfile md4qt\1parser.h
+         *
+         * \brief Raw text data.
+         *
+         * Raw text data for corresponding text item in paragraph. Here text is not pre-processed
+         * with anything.
+         *\1
         struct TextData {
+            \1*!
+             * String.
+             *\1
             typename Trait::String m_str;
+            \1*!
+             * Local start position of string.
+             *\1
             long long int m_pos = -1;
+            \1*!
+             * Local line number.
+             *\1
             long long int m_line = -1;
         };
         \endcode
@@ -454,15 +501,25 @@ resolved, welcome to discussion.
         plugin function is quite simple, look.
 
         \code /
+        \1*!
+         * \inheaderfile md4qt\1parser.h
+         *
+         * GitHub autolinks plugin.
+         *
+         * \a p Paragraph.
+         *
+         * \a po Text parsing options.
+         *\1
         template<class Trait>
         inline void
         githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
-          TextParsingOpts< Trait > &po)
+                             TextParsingOpts<Trait> &po,
+                             const typename Trait::StringList &)
         {
-            if (!po.collectRefLinks) {
+            if (!po.m_collectRefLinks) {
                 long long int i = 0;
         
-                while (i >= 0 && i < (long long int) po.rawTextData.size()) {
+                while (i >= 0 && i < (long long int)po.m_rawTextData.size()) {
                     i = processGitHubAutolinkExtension(p, po, i);
         
                     ++i;
@@ -508,6 +565,15 @@ resolved, welcome to discussion.
         virgin positions.
 
         \code /
+        \1*!
+         * \inheaderfile md4qt\1parser.h
+         *
+         * Returns substring from fragment with given virgin positions.
+         *
+         * \a fr Text fragment (list of lines).
+         *
+         * \a virginPos Virgin coordinates of text in fragment.
+         *\1
         template<class Trait>
         inline typename Trait::String
         virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos);
@@ -516,11 +582,21 @@ resolved, welcome to discussion.
         And a function to get local position from virgin one.
 
         \code /
+        \1*!
+         * \inheaderfile md4qt\1parser.h
+         *
+         * Returns local position ( { column, line } ) in fragment for given virgin position if exists.
+         * Returns { -1, -1 } if there is no given position.
+         *
+         * \a fr Text fragment (list of lines).
+         *
+         * \a virginColumn Virgin position of character.
+         *
+         * \a virginLine Virgin line number.
+         *\1
         template<class Trait>
         inline std::pair<long long int, long long int>
-        localPosFromVirgin(const MdBlock<Trait> &fr,
-            long long int virginColumn,
-            long long int virginLine)
+        localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine);
         \endcode
 
 
@@ -544,18 +620,24 @@ resolved, welcome to discussion.
     \li Since version \c {3.0.0} was added algorithm \c {MD::forEach()}.
 
         \code /
-        \1\1! Calls function for each item in the document with the given type.
+        \1*!
+         * \inheaderfile md4qt\1algo.h
+         *
+         * \brief Calls function for each item in the document with the given type.
+         *
+         * \a types Vector of item's types to be processed.
+         *
+         * \a doc Document.
+         *
+         * \a func Functor object.
+         *
+         * \a maxNestingLevel Maximun nesting level. 0 means infinity, 1 - only top level items...
+         *\1
         template<class Trait>
-        inline void
-        forEach(
-            \1\1! Vector of item's types to be processed.
+        inline void forEach(
             const typename Trait::template Vector<ItemType> &types,
-            \1\1! Document.
             std::shared_ptr<Document<Trait>> doc,
-            \1\1! Functor object.
             ItemFunctor<Trait> func,
-            \1\1! Maximun nesting level.
-            \1\1! 0 means infinity, 1 - only top level items...
             unsigned int maxNestingLevel = 0);
         \endcode
 
