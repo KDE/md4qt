@@ -7233,119 +7233,122 @@ Parser<Trait>::makeLink(const typename Trait::String &url,
 {
     MD_UNUSED(doNotCreateTextOnFail)
 
-    typename Trait::String u = (url.startsWith(s_numberSignString<Trait>) ?
-        url : removeBackslashes<Trait>(replaceEntity<Trait>(url)));
-
-    if (!u.isEmpty()) {
-        if (!u.startsWith(s_numberSignString<Trait>)) {
-            const auto checkForFile = [&](typename Trait::String &url,
-                                          const typename Trait::String &ref = {}) -> bool {
-                if (Trait::fileExists(url)) {
-                    url = Trait::absoluteFilePath(url);
-
-                    if (!po.m_collectRefLinks) {
-                        po.m_linksToParse.push_back(url);
-                    }
-
-                    if (!ref.isEmpty()) {
-                        url = ref + s_solidusString<Trait> + url;
-                    }
-
-                    return true;
-                } else if (Trait::fileExists(url, po.m_workingPath)) {
-                    url = Trait::absoluteFilePath(po.m_workingPath + s_solidusString<Trait> + url);
-
-                    if (!po.m_collectRefLinks) {
-                        po.m_linksToParse.push_back(url);
-                    }
-
-                    if (!ref.isEmpty()) {
-                        url = ref + s_solidusString<Trait> + url;
-                    }
-
-                    return true;
-                } else {
-                    return false;
-                }
-            };
-
-            if (!checkForFile(u) && u.contains(s_numberSignChar<Trait>)) {
-                const auto i = u.indexOf(s_numberSignChar<Trait>);
-                const auto ref = u.sliced(i);
-                u = u.sliced(0, i);
-
-                if (!checkForFile(u, ref)) {
-                    u = u + ref;
-                }
-            }
-        } else
-            u = u + (po.m_workingPath.isEmpty() ? typename Trait::String() :
-                s_solidusString<Trait> + po.m_workingPath) + s_solidusString<Trait> +
-                po.m_fileName;
-    }
-
     std::shared_ptr<Link<Trait>> link(new Link<Trait>);
-    link->setUrl(u);
-    link->setOpts(po.m_opts);
-    link->setTextPos(textPos);
-    link->setUrlPos(urlPos);
 
-    MdBlock<Trait> block = {text, 0};
+    if (!po.m_collectRefLinks) {
+        typename Trait::String u = (url.startsWith(s_numberSignString<Trait>) ?
+            url : removeBackslashes<Trait>(replaceEntity<Trait>(url)));
 
-    std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
+        if (!u.isEmpty()) {
+            if (!u.startsWith(s_numberSignString<Trait>)) {
+                const auto checkForFile = [&](typename Trait::String &url,
+                                              const typename Trait::String &ref = {}) -> bool {
+                    if (Trait::fileExists(url)) {
+                        url = Trait::absoluteFilePath(url);
 
-    RawHtmlBlock<Trait> html;
+                        if (!po.m_collectRefLinks) {
+                            po.m_linksToParse.push_back(url);
+                        }
 
-    parseFormattedTextLinksImages(block,
-                                  std::static_pointer_cast<Block<Trait>>(p),
-                                  po.m_doc,
-                                  po.m_linksToParse,
-                                  po.m_workingPath,
-                                  po.m_fileName,
-                                  po.m_collectRefLinks,
-                                  true,
-                                  html,
-                                  true);
+                        if (!ref.isEmpty()) {
+                            url = ref + s_solidusString<Trait> + url;
+                        }
 
-    if (!p->isEmpty()) {
-        std::shared_ptr<Image<Trait>> img;
+                        return true;
+                    } else if (Trait::fileExists(url, po.m_workingPath)) {
+                        url = Trait::absoluteFilePath(po.m_workingPath + s_solidusString<Trait> + url);
 
-        if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph) {
-            const auto ip = std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0));
+                        if (!po.m_collectRefLinks) {
+                            po.m_linksToParse.push_back(url);
+                        }
 
-            for (auto it = ip->items().cbegin(), last = ip->items().cend(); it != last; ++it) {
-                switch ((*it)->type()) {
-                case ItemType::Link:
-                    return {};
+                        if (!ref.isEmpty()) {
+                            url = ref + s_solidusString<Trait> + url;
+                        }
 
-                case ItemType::Image: {
-                    img = std::static_pointer_cast<Image<Trait>>(*it);
-                } break;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                };
 
-                default:
-                    break;
+                if (!checkForFile(u) && u.contains(s_numberSignChar<Trait>)) {
+                    const auto i = u.indexOf(s_numberSignChar<Trait>);
+                    const auto ref = u.sliced(i);
+                    u = u.sliced(0, i);
+
+                    if (!checkForFile(u, ref)) {
+                        u = u + ref;
+                    }
                 }
-            }
-
-            if (img.get()) {
-                link->setImg(img);
-            }
-
-            link->setP(ip);
+            } else
+                u = u + (po.m_workingPath.isEmpty() ? typename Trait::String() :
+                    s_solidusString<Trait> + po.m_workingPath) + s_solidusString<Trait> +
+                    po.m_fileName;
         }
+
+        link->setUrl(u);
+        link->setOpts(po.m_opts);
+        link->setTextPos(textPos);
+        link->setUrlPos(urlPos);
+
+        MdBlock<Trait> block = {text, 0};
+
+        std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
+
+        RawHtmlBlock<Trait> html;
+
+        parseFormattedTextLinksImages(block,
+                                      std::static_pointer_cast<Block<Trait>>(p),
+                                      po.m_doc,
+                                      po.m_linksToParse,
+                                      po.m_workingPath,
+                                      po.m_fileName,
+                                      po.m_collectRefLinks,
+                                      true,
+                                      html,
+                                      true);
+
+        if (!p->isEmpty()) {
+            std::shared_ptr<Image<Trait>> img;
+
+            if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph) {
+                const auto ip = std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0));
+
+                for (auto it = ip->items().cbegin(), last = ip->items().cend(); it != last; ++it) {
+                    switch ((*it)->type()) {
+                    case ItemType::Link:
+                        return {};
+
+                    case ItemType::Image: {
+                        img = std::static_pointer_cast<Image<Trait>>(*it);
+                    } break;
+
+                    default:
+                        break;
+                    }
+                }
+
+                if (img.get()) {
+                    link->setImg(img);
+                }
+
+                link->setP(ip);
+            }
+        }
+
+        if (html.m_html.get()) {
+            link->p()->appendItem(html.m_html);
+        }
+
+        link->setText(toSingleLine(removeBackslashes<Trait>(text)));
+        link->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+        link->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+        link->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
+        link->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
+
+        initLastItemWithOpts<Trait>(po, link);
     }
-
-    if (html.m_html.get()) {
-        link->p()->appendItem(html.m_html);
-    }
-
-    link->setText(toSingleLine(removeBackslashes<Trait>(text)));
-    link->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
-    link->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
-    link->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
-    link->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
-
-    initLastItemWithOpts<Trait>(po, link);
 
     return link;
 }
@@ -7427,49 +7430,51 @@ Parser<Trait>::makeImage(const typename Trait::String &url,
 
     std::shared_ptr<Image<Trait>> img(new Image<Trait>);
 
-    typename Trait::String u = (url.startsWith(s_numberSignString<Trait>) ? url :
-        removeBackslashes<Trait>(replaceEntity<Trait>(url)));
+    if (!po.m_collectRefLinks) {
+        typename Trait::String u = (url.startsWith(s_numberSignString<Trait>) ? url :
+            removeBackslashes<Trait>(replaceEntity<Trait>(url)));
 
-    if (Trait::fileExists(u)) {
-        img->setUrl(u);
-    } else if (Trait::fileExists(u, po.m_workingPath)) {
-        img->setUrl(po.m_workingPath + s_solidusString<Trait> + u);
-    } else {
-        img->setUrl(u);
-    }
-
-    MdBlock<Trait> block = {text, 0};
-
-    std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
-
-    RawHtmlBlock<Trait> html;
-
-    parseFormattedTextLinksImages(block,
-                                  std::static_pointer_cast<Block<Trait>>(p),
-                                  po.m_doc,
-                                  po.m_linksToParse,
-                                  po.m_workingPath,
-                                  po.m_fileName,
-                                  po.m_collectRefLinks,
-                                  true,
-                                  html,
-                                  true);
-
-    if (!p->isEmpty()) {
-        if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph) {
-            img->setP(std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0)));
+        if (Trait::fileExists(u)) {
+            img->setUrl(u);
+        } else if (Trait::fileExists(u, po.m_workingPath)) {
+            img->setUrl(po.m_workingPath + s_solidusString<Trait> + u);
+        } else {
+            img->setUrl(u);
         }
+
+        MdBlock<Trait> block = {text, 0};
+
+        std::shared_ptr<Paragraph<Trait>> p(new Paragraph<Trait>);
+
+        RawHtmlBlock<Trait> html;
+
+        parseFormattedTextLinksImages(block,
+                                      std::static_pointer_cast<Block<Trait>>(p),
+                                      po.m_doc,
+                                      po.m_linksToParse,
+                                      po.m_workingPath,
+                                      po.m_fileName,
+                                      po.m_collectRefLinks,
+                                      true,
+                                      html,
+                                      true);
+
+        if (!p->isEmpty()) {
+            if (p->items().size() == 1 && p->items().at(0)->type() == ItemType::Paragraph) {
+                img->setP(std::static_pointer_cast<Paragraph<Trait>>(p->items().at(0)));
+            }
+        }
+
+        img->setText(toSingleLine(removeBackslashes<Trait>(text)));
+        img->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
+        img->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
+        img->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
+        img->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
+        img->setTextPos(textPos);
+        img->setUrlPos(urlPos);
+
+        initLastItemWithOpts<Trait>(po, img);
     }
-
-    img->setText(toSingleLine(removeBackslashes<Trait>(text)));
-    img->setStartColumn(po.m_fr.m_data.at(startLine).first.virginPos(startPos));
-    img->setStartLine(po.m_fr.m_data.at(startLine).second.m_lineNumber);
-    img->setEndColumn(po.m_fr.m_data.at(lastLine).first.virginPos(lastPos - 1));
-    img->setEndLine(po.m_fr.m_data.at(lastLine).second.m_lineNumber);
-    img->setTextPos(textPos);
-    img->setUrlPos(urlPos);
-
-    initLastItemWithOpts<Trait>(po, img);
 
     return img;
 }
