@@ -100,7 +100,7 @@ public:
     virtual typename Trait::String toHtml(std::shared_ptr<Document<Trait>> doc,
                                           const typename Trait::String &hrefForRefBackImage,
                                           bool wrappedInArticle = true,
-                                          IdsMap<Trait> *idsMap = nullptr)
+                                          const IdsMap<Trait> *idsMap = nullptr)
     {
         m_isWrappedInArticle = wrappedInArticle;
         m_idsMap = idsMap;
@@ -977,7 +977,7 @@ protected:
     /*!
      * Map of IDs to set to corresponding items.
      */
-    IdsMap<Trait> *m_idsMap = nullptr;
+    const IdsMap<Trait> *m_idsMap = nullptr;
 }; // class HtmlVisitor
 
 } /* namespace details */
@@ -1003,7 +1003,7 @@ toHtml(std::shared_ptr<Document<Trait>> doc,
        bool wrapInBodyTag = true,
        const typename Trait::String &hrefForRefBackImage = {},
        bool wrapInArticle = true,
-       details::IdsMap<Trait> *idsMap = nullptr)
+       const details::IdsMap<Trait> *idsMap = nullptr)
 {
     typename Trait::String html;
 
