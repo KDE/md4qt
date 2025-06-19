@@ -118,6 +118,8 @@ public:
 protected:
     /*!
      * Returns ID of item if it's set.
+     *
+     * \a item Item.
      */
     virtual typename Trait::String getId(Item<Trait> *item) const
     {
@@ -138,6 +140,8 @@ protected:
 
     /*!
      * Append ID into HTML.
+     *
+     * \a item Item.
      */
     virtual void printId(Item<Trait> *item)
     {
