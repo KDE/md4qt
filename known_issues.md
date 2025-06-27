@@ -90,3 +90,26 @@ I can say that I will win very much in performance if to replace `QUrl` with
 simple functions in corresponding with Markdown standard, but...
 
 **Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/7).**
+
+# 4. Nested links
+
+In Markdown link can't has nested links, so in `[[link](/url)](/url)` only `[link](/url)` is a link,
+and surrounding "link" is just a text. In `md4qt` big nesting of such things may lead to a
+significant slowdown of parsing. This happens because in `md4qt` I parse nested links each time with
+full recursion to very nested, so if somebody will write something starting with `[[[[[` and
+this construction will be ended with all rules for links, `md4qt` will go 5 times through recursion to
+the very nested link and will move to `-1` recursion step each time. So it may eat some time.
+
+This issue can be solved by moving "pointer" of  parser to very nested link at first complete recursion,
+there is no need to go through the recursion more than one time. I didn't do it right now. It requires
+some effort, not so big, but. Most important why I didn't optimize it because it's very rare case
+in real world. Who, when and why will write constructions in Markdown like:
+
+```md
+[[[[[[[[](test)](test)](test)](test)](test)](test)](test)]
+```
+
+So I decided to keep it while.
+
+**Interested in this question may start a discussion with me [here](https://invent.kde.org/libraries/md4qt/-/issues/8).**
+
