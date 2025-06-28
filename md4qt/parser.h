@@ -2251,6 +2251,12 @@ private:
                   bool calcIndent = false,
                   const std::vector<long long int> *indents = nullptr);
 
+    /*
+     * In family of functions like parseText(), parseBlockquote() returned value
+     * is a virgin line number where processing of fragment was stopped. In case of
+     * returned value not equal -1 overlying code will continue parsing of Markdown
+     * from that line number (will consider this line as start of new block).
+     */
     long long int
     parseFragment(MdBlock<Trait> &fr,
                   std::shared_ptr<Block<Trait>> parent,
