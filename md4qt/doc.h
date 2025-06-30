@@ -235,12 +235,13 @@ private:
  *
  * \a r Right operand.
  */
-inline bool operator==(const WithPosition &l, const WithPosition &r)
+inline bool operator==(const WithPosition &l,
+                       const WithPosition &r)
 {
-    return (l.startColumn() == r.startColumn() &&
-            l.startLine() == r.startLine() &&
-            l.endColumn() == r.endColumn() &&
-            l.endLine() == r.endLine());
+    return (l.startColumn() == r.startColumn()
+            && l.startLine() == r.startLine()
+            && l.endColumn() == r.endColumn()
+            && l.endLine() == r.endLine());
 }
 
 template<class Trait>
@@ -356,7 +357,10 @@ public:
                long long int startLine,
                long long int endColumn,
                long long int endLine)
-        : WithPosition(startColumn, startLine, endColumn, endLine)
+        : WithPosition(startColumn,
+                       startLine,
+                       endColumn,
+                       endLine)
         , m_style(s)
     {
     }
@@ -395,7 +399,8 @@ private:
  *
  * \a r Right operand.
  */
-inline bool operator==(const StyleDelim &l, const StyleDelim &r)
+inline bool operator==(const StyleDelim &l,
+                       const StyleDelim &r)
 {
     return (static_cast<WithPosition>(l) == static_cast<WithPosition>(r) && l.style() == r.style());
 }
@@ -978,7 +983,8 @@ public:
      *
      * \a doc Parent of new item.
      */
-    void applyBlock(const Block<Trait> &other, Document<Trait> *doc = nullptr)
+    void applyBlock(const Block<Trait> &other,
+                    Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
             WithPosition::applyPositions(other);
@@ -1005,7 +1011,8 @@ public:
      *
      * \a i Item to insert.
      */
-    void insertItem(long long int idx, ItemSharedPointer i)
+    void insertItem(long long int idx,
+                    ItemSharedPointer i)
     {
         m_items.insert(m_items.cbegin() + idx, i);
     }
@@ -1740,7 +1747,8 @@ public:
      *
      * \a doc Parent of new item.
      */
-    void applyLinkBase(const LinkBase<Trait> &other, Document<Trait> *doc = nullptr)
+    void applyLinkBase(const LinkBase<Trait> &other,
+                       Document<Trait> *doc = nullptr)
     {
         if (this != &other) {
             ItemWithOpts<Trait>::applyItemWithOpts(other);
@@ -2042,7 +2050,9 @@ public:
      *
      * \a inl Whether this code is an inline code.
      */
-    explicit Code(const typename Trait::String &t, bool fensedCode, bool inl)
+    explicit Code(const typename Trait::String &t,
+                  bool fensedCode,
+                  bool inl)
         : ItemWithOpts<Trait>()
         , m_text(t)
         , m_inlined(inl)
@@ -2274,7 +2284,9 @@ public:
      * Default constructor.
      */
     Math()
-        : Code<Trait>(typename Trait::String(), false, true)
+        : Code<Trait>(typename Trait::String(),
+                      false,
+                      true)
     {
     }
 
@@ -2598,7 +2610,8 @@ public:
      *
      * \a a New value.
      */
-    void setColumnAlignment(int idx, Alignment a)
+    void setColumnAlignment(int idx,
+                            Alignment a)
     {
         if (idx + 1 > columnsCount()) {
             m_aligns.push_back(a);
@@ -2845,13 +2858,11 @@ public:
         d->applyBlock(*this, d.get());
 
         for (auto it = m_footnotes.cbegin(), last = m_footnotes.cend(); it != last; ++it) {
-            d->insertFootnote(it->first,
-                std::static_pointer_cast<Footnote<Trait>>(it->second->clone(d.get())));
+            d->insertFootnote(it->first, std::static_pointer_cast<Footnote<Trait>>(it->second->clone(d.get())));
         }
 
         for (auto it = m_labeledLinks.cbegin(), last = m_labeledLinks.cend(); it != last; ++it) {
-            d->insertLabeledLink(it->first,
-                std::static_pointer_cast<Link<Trait>>(it->second->clone(d.get())));
+            d->insertLabeledLink(it->first, std::static_pointer_cast<Link<Trait>>(it->second->clone(d.get())));
         }
 
         return d;
@@ -2885,7 +2896,8 @@ public:
      *
      * \a fn Footnote.
      */
-    void insertFootnote(const typename Trait::String &id, FootnoteSharedPointer fn)
+    void insertFootnote(const typename Trait::String &id,
+                        FootnoteSharedPointer fn)
     {
         m_footnotes.insert({id, fn});
     }
@@ -2918,7 +2930,8 @@ public:
      *
      * \a lnk Link.
      */
-    void insertLabeledLink(const typename Trait::String &label, LinkSharedPointer lnk)
+    void insertLabeledLink(const typename Trait::String &label,
+                           LinkSharedPointer lnk)
     {
         m_labeledLinks.insert({label, lnk});
     }
@@ -2951,7 +2964,8 @@ public:
      *
      * \a h Heading.
      */
-    void insertLabeledHeading(const typename Trait::String &label, HeadingSharedPointer h)
+    void insertLabeledHeading(const typename Trait::String &label,
+                              HeadingSharedPointer h)
     {
         m_labeledHeadings.insert({label, h});
     }

@@ -6,13 +6,13 @@
 
 #define MD4QT_QT_SUPPORT
 #include <md4qt/doc.h>
-#include <md4qt/parser.h>
 #include <md4qt/html.h>
+#include <md4qt/parser.h>
 #include <md4qt/poscache.h>
 
 #include <QFile>
-#include <QTest>
 #include <QObject>
+#include <QTest>
 
 #include <cmark-gfm-core-extensions.h>
 #include <cmark-gfm.h>
@@ -20,7 +20,7 @@
 
 class MdBenchmark : public QObject
 {
-	Q_OBJECT
+    Q_OBJECT
 
 private Q_SLOTS:
     void initTestCase()

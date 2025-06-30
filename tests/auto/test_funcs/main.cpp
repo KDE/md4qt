@@ -10,7 +10,6 @@
 // doctest include.
 #include <doctest/doctest.h>
 
-
 TEST_CASE("is_footnote")
 {
     REQUIRE(!MD::isFootnote<TRAIT>(TRAIT::latin1ToString("[^]:")));
@@ -204,10 +203,12 @@ TEST_CASE("is_email")
     static const auto i63 = typename TRAIT::String(63, TRAIT::latin1ToChar('i'));
     static const auto i64 = typename TRAIT::String(64, TRAIT::latin1ToChar('i'));
 
-    static const TRAIT::String okEmail = TRAIT::latin1ToString("igor@") + i63 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
+    static const TRAIT::String okEmail =
+        TRAIT::latin1ToString("igor@") + i63 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
     REQUIRE(MD::isEmail<TRAIT>(okEmail));
 
-    static const TRAIT::String wrongEmail = TRAIT::latin1ToString("igor@") + i64 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
+    static const TRAIT::String wrongEmail =
+        TRAIT::latin1ToString("igor@") + i64 + typename TRAIT::String(1, TRAIT::latin1ToChar('.')) + i63;
     REQUIRE(!MD::isEmail<TRAIT>(wrongEmail));
 
     REQUIRE(!MD::isEmail<TRAIT>(TRAIT::latin1ToString("i[]gor@gmail.com")));
@@ -223,16 +224,17 @@ TEST_CASE("is_email")
     REQUIRE(!MD::isEmail<TRAIT>(TRAIT::latin1ToString("@.")));
 }
 
-#define INIT_VARS_FOR_OPTIMIZE_PARAGRAPH                                                                                                                       \
-    std::shared_ptr<MD::Block<TRAIT>> parent = std::make_shared<MD::Paragraph<TRAIT>>();                                                                       \
-    auto doc = std::make_shared<MD::Document<TRAIT>>();                                                                                                        \
-    MD::MdBlock<TRAIT> fr;                                                                                                                                     \
-    typename TRAIT::StringList links;                                                                                                                          \
-    MD::RawHtmlBlock<TRAIT> html;                                                                                                                              \
-    const MD::TextPluginsMap<TRAIT> textPlugins;                                                                                                               \
-                                                                                                                                                               \
-    MD::TextParsingOpts<TRAIT> po = {fr, parent, doc, links, TRAIT::String(), TRAIT::String(), false, false, html, textPlugins};                      \
-                                                                                                                                                               \
+#define INIT_VARS_FOR_OPTIMIZE_PARAGRAPH                                                                               \
+    std::shared_ptr<MD::Block<TRAIT>> parent = std::make_shared<MD::Paragraph<TRAIT>>();                               \
+    auto doc = std::make_shared<MD::Document<TRAIT>>();                                                                \
+    MD::MdBlock<TRAIT> fr;                                                                                             \
+    typename TRAIT::StringList links;                                                                                  \
+    MD::RawHtmlBlock<TRAIT> html;                                                                                      \
+    const MD::TextPluginsMap<TRAIT> textPlugins;                                                                       \
+                                                                                                                       \
+    MD::TextParsingOpts<TRAIT> po =                                                                                    \
+        {fr, parent, doc, links, TRAIT::String(), TRAIT::String(), false, false, html, textPlugins};                   \
+                                                                                                                       \
     auto p = std::make_shared<MD::Paragraph<TRAIT>>();
 
 void makeText(MD::TextParsingOpts<TRAIT> &po,
@@ -261,7 +263,9 @@ void makeText(MD::TextParsingOpts<TRAIT> &po,
     p->appendItem(t);
 }
 
-void makeCode(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line)
+void makeCode(MD::TextParsingOpts<TRAIT> &,
+              std::shared_ptr<MD::Paragraph<TRAIT>> p,
+              long long int line)
 {
     auto c = std::make_shared<MD::Code<TRAIT>>(TRAIT::latin1ToString("code"), false, true);
     c->setStartColumn(0);
@@ -272,7 +276,10 @@ void makeCode(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>
     p->appendItem(c);
 }
 
-void makeHtml(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>> p, long long int line, bool isFree)
+void makeHtml(MD::TextParsingOpts<TRAIT> &,
+              std::shared_ptr<MD::Paragraph<TRAIT>> p,
+              long long int line,
+              bool isFree)
 {
     auto h = std::make_shared<MD::RawHtml<TRAIT>>();
     h->setStartColumn(0);
@@ -284,7 +291,8 @@ void makeHtml(MD::TextParsingOpts<TRAIT> &, std::shared_ptr<MD::Paragraph<TRAIT>
     p->appendItem(h);
 }
 
-void checkP(const std::string &d, std::shared_ptr<MD::Paragraph<TRAIT>> p)
+void checkP(const std::string &d,
+            std::shared_ptr<MD::Paragraph<TRAIT>> p)
 {
     REQUIRE(d.length() == p->items().size());
 
@@ -314,7 +322,8 @@ void checkP(const std::string &d, std::shared_ptr<MD::Paragraph<TRAIT>> p)
     }
 }
 
-void checkT(const std::vector<int> &d, const MD::TextParsingOpts<TRAIT> &po)
+void checkT(const std::vector<int> &d,
+            const MD::TextParsingOpts<TRAIT> &po)
 {
     REQUIRE(d.size() == po.m_rawTextData.size());
 
@@ -581,7 +590,8 @@ TEST_CASE("virgin_substr")
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 2, 1, 2}) == TRAIT::latin1ToString("__"));
     REQUIRE(MD::virginSubstr<TRAIT>(data, {6, 1, 1, 2}) == TRAIT::latin1ToString("**\n__"));
     REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 3, 0, 10}) == TRAIT::latin1ToString("text\n~~text~~\n~text*"));
-    REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 0, 100, 100}) == TRAIT::latin1ToString("**text**\n__text__\ntext\n~~text~~\n~text*"));
+    REQUIRE(MD::virginSubstr<TRAIT>(data, {0, 0, 100, 100})
+            == TRAIT::latin1ToString("**text**\n__text__\ntext\n~~text~~\n~text*"));
 
     data.m_data[1].first.remove(0, 2);
 

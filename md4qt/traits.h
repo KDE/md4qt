@@ -38,7 +38,8 @@ namespace MD
  * to string from view, and modifications will be made on copied string.
  */
 template<class String, class StringView>
-class StringVariant {
+class StringVariant
+{
 public:
     /*!
      * Default constructor of empty string variant.
@@ -67,7 +68,7 @@ public:
     /*!
      * Copy operator.
      */
-    StringVariant & operator = (const StringVariant &) = default;
+    StringVariant &operator=(const StringVariant &) = default;
     /*!
      * Copy constructor.
      */
@@ -78,7 +79,7 @@ public:
      *
      * \a pos Position.
      */
-    typename String::value_type operator[] (long long int pos) const
+    typename String::value_type operator[](long long int pos) const
     {
         return (m_isView ? m_view[pos] : m_string[pos]);
     }
@@ -106,7 +107,8 @@ public:
      *
      * \a n Count of characters.
      */
-    StringVariant sliced(long long int pos, long long int n) const
+    StringVariant sliced(long long int pos,
+                         long long int n) const
     {
         return (m_isView ? StringVariant(m_view.sliced(pos, n)) : StringVariant(m_string.sliced(pos, n)));
     }
@@ -126,7 +128,8 @@ public:
      *
      * \a what A string to insert.
      */
-    StringVariant &insert(long long int pos, const String &what)
+    StringVariant &insert(long long int pos,
+                          const String &what)
     {
         if (m_isView) {
             m_string = m_view.toString();
@@ -146,7 +149,8 @@ public:
      *
      * \a size Count of characters.
      */
-    StringVariant &remove(long long int pos, long long int size)
+    StringVariant &remove(long long int pos,
+                          long long int size)
     {
         if (m_isView) {
             m_string = m_view.toString();
@@ -266,7 +270,8 @@ public:
      *
      * \a len Length.
      */
-    String virginSubString(long long int pos = 0, long long int len = -1) const
+    String virginSubString(long long int pos = 0,
+                           long long int len = -1) const
     {
         if (pos < 0) {
             pos = 0;
@@ -350,7 +355,9 @@ public:
      *
      * \a with Value to insert.
      */
-    InternalStringT &replaceOne(long long int pos, long long int size, const String &with)
+    InternalStringT &replaceOne(long long int pos,
+                                long long int size,
+                                const String &with)
     {
         const auto len = m_string.length();
 
@@ -373,7 +380,8 @@ public:
      * \a from Start position.
      */
     template<class T>
-    long long int indexOf(const T &what, long long int from = 0) const
+    long long int indexOf(const T &what,
+                          long long int from = 0) const
     {
         if (from < 0 || from >= length()) {
             return -1;
@@ -384,10 +392,10 @@ public:
         }
 
         for (long long int i = from; i <= length() - what.length(); ++i) {
-            if (this->operator [](i) == what[0]) {
+            if (this->operator[](i) == what[0]) {
                 bool match = true;
                 for (long long int j = 1; j < what.length(); ++j) {
-                    if (this->operator [](i + j) != what[j]) {
+                    if (this->operator[](i + j) != what[j]) {
                         match = false;
                         break;
                     }
@@ -430,7 +438,7 @@ public:
         }
 
         for (long long int i = 0; i < what.length(); ++i) {
-            if (this->operator [](i) != what[i]) {
+            if (this->operator[](i) != what[i]) {
                 return false;
             }
         }
@@ -457,7 +465,7 @@ public:
         }
 
         for (long long int i = 0; i < what.length(); ++i) {
-            if (this->operator [](l - i - 1) != what[i]) {
+            if (this->operator[](l - i - 1) != what[i]) {
                 return false;
             }
         }
@@ -472,7 +480,8 @@ public:
      *
      * \a with Value to insert.
      */
-    InternalStringT &replace(const String &what, const String &with)
+    InternalStringT &replace(const String &what,
+                             const String &with)
     {
         long long int pos = 0;
 
@@ -491,7 +500,8 @@ public:
      *
      * \a size Length.
      */
-    InternalStringT &remove(long long int pos, long long int size)
+    InternalStringT &remove(long long int pos,
+                            long long int size)
     {
         const auto len = m_string.length();
 
@@ -533,7 +543,7 @@ public:
         while (true) {
             long long int tmp = i;
 
-            while (i < length() && this->operator [](i).isSpace()) {
+            while (i < length() && this->operator[](i).isSpace()) {
                 ++i;
             }
 
@@ -552,8 +562,8 @@ public:
 
             first = false;
 
-            while (i != len && !this->operator [](i).isSpace()) {
-                tmpString.push_back(this->operator [](i));
+            while (i != len && !this->operator[](i).isSpace()) {
+                tmpString.push_back(this->operator[](i));
                 ++i;
             }
 
@@ -593,7 +603,7 @@ public:
             for (long long int i = 0; i < len; ++i) {
                 auto is = *this;
                 is.m_string.clear();
-                is.m_string = String(1, this->operator [](i));
+                is.m_string = String(1, this->operator[](i));
                 is.m_changedPos.push_back({{i, len}, {}});
 
                 result.push_back(is);
@@ -627,7 +637,8 @@ public:
      *
      * \a len Length.
      */
-    InternalStringT sliced(long long int pos, long long int len = -1) const
+    InternalStringT sliced(long long int pos,
+                           long long int len = -1) const
     {
         InternalStringT tmp = *this;
         tmp.m_string.clear();
@@ -659,7 +670,8 @@ public:
      *
      * \a ch Character.
      */
-    InternalStringT &insert(long long int pos, Char ch)
+    InternalStringT &insert(long long int pos,
+                            Char ch)
     {
         return insert(pos, String(1, ch));
     }
@@ -671,7 +683,8 @@ public:
      *
      * \a s String.
      */
-    InternalStringT &insert(long long int pos, const String &s)
+    InternalStringT &insert(long long int pos,
+                            const String &s)
     {
         const auto len = m_string.length();
         const auto ilen = s.length();
@@ -718,7 +731,8 @@ private:
 
 private:
     long long int virginPosImpl(long long int pos,
-                                const std::pair<LengthAndStartPos, std::vector<ChangedPos>> &changed,
+                                const std::pair<LengthAndStartPos,
+                                                std::vector<ChangedPos>> &changed,
                                 bool end) const
     {
         for (const auto &c : changed.second) {
@@ -778,12 +792,20 @@ private:
  *
  * \a other Other string to compare.
  */
-template<class String, class StringView, class Char, class Latin1Char, class T>
-bool operator == (const InternalStringT<String, StringView, Char, Latin1Char> &str, const T &other)
+template<class String,
+         class StringView,
+         class Char,
+         class Latin1Char,
+         class T>
+bool operator==(const InternalStringT<String,
+                                      StringView,
+                                      Char,
+                                      Latin1Char> &str,
+                const T &other)
 {
     const auto length = str.length();
 
-    if (length != other.length() ) {
+    if (length != other.length()) {
         return false;
     }
 
@@ -899,10 +921,10 @@ struct QStringTrait {
      *
      * \a workingPath Working path.
      */
-    static bool fileExists(const String &fileName, const String &workingPath)
+    static bool fileExists(const String &fileName,
+                           const String &workingPath)
     {
-        return QFileInfo::exists((workingPath.isEmpty() ?
-                                    QString() : workingPath + latin1ToString("/")) + fileName);
+        return QFileInfo::exists((workingPath.isEmpty() ? QString() : workingPath + latin1ToString("/")) + fileName);
     }
 
     /*!
@@ -932,7 +954,8 @@ struct QStringTrait {
      *
      * \a ch Character to append.
      */
-    static void appendUcs4(String &str, char32_t ch)
+    static void appendUcs4(String &str,
+                           char32_t ch)
     {
         str += QChar::fromUcs4(ch);
     }
@@ -946,7 +969,9 @@ struct QStringTrait {
      *
      * \a from Start position.
      */
-    static long long int lastIndexOf(const String &where, const String &what, long long int from)
+    static long long int lastIndexOf(const String &where,
+                                     const String &what,
+                                     long long int from)
     {
         if (from < 0) {
             return -1;

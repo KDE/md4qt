@@ -89,11 +89,13 @@ TEST_CASE("121")
 \[\mathrm{\mathbf{M}}(\alpha) =
    \left(
       \begin{matrix}
-         \cos(\alpha)+n_x^2\cdot (1-\cos(\alpha))  &  n_x\cdot n_y\cdot (1-\cos(\alpha))-n_z\cdot \sin(\alpha) &  n_x\cdot n_z\cdot (1-\cos(\alpha))+n_y\cdot
+         \cos(\alpha)+n_x^2\cdot (1-\cos(\alpha))  &  n_x\cdot n_y\cdot (1-\cos(\alpha))-n_z\cdot \sin(\alpha) &
+n_x\cdot n_z\cdot (1-\cos(\alpha))+n_y\cdot
 \sin(\alpha)\\
-         n_x\cdot n_y\cdot (1-\cos(\alpha))+n_z\cdot \sin(\alpha) & \cos(\alpha)+n_y^2\cdot (1-\cos(\alpha))  &   n_y\cdot n_z\cdot (1-\cos(\alpha))-n_x\cdot
-\sin(\alpha)\\ n_z\cdot n_x\cdot (1-\cos(\alpha))-n_y\cdot \sin(\alpha) & n_z\cdot n_y\cdot (1-\cos(\alpha))+n_x\cdot \sin(\alpha)  & \cos(\alpha)+n_z^2\cdot
-(1-\cos(\alpha)) \end{matrix} \right)
+         n_x\cdot n_y\cdot (1-\cos(\alpha))+n_z\cdot \sin(\alpha) & \cos(\alpha)+n_y^2\cdot (1-\cos(\alpha))  & n_y\cdot
+n_z\cdot (1-\cos(\alpha))-n_x\cdot
+\sin(\alpha)\\ n_z\cdot n_x\cdot (1-\cos(\alpha))-n_y\cdot \sin(\alpha) & n_z\cdot n_y\cdot (1-\cos(\alpha))+n_x\cdot
+\sin(\alpha)  & \cos(\alpha)+n_z^2\cdot (1-\cos(\alpha)) \end{matrix} \right)
 \]
 ```
 
@@ -830,7 +832,9 @@ TEST_CASE("129")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::RawHtml);
     auto h = static_cast<MD::RawHtml<TRAIT> *>(doc->items().at(1).get());
-    REQUIRE(h->text() == TRAIT::latin1ToString("<!--[![Downloads](https://pepy.tech/badge/ludwig)](https://pepy.tech/project/ludwig)-->"));
+    REQUIRE(h->text()
+            == TRAIT::latin1ToString(
+                "<!--[![Downloads](https://pepy.tech/badge/ludwig)](https://pepy.tech/project/ludwig)-->"));
     REQUIRE(h->startColumn() == 0);
     REQUIRE(h->startLine() == 0);
     REQUIRE(h->endColumn() == 86);
@@ -855,7 +859,9 @@ TEST_CASE("130")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::RawHtml);
     auto h = static_cast<MD::RawHtml<TRAIT> *>(doc->items().at(1).get());
-    REQUIRE(h->text() == TRAIT::latin1ToString("<!--[![Downloads](https://pepy.tech/badge/ludwig)](https://pepy.tech/project/ludwig)\ntext\n\ntext"));
+    REQUIRE(h->text()
+            == TRAIT::latin1ToString(
+                "<!--[![Downloads](https://pepy.tech/badge/ludwig)](https://pepy.tech/project/ludwig)\ntext\n\ntext"));
     REQUIRE(h->startColumn() == 0);
     REQUIRE(h->startLine() == 0);
     REQUIRE(h->endColumn() == 3);
@@ -1011,7 +1017,8 @@ TEST_CASE("133")
     {
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
         auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
-        REQUIRE(l->url() == TRAIT::latin1ToString("#standalone-gpu-ready-solution/") + wd + TRAIT::latin1ToString("/133.md"));
+        REQUIRE(l->url()
+                == TRAIT::latin1ToString("#standalone-gpu-ready-solution/") + wd + TRAIT::latin1ToString("/133.md"));
         REQUIRE(l->textPos() == MD::WithPosition{1, 0, 29, 0});
         REQUIRE(l->urlPos() == MD::WithPosition{32, 0, 61, 0});
         REQUIRE(doc->labeledHeadings().find(l->url()) != doc->labeledHeadings().cend());

@@ -36,7 +36,7 @@ namespace details
  * This is a map of IDs that should be set in HTML for corresponding items.
  */
 template<class Trait>
-using IdsMap = std::unordered_map<MD::Item<Trait>*, typename Trait::String>;
+using IdsMap = std::unordered_map<MD::Item<Trait> *, typename Trait::String>;
 
 //
 // HtmlVisitor
@@ -132,7 +132,7 @@ protected:
                 }
             }
         } else {
-            return static_cast<Heading<Trait>*>(item)->label();
+            return static_cast<Heading<Trait> *>(item)->label();
         }
 
         return {};
@@ -271,7 +271,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool wrap,  bool skipOpeningWrap = false) override
+    void onParagraph(Paragraph<Trait> *p,
+                     bool wrap,
+                     bool skipOpeningWrap = false) override
     {
         if (wrap && !m_justCollectFootnoteRefs && !skipOpeningWrap) {
             m_html.push_back(Trait::latin1ToString("<p dir=\"auto\""));
@@ -467,7 +469,9 @@ protected:
 
             int columns = 0;
 
-            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend(); th != last; ++th) {
+            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend();
+                 th != last;
+                 ++th) {
                 if (!m_justCollectFootnoteRefs) {
                     m_html.push_back(Trait::latin1ToString("<th"));
                     m_html.push_back(tableAlignmentToHtml(t->columnAlignment(columns)));
@@ -729,7 +733,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *i, bool first,  bool skipOpeningWrap = false) override
+    void onListItem(ListItem<Trait> *i,
+                    bool first,
+                    bool skipOpeningWrap = false) override
     {
         if (!m_justCollectFootnoteRefs) {
             m_html.push_back(Trait::latin1ToString("<li"));
@@ -744,8 +750,9 @@ protected:
                     m_html.push_back(Trait::latin1ToString("<p dir=\"auto\">"));
                 }
 
-                m_html.push_back(Trait::latin1ToString("<input "
-                    "type=\"checkbox\" id=\"\" disabled=\"\" class=\"task-list-item-checkbox\""));
+                m_html.push_back(
+                    Trait::latin1ToString("<input "
+                                          "type=\"checkbox\" id=\"\" disabled=\"\" class=\"task-list-item-checkbox\""));
 
                 if (i->isChecked()) {
                     m_html.push_back(Trait::latin1ToString(" checked=\"\""));
@@ -775,7 +782,8 @@ protected:
      *
      * \a ht Heading tag.
      */
-    virtual void onHeading(Heading<Trait> *h, const typename Trait::String &ht)
+    virtual void onHeading(Heading<Trait> *h,
+                           const typename Trait::String &ht)
     {
         if (!m_justCollectFootnoteRefs) {
             m_html.push_back(Trait::latin1ToString("<"));
@@ -1001,13 +1009,13 @@ protected:
  *
  * \a idsMap Map of IDs to set to items.
  */
-template<class Trait, class HtmlVisitor = details::HtmlVisitor<Trait>>
-typename Trait::String
-toHtml(std::shared_ptr<Document<Trait>> doc,
-       bool wrapInBodyTag = true,
-       const typename Trait::String &hrefForRefBackImage = {},
-       bool wrapInArticle = true,
-       const details::IdsMap<Trait> *idsMap = nullptr)
+template<class Trait,
+         class HtmlVisitor = details::HtmlVisitor<Trait>>
+typename Trait::String toHtml(std::shared_ptr<Document<Trait>> doc,
+                              bool wrapInBodyTag = true,
+                              const typename Trait::String &hrefForRefBackImage = {},
+                              bool wrapInArticle = true,
+                              const details::IdsMap<Trait> *idsMap = nullptr)
 {
     typename Trait::String html;
 

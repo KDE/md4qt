@@ -177,7 +177,8 @@ TEST_CASE("221")
 |:--------------|:----------------------------------------|:-----
 |$x_n$ `x_n` |$\stackrel{!}{=}$ `\stackrel{!}{=}`| $a \atop b$ `a \atop b`
 |$e^x$ `e^x` |$\overset{!}{=}$ `\overset{!}{=}`  | $a\raisebox{0.25em}{$b$}c$ `a\raisebox{0.25em}{$b$}c`
-|$_u^o $ `_u^o `| $\underset{!}{=}$ `\underset{!}{=}` | $a+\left(\vcenter{\frac{\frac a b}c}\right)$ `a+\left(\vcenter{\hbox{$\frac{\frac a b}c$}}\right)`
+|$_u^o $ `_u^o `| $\underset{!}{=}$ `\underset{!}{=}` | $a+\left(\vcenter{\frac{\frac a b}c}\right)$
+`a+\left(\vcenter{\hbox{$\frac{\frac a b}c$}}\right)`
 ||| $$\sum_{\substack{0<i<m\\0<j<n}}$$ `\sum_{\substack{0<i<m\\0<j<n}}`
 
 */
@@ -1042,7 +1043,8 @@ TEST_CASE("240")
 }
 
 /*
-[<img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" align="right">](https://www.patreon.com/onqtam)
+[<img src="https://c5.patreon.com/external/logo/become_a_patron_button.png"
+align="right">](https://www.patreon.com/onqtam)
 
 */
 TEST_CASE("241")

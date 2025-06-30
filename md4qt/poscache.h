@@ -11,9 +11,9 @@
 // C++ include.
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include <stack>
 #include <vector>
-#include <memory>
 
 namespace MD
 {
@@ -48,8 +48,10 @@ struct PosRange {
      *
      * \a endLine End line.
      */
-    PosRange(long long int startColumn, long long int startLine,
-             long long int endColumn, long long int endLine)
+    PosRange(long long int startColumn,
+             long long int startLine,
+             long long int endColumn,
+             long long int endLine)
         : m_startColumn(startColumn)
         , m_startLine(startLine)
         , m_endColumn(endColumn)
@@ -70,8 +72,10 @@ struct PosRange {
      *
      * \a item This item.
      */
-    PosRange(long long int startColumn, long long int startLine,
-             long long int endColumn, long long int endLine,
+    PosRange(long long int startColumn,
+             long long int startLine,
+             long long int endColumn,
+             long long int endLine,
              Item<Trait> *item)
         : m_startColumn(startColumn)
         , m_startLine(startLine)
@@ -96,9 +100,12 @@ struct PosRange {
      *
      * \a children Children items.
      */
-    PosRange(long long int startColumn, long long int startLine,
-             long long int endColumn, long long int endLine,
-             Item<Trait> *item, const std::vector<std::shared_ptr<PosRange<Trait>>> &children)
+    PosRange(long long int startColumn,
+             long long int startLine,
+             long long int endColumn,
+             long long int endLine,
+             Item<Trait> *item,
+             const std::vector<std::shared_ptr<PosRange<Trait>>> &children)
         : m_startColumn(startColumn)
         , m_startLine(startLine)
         , m_endColumn(endColumn)
@@ -155,11 +162,14 @@ struct PosRange {
  * \a r Right operand.
  */
 template<class Trait>
-bool operator==(const PosRange<Trait> &l, const PosRange<Trait> &r)
+bool operator==(const PosRange<Trait> &l,
+                const PosRange<Trait> &r)
 {
-    return (l.m_startLine <= r.m_endLine && l.m_endLine >= r.m_startLine &&
-           (l.m_startLine == r.m_endLine && l.m_endLine == r.m_startLine ?
-                l.m_endColumn >= r.m_startColumn && l.m_startColumn <= r.m_endColumn : true));
+    return (l.m_startLine <= r.m_endLine
+            && l.m_endLine >= r.m_startLine
+            && (l.m_startLine == r.m_endLine && l.m_endLine == r.m_startLine
+                    ? l.m_endColumn >= r.m_startColumn && l.m_startColumn <= r.m_endColumn
+                    : true));
 }
 
 /*!
@@ -173,22 +183,24 @@ bool operator==(const PosRange<Trait> &l, const PosRange<Trait> &r)
  * \a r Right operand.
  */
 template<class Trait>
-bool operator<(const PosRange<Trait> &l, const PosRange<Trait> &r)
+bool operator<(const PosRange<Trait> &l,
+               const PosRange<Trait> &r)
 {
-    return (l.m_endLine < r.m_startLine ||
-            (l.m_endLine == r.m_startLine && l.m_endColumn < r.m_startColumn));
+    return (l.m_endLine < r.m_startLine || (l.m_endLine == r.m_startLine && l.m_endColumn < r.m_startColumn));
 }
 
 } /* namespace details */
 
 template<class Trait>
-bool comparePosRangeLower(const std::shared_ptr<details::PosRange<Trait>> &ptr, const details::PosRange<Trait> &range)
+bool comparePosRangeLower(const std::shared_ptr<details::PosRange<Trait>> &ptr,
+                          const details::PosRange<Trait> &range)
 {
     return (*ptr.get() < range);
 }
 
 template<class Trait>
-bool comparePosRangeUpper(const details::PosRange<Trait> &range, const std::shared_ptr<details::PosRange<Trait>> &ptr)
+bool comparePosRangeUpper(const details::PosRange<Trait> &range,
+                          const std::shared_ptr<details::PosRange<Trait>> &ptr)
 {
     return (range < *ptr.get());
 }
@@ -266,8 +278,7 @@ public:
     {
         Items res;
 
-        details::PosRange<Trait> tmp{pos.startColumn(), pos.startLine(),
-                                     pos.endColumn(), pos.endLine()};
+        details::PosRange<Trait> tmp{pos.startColumn(), pos.startLine(), pos.endColumn(), pos.endLine()};
 
         findFirstInCache(m_cache, tmp, res);
 
@@ -284,10 +295,9 @@ protected:
      *
      * \a ordered Indicates that we sure that searching item places after everything.
      */
-    details::PosRange<Trait> *findInCache(
-            const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
-            const details::PosRange<Trait> &pos,
-            bool ordered = false) const
+    details::PosRange<Trait> *findInCache(const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
+                                          const details::PosRange<Trait> &pos,
+                                          bool ordered = false) const
     {
         if (!m_currentItems.empty()) {
             return m_currentItems.top().get();
@@ -319,10 +329,9 @@ protected:
      *
      * \a res Reference to result of search.
      */
-    void findFirstInCache(
-            const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
-            const details::PosRange<Trait> &pos,
-            Items &res) const
+    void findFirstInCache(const std::vector<std::shared_ptr<details::PosRange<Trait>>> &vec,
+                          const details::PosRange<Trait> &pos,
+                          Items &res) const
     {
         const auto it = std::lower_bound(vec.begin(), vec.end(), pos, comparePosRangeLower<Trait>);
 
@@ -346,10 +355,9 @@ protected:
      *                  added into stack for fast finding parent item for the next children. This
      *                  techinque allows to have O(N) walking complexity.
      */
-    void insertInCache(
-            const details::PosRange<Trait> &item,
-            bool sort = false,
-            bool insertInStack = false)
+    void insertInCache(const details::PosRange<Trait> &item,
+                       bool sort = false,
+                       bool insertInStack = false)
     {
         const auto insertInStackFunc = [this, insertInStack](std::shared_ptr<details::PosRange<Trait>> item) {
             if (insertInStack) {
@@ -357,12 +365,14 @@ protected:
             }
         };
 
-        static const auto makeSharedPosRange = [](const details::PosRange<Trait> &range)
-                -> std::shared_ptr<details::PosRange<Trait>>
-        {
-            return std::make_shared<details::PosRange<Trait>>(range.m_startColumn, range.m_startLine,
-                                                       range.m_endColumn, range.m_endLine,
-                                                       range.m_item, range.m_children);
+        static const auto makeSharedPosRange =
+            [](const details::PosRange<Trait> &range) -> std::shared_ptr<details::PosRange<Trait>> {
+            return std::make_shared<details::PosRange<Trait>>(range.m_startColumn,
+                                                              range.m_startLine,
+                                                              range.m_endColumn,
+                                                              range.m_endLine,
+                                                              range.m_item,
+                                                              range.m_children);
         };
 
         if (!m_skipInCache) {
@@ -480,7 +490,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool wrap,  bool skipOpeningWrap = false) override
+    void onParagraph(Paragraph<Trait> *p,
+                     bool wrap,
+                     bool skipOpeningWrap = false) override
     {
         details::PosRange<Trait> r{p->startColumn(), p->startLine(), p->endColumn(), p->endLine(), p};
 
@@ -520,7 +532,8 @@ protected:
     {
         auto startColumn = c->isFensedCode() ? c->startDelim().startColumn() : c->startColumn();
         auto startLine = c->isFensedCode() ? c->startDelim().startLine() : c->startLine();
-        auto endColumn = c->isFensedCode() && c->endDelim().endColumn() > -1 ? c->endDelim().endColumn() : c->endColumn();
+        auto endColumn =
+            c->isFensedCode() && c->endDelim().endColumn() > -1 ? c->endDelim().endColumn() : c->endColumn();
         auto endLine = c->isFensedCode() && c->endDelim().endLine() > -1 ? c->endDelim().endLine() : c->endLine();
 
         details::PosRange<Trait> r{startColumn, startLine, endColumn, endLine, c};
@@ -609,7 +622,9 @@ protected:
         if (!t->isEmpty()) {
             int columns = 0;
 
-            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend(); th != last; ++th) {
+            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend();
+                 th != last;
+                 ++th) {
                 Visitor<Trait>::onTableCell(th->get());
 
                 ++columns;
@@ -777,7 +792,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *l, bool first,  bool skipOpeningWrap = false) override
+    void onListItem(ListItem<Trait> *l,
+                    bool first,
+                    bool skipOpeningWrap = false) override
     {
         details::PosRange<Trait> r{l->startColumn(), l->startLine(), l->endColumn(), l->endLine(), l};
 
@@ -802,7 +819,8 @@ private:
     std::stack<std::shared_ptr<details::PosRange<Trait>>> m_currentItems;
 
     struct RollbackBool {
-        RollbackBool(bool &variable, bool newValue)
+        RollbackBool(bool &variable,
+                     bool newValue)
             : m_variable(variable)
             , m_prevValue(variable)
         {

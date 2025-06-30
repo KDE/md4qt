@@ -159,7 +159,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    virtual void onParagraph(Paragraph<Trait> *p, bool wrap, bool skipOpeningWrap = false)
+    virtual void onParagraph(Paragraph<Trait> *p,
+                             bool wrap,
+                             bool skipOpeningWrap = false)
     {
         MD_UNUSED(wrap)
         MD_UNUSED(skipOpeningWrap)
@@ -353,7 +355,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    virtual void onListItem(ListItem<Trait> *i, bool first,  bool skipOpeningWrap = false)
+    virtual void onListItem(ListItem<Trait> *i,
+                            bool first,
+                            bool skipOpeningWrap = false)
     {
         MD_UNUSED(first)
 
@@ -368,7 +372,8 @@ protected:
 
                 case ItemType::Paragraph:
                     onParagraph(static_cast<Paragraph<Trait> *>(it->get()),
-                                wrapFirstParagraphInListItem(i), skipOpeningWrap);
+                                wrapFirstParagraphInListItem(i),
+                                skipOpeningWrap);
                     break;
 
                 case ItemType::Code:

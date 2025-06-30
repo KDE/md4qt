@@ -413,7 +413,8 @@ TEST_CASE("500")
         REQUIRE(l->opts() == MD::TextWithoutFormat);
         REQUIRE(l->text() == TRAIT::latin1ToString("link"));
 
-        typename TRAIT::String fn = TRAIT::latin1ToString("/") +
+        typename TRAIT::String fn = TRAIT::latin1ToString("/")
+            +
 #ifdef MD4QT_QT_SUPPORT
             QDir().absolutePath()
 #else

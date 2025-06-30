@@ -14,7 +14,8 @@
 #include <QString>
 #endif
 
-inline std::shared_ptr<MD::Document<TRAIT>> load_test(int n, const std::string &folder = "0.30")
+inline std::shared_ptr<MD::Document<TRAIT>> load_test(int n,
+                                                      const std::string &folder = "0.30")
 {
     auto fileName = std::to_string(n);
 

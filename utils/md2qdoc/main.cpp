@@ -120,7 +120,9 @@ protected:
         m_qdoc.append(QStringLiteral("\\br "));
     }
 
-    void onParagraph(MD::Paragraph<MD::QStringTrait> *p, bool wrap, bool skipOpeningWrap = false) override
+    void onParagraph(MD::Paragraph<MD::QStringTrait> *p,
+                     bool wrap,
+                     bool skipOpeningWrap = false) override
     {
         MD_UNUSED(skipOpeningWrap)
 
@@ -140,7 +142,8 @@ protected:
     void onHeading(MD::Heading<MD::QStringTrait> *h) override
     {
         m_qdoc.append(QStringLiteral("%2\\target %1\n").arg(h->label(), currentOffset()));
-        m_qdoc.append(QStringLiteral("%2\\section%1 ").arg(QString::number(h->level() > 4 ? 4 : h->level()), currentOffset()));
+        m_qdoc.append(
+            QStringLiteral("%2\\section%1 ").arg(QString::number(h->level() > 4 ? 4 : h->level()), currentOffset()));
         incrementOffset();
 
         if (h->text().get()) {
@@ -253,7 +256,9 @@ protected:
                 m_qdoc.append(QStringLiteral("\n%1\\header\n").arg(currentOffset()));
                 incrementOffset();
 
-                for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend(); th != last; ++th) {
+                for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend();
+                     th != last;
+                     ++th) {
                     m_qdoc.append(QStringLiteral("\n%1\\li ").arg(currentOffset()));
 
                     this->onTableCell(th->get());
@@ -306,7 +311,7 @@ protected:
         const auto dotPos = relative.lastIndexOf(QLatin1Char('.'));
         m_fileName = relative;
 
-        if (dotPos != -1 ) {
+        if (dotPos != -1) {
             relative.remove(dotPos, relative.size() - dotPos);
         }
 
@@ -315,8 +320,10 @@ protected:
             relative.insert(relative.lastIndexOf(QStringLiteral("/")) + 1, m_prefix + QStringLiteral("-"));
         }
 
-        const QString fileName = m_outputDirectory + relative + QStringLiteral(".qdoc") +
-                (m_isGenIncludes ? QStringLiteral("inc") : QString());
+        const QString fileName = m_outputDirectory
+            + relative
+            + QStringLiteral(".qdoc")
+            + (m_isGenIncludes ? QStringLiteral("inc") : QString());
 
         QFileInfo info(fileName);
 
@@ -330,8 +337,8 @@ protected:
             m_file.reset();
         } else {
             if (!m_isGenIncludes) {
-                m_qdoc.append(QStringLiteral("/*!\n%2\\page %1\n")
-                              .arg(m_fileName + QStringLiteral(".html"), currentOffset()));
+                m_qdoc.append(
+                    QStringLiteral("/*!\n%2\\page %1\n").arg(m_fileName + QStringLiteral(".html"), currentOffset()));
             }
         }
     }
@@ -422,7 +429,9 @@ protected:
         printWhereInfo(r);
     }
 
-    void onListItem(MD::ListItem<MD::QStringTrait> *i, bool first, bool skipOpeningWrap = false) override
+    void onListItem(MD::ListItem<MD::QStringTrait> *i,
+                    bool first,
+                    bool skipOpeningWrap = false) override
     {
         MD_UNUSED(skipOpeningWrap)
 
@@ -496,11 +505,12 @@ protected:
     void printWhereInfo(MD::Item<MD::QStringTrait> *item)
     {
         s_outStream << QLatin1String("%1in \"%2\" at line %3\n")
-                    .arg(QString(2, QLatin1Char(' ')), m_fileName, QString::number(item->startLine() + 1));
+                           .arg(QString(2, QLatin1Char(' ')), m_fileName, QString::number(item->startLine() + 1));
     }
 }; // class QDocVisitor
 
-int main(int argc, char **argv)
+int main(int argc,
+         char **argv)
 {
     QCoreApplication app(argc, argv);
 
@@ -509,17 +519,21 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addPositionalArgument(QStringLiteral("markdown"), QStringLiteral("Markdown file to convert."));
     QCommandLineOption out(QStringList() << QStringLiteral("o") << QStringLiteral("out"),
-                           QStringLiteral("Output directory."), QStringLiteral("dir"), QStringLiteral("./"));
+                           QStringLiteral("Output directory."),
+                           QStringLiteral("dir"),
+                           QStringLiteral("./"));
     QCommandLineOption recursive(QStringList() << QStringLiteral("r") << QStringLiteral("recursive"),
                                  QStringLiteral("Load and convert all linked Markdown files."));
     QCommandLineOption offset(QStringList() << QStringLiteral("offset"),
                               QStringLiteral("Amount of spaces used for offset."),
-                              QStringLiteral("int"), QStringLiteral("4"));
+                              QStringLiteral("int"),
+                              QStringLiteral("4"));
     QCommandLineOption prefix(QStringList() << QStringLiteral("prefix"),
                               QStringLiteral("Prefix used to create top-level targets."),
-                              QStringLiteral("str"), QStringLiteral(""));
+                              QStringLiteral("str"),
+                              QStringLiteral(""));
     QCommandLineOption include(QStringList() << QStringLiteral("i") << QStringLiteral("gen-includes"),
-                                 QStringLiteral("Generate QDoc includes only, i.e. without \"/*! */\" comment."));
+                               QStringLiteral("Generate QDoc includes only, i.e. without \"/*! */\" comment."));
     parser.addOption(out);
     parser.addOption(recursive);
     parser.addOption(offset);

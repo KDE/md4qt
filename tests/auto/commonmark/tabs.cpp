@@ -232,7 +232,8 @@ TEST_CASE("010")
 
     auto h = static_cast<MD::Heading<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(h->isLabeled());
-    typename TRAIT::String fn = TRAIT::latin1ToString("/") +
+    typename TRAIT::String fn = TRAIT::latin1ToString("/")
+        +
 #ifdef MD4QT_QT_SUPPORT
         QDir().absolutePath()
 #else

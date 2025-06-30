@@ -33,16 +33,16 @@ TEST_CASE("281")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 3);
     REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(2).get());
         REQUIRE(li->items().size() == 2);
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        auto l = static_cast<MD::List<TRAIT> *>(li->items().at(1).get());
         REQUIRE(l->items().size() == 5);
     }
 
@@ -50,7 +50,7 @@ TEST_CASE("281")
 
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(3).get());
         REQUIRE(l->items().size() == 3);
     }
 }
@@ -80,16 +80,16 @@ TEST_CASE("282")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 3);
     REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(2).get());
         REQUIRE(li->items().size() == 2);
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        auto l = static_cast<MD::List<TRAIT> *>(li->items().at(1).get());
         REQUIRE(l->items().size() == 5);
     }
 
@@ -97,7 +97,7 @@ TEST_CASE("282")
 
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(3).get());
         REQUIRE(l->items().size() == 3);
     }
 }
@@ -127,16 +127,16 @@ TEST_CASE("283")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 3);
     REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(2).get());
         REQUIRE(li->items().size() == 2);
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        auto l = static_cast<MD::List<TRAIT> *>(li->items().at(1).get());
         REQUIRE(l->items().size() == 5);
     }
 
@@ -144,7 +144,7 @@ TEST_CASE("283")
 
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(3).get());
         REQUIRE(l->items().size() == 3);
     }
 }
@@ -174,16 +174,16 @@ TEST_CASE("284")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 3);
     REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(2).get());
         REQUIRE(li->items().size() == 2);
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        auto l = static_cast<MD::List<TRAIT> *>(li->items().at(1).get());
         REQUIRE(l->items().size() == 5);
     }
 
@@ -191,7 +191,7 @@ TEST_CASE("284")
 
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(3).get());
         REQUIRE(l->items().size() == 3);
     }
 }
@@ -223,21 +223,21 @@ TEST_CASE("285")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 3);
     REQUIRE(l->items().at(2)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(2).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(2).get());
         REQUIRE(li->items().size() == 2);
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(li->items().at(1).get());
+        auto l = static_cast<MD::List<TRAIT> *>(li->items().at(1).get());
         REQUIRE(l->items().size() == 5);
     }
 
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::Code);
-    auto c = static_cast<MD::Code<TRAIT>*>(doc->items().at(2).get());
+    auto c = static_cast<MD::Code<TRAIT> *>(doc->items().at(2).get());
     REQUIRE(c->text() == TRAIT::latin1ToString("- 4"));
     REQUIRE(c->startColumn() == 4);
     REQUIRE(c->startLine() == 11);
@@ -246,7 +246,7 @@ TEST_CASE("285")
 
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
-        auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(3).get());
+        auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(3).get());
         REQUIRE(l->items().size() == 3);
     }
 }
@@ -476,7 +476,7 @@ TEST_CASE("296")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 3);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Blockquote);
-    auto b = static_cast<MD::Blockquote<TRAIT>*>(doc->items().at(1).get());
+    auto b = static_cast<MD::Blockquote<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(b->items().size() == 1);
     REQUIRE(b->items().at(0)->type() == MD::ItemType::RawHtml);
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::Heading);
@@ -499,7 +499,7 @@ TEST_CASE("297")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 4);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Blockquote);
-    auto b = static_cast<MD::Blockquote<TRAIT>*>(doc->items().at(1).get());
+    auto b = static_cast<MD::Blockquote<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(b->items().size() == 1);
     REQUIRE(b->items().at(0)->type() == MD::ItemType::RawHtml);
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::Code);
@@ -519,13 +519,13 @@ TEST_CASE("298")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
-    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(p->items().size() == 1);
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
-    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+    auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
     REQUIRE(l->p()->items().size() == 1);
     REQUIRE(l->p()->items().at(0)->type() == MD::ItemType::Text);
-    auto t = static_cast<MD::Text<TRAIT>*>(l->p()->items().at(0).get());
+    auto t = static_cast<MD::Text<TRAIT> *>(l->p()->items().at(0).get());
     REQUIRE(t->opts() == MD::TextWithoutFormat);
     REQUIRE(t->text() == TRAIT::latin1ToString("__VA_OPT__"));
 }
@@ -547,12 +547,12 @@ TEST_CASE("299")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 1);
     REQUIRE(l->items().at(0)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(0).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(0).get());
         REQUIRE(li->items().size() == 3);
 
         REQUIRE(li->items().at(0)->type() == MD::ItemType::Paragraph);
@@ -576,12 +576,12 @@ TEST_CASE("300")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 1);
     REQUIRE(l->items().at(0)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(0).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(0).get());
         REQUIRE(li->items().size() == 3);
 
         REQUIRE(li->items().at(0)->type() == MD::ItemType::Paragraph);
@@ -605,12 +605,12 @@ TEST_CASE("301")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
-    auto l = static_cast<MD::List<TRAIT>*>(doc->items().at(1).get());
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(l->items().size() == 1);
     REQUIRE(l->items().at(0)->type() == MD::ItemType::ListItem);
 
     {
-        auto li = static_cast<MD::ListItem<TRAIT>*>(l->items().at(0).get());
+        auto li = static_cast<MD::ListItem<TRAIT> *>(l->items().at(0).get());
         REQUIRE(li->items().size() == 3);
 
         REQUIRE(li->items().at(0)->type() == MD::ItemType::Paragraph);
@@ -633,7 +633,7 @@ TEST_CASE("302")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::RawHtml);
-    auto h = static_cast<MD::RawHtml<TRAIT>*>(doc->items().at(1).get());
+    auto h = static_cast<MD::RawHtml<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(h->startColumn() == 0);
     REQUIRE(h->startLine() == 0);
     REQUIRE(h->endColumn() == 29);
@@ -641,10 +641,11 @@ TEST_CASE("302")
 }
 
 /*
-[![You sir are my hero. You've pretty much summed up and described my experiences of late, much better than I could have. Cursor and Windsurf both had me frustrated to the point where I was almost yelling at my computer screen. Out of whimsy, I thought to myself why not just ask Claude directly, and haven't looked back since.
-Claude first to keep my sanity in check, then if necessary, engage with other IDEs, frameworks, etc. I thought I was the only one, glad to see I'm not lol.
-33
-1](testemonials/img_4.png)
+[![You sir are my hero. You've pretty much summed up and described my experiences of late, much better than I could
+have. Cursor and Windsurf both had me frustrated to the point where I was almost yelling at my computer screen. Out of
+whimsy, I thought to myself why not just ask Claude directly, and haven't looked back since. Claude first to keep my
+sanity in check, then if necessary, engage with other IDEs, frameworks, etc. I thought I was the only one, glad to see
+I'm not lol. 33 1](testemonials/img_4.png)
 https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e](https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e)
 
 */
@@ -657,10 +658,10 @@ TEST_CASE("303")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
-    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(p->items().size() == 1);
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
-    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+    auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
     REQUIRE(l->startColumn() == 0);
     REQUIRE(l->startLine() == 0);
     REQUIRE(l->endColumn() == 120);
@@ -701,25 +702,25 @@ TEST_CASE("304")
 
     {
         REQUIRE(doc->items().at(0)->type() == MD::ItemType::Anchor);
-        auto a = static_cast<MD::Anchor<TRAIT>*>(doc->items().at(0).get());
+        auto a = static_cast<MD::Anchor<TRAIT> *>(doc->items().at(0).get());
         REQUIRE(a->label() == wd + TRAIT::latin1ToString("data/304.md"));
     }
 
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
-        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+        auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
         REQUIRE(p->items().size() == 1);
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Image);
-        auto i = static_cast<MD::Image<TRAIT>*>(p->items().at(0).get());
+        auto i = static_cast<MD::Image<TRAIT> *>(p->items().at(0).get());
         REQUIRE(i->url() == wd + TRAIT::latin1ToString("./data/a.png"));
     }
 
     {
         REQUIRE(doc->items().at(2)->type() == MD::ItemType::Paragraph);
-        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(2).get());
+        auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(2).get());
         REQUIRE(p->items().size() == 1);
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
-        auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+        auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
         REQUIRE(l->url() == wd + TRAIT::latin1ToString("data/304-1.md"));
     }
 
@@ -727,16 +728,16 @@ TEST_CASE("304")
 
     {
         REQUIRE(doc->items().at(4)->type() == MD::ItemType::Anchor);
-        auto a = static_cast<MD::Anchor<TRAIT>*>(doc->items().at(4).get());
+        auto a = static_cast<MD::Anchor<TRAIT> *>(doc->items().at(4).get());
         REQUIRE(a->label() == wd + TRAIT::latin1ToString("data/304-1.md"));
     }
 
     {
         REQUIRE(doc->items().at(5)->type() == MD::ItemType::Paragraph);
-        auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(5).get());
+        auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(5).get());
         REQUIRE(p->items().size() == 1);
         REQUIRE(p->items().at(0)->type() == MD::ItemType::Image);
-        auto i = static_cast<MD::Image<TRAIT>*>(p->items().at(0).get());
+        auto i = static_cast<MD::Image<TRAIT> *>(p->items().at(0).get());
         REQUIRE(i->url() == wd + TRAIT::latin1ToString("./data/b.png"));
     }
 }
@@ -754,17 +755,17 @@ TEST_CASE("305")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
-    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(p->items().size() == 2);
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
-    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(0).get());
+    auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(0).get());
     REQUIRE(l->startColumn() == 0);
     REQUIRE(l->startLine() == 0);
     REQUIRE(l->endColumn() == 21);
     REQUIRE(l->endLine() == 0);
     REQUIRE(l->url() == TRAIT::latin1ToString("https://www.google.com"));
     REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
-    auto t = static_cast<MD::Text<TRAIT>*>(p->items().at(1).get());
+    auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
     REQUIRE(t->startColumn() == 22);
     REQUIRE(t->startLine() == 0);
     REQUIRE(t->endColumn() == 22);
@@ -848,11 +849,11 @@ TEST_CASE("307")
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
 
-    auto p = static_cast<MD::Paragraph<TRAIT>*>(doc->items().at(1).get());
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
     REQUIRE(p->items().size() == 2);
 
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
-    auto t = static_cast<MD::Text<TRAIT>*>(p->items().at(0).get());
+    auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
     REQUIRE(t->startColumn() == 0);
     REQUIRE(t->startLine() == 0);
     REQUIRE(t->endColumn() == 2);
@@ -860,7 +861,7 @@ TEST_CASE("307")
     REQUIRE(t->text() == TRAIT::latin1ToString("..."));
 
     REQUIRE(p->items().at(1)->type() == MD::ItemType::Link);
-    auto l = static_cast<MD::Link<TRAIT>*>(p->items().at(1).get());
+    auto l = static_cast<MD::Link<TRAIT> *>(p->items().at(1).get());
     REQUIRE(l->startColumn() == 3);
     REQUIRE(l->startLine() == 0);
     REQUIRE(l->endColumn() == 16);

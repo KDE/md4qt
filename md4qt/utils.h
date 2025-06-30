@@ -20,8 +20,8 @@ namespace MD
  *
  * \brief Macro for disabling copy.
  */
-#define MD_DISABLE_COPY(Class)                                                                                                                                 \
-    Class(const Class &) = delete;                                                                                                                             \
+#define MD_DISABLE_COPY(Class)                                                                                         \
+    Class(const Class &) = delete;                                                                                     \
     Class &operator=(const Class &) = delete;
 
 //

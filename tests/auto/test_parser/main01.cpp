@@ -444,7 +444,8 @@ TEST_CASE("008")
 
         auto dt = static_cast<MD::Text<TRAIT> *>(dp->items().at(0).get());
 
-        REQUIRE(dt->opts() == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
+        REQUIRE(dt->opts()
+                == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
         REQUIRE(dt->text() == TRAIT::latin1ToString("Line 1..."));
         REQUIRE(dt->startColumn() == 5);
         REQUIRE(dt->startLine() == 0);
@@ -462,7 +463,8 @@ TEST_CASE("008")
 
         auto dt = static_cast<MD::Text<TRAIT> *>(dp->items().at(1).get());
 
-        REQUIRE(dt->opts() == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
+        REQUIRE(dt->opts()
+                == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
         REQUIRE(dt->text() == TRAIT::latin1ToString("Line 2..."));
         REQUIRE(dt->startColumn() == 0);
         REQUIRE(dt->startLine() == 1);
@@ -477,7 +479,8 @@ TEST_CASE("008")
 
         auto dt = static_cast<MD::Text<TRAIT> *>(dp->items().at(2).get());
 
-        REQUIRE(dt->opts() == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
+        REQUIRE(dt->opts()
+                == (MD::TextOption::ItalicText | MD::TextOption::BoldText | MD::TextOption::StrikethroughText));
         REQUIRE(dt->text() == TRAIT::latin1ToString("Line 3..."));
         REQUIRE(dt->startColumn() == 0);
         REQUIRE(dt->startLine() == 2);
@@ -1016,7 +1019,8 @@ TEST_CASE("017")
         REQUIRE(bq->startLine() == 0);
         REQUIRE(bq->endColumn() == 14);
         REQUIRE(bq->endLine() == 4);
-        REQUIRE(bq->delims() == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0}, {0, 1, 0, 1}, {0, 2, 0, 2}, {0, 3, 0, 3}, {0, 4, 0, 4}});
+        REQUIRE(bq->delims()
+                == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0}, {0, 1, 0, 1}, {0, 2, 0, 2}, {0, 3, 0, 3}, {0, 4, 0, 4}});
 
         REQUIRE(!bq->isEmpty());
         REQUIRE(bq->items().size() == 3);
@@ -1133,7 +1137,8 @@ TEST_CASE("018")
     REQUIRE(bq->startLine() == 0);
     REQUIRE(bq->endColumn() == 15);
     REQUIRE(bq->endLine() == 4);
-    REQUIRE(bq->delims() == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0}, {0, 1, 0, 1}, {0, 2, 0, 2}, {0, 3, 0, 3}, {0, 4, 0, 4}});
+    REQUIRE(bq->delims()
+            == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0}, {0, 1, 0, 1}, {0, 2, 0, 2}, {0, 3, 0, 3}, {0, 4, 0, 4}});
 
     REQUIRE(!bq->isEmpty());
     REQUIRE(bq->items().size() == 3);

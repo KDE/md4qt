@@ -214,7 +214,8 @@ TEST_CASE("031")
 
             REQUIRE(doc->labeledLinks().size() == 2);
 
-            const auto lit = doc->labeledLinks().find(TRAIT::latin1ToString("#1/") + wd + TRAIT::latin1ToString("/031.md"));
+            const auto lit =
+                doc->labeledLinks().find(TRAIT::latin1ToString("#1/") + wd + TRAIT::latin1ToString("/031.md"));
             REQUIRE(lit != doc->labeledLinks().cend());
 
             REQUIRE(lit->second->url() == wd + TRAIT::latin1ToString("/a.md"));
@@ -1500,7 +1501,8 @@ TEST_CASE("042")
 
     REQUIRE(doc->items().at(3)->type() == MD::ItemType::Anchor);
 
-    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(3).get())->label() == wd + TRAIT::latin1ToString("/042-1.md"));
+    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(3).get())->label()
+            == wd + TRAIT::latin1ToString("/042-1.md"));
 
     REQUIRE(doc->items().at(4)->type() == MD::ItemType::Paragraph);
 
@@ -1811,7 +1813,8 @@ TEST_CASE("046")
         static const std::vector<long long int> eline = {1, 5, 8, 12, 17, 22};
         static const std::vector<long long int> pcolumn = {0, 0, 4, 3, 0, 0};
         static const std::vector<long long int> pline = {2, 6, 10, 14, 19, 24};
-        static const std::vector<MD::WithPosition> delims = {{0, 1, 8, 1}, {0, 5, 8, 5}, {2, 8, 2, 8}, {0, 12, 1, 12}, {0, 17, 8, 17}, {0, 22, 8, 22}};
+        static const std::vector<MD::WithPosition> delims =
+            {{0, 1, 8, 1}, {0, 5, 8, 5}, {2, 8, 2, 8}, {0, 12, 1, 12}, {0, 17, 8, 17}, {0, 22, 8, 22}};
 
         int didx = 1;
 
@@ -1858,7 +1861,8 @@ TEST_CASE("046")
 
                 REQUIRE(p->items().size() == 1);
                 REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
-                REQUIRE(static_cast<MD::Text<TRAIT> *>(p->items().at(0).get())->text() == TRAIT::latin1ToString("Paragraph ") + to_string(j));
+                REQUIRE(static_cast<MD::Text<TRAIT> *>(p->items().at(0).get())->text()
+                        == TRAIT::latin1ToString("Paragraph ") + to_string(j));
 
                 ++didx;
             }
@@ -1891,7 +1895,8 @@ TEST_CASE("046")
         REQUIRE(t->text() == TRAIT::latin1ToString("Heading 3"));
         REQUIRE(h->isLabeled());
 
-        const typename TRAIT::String label = TRAIT::latin1ToString("#heading-3/") + wd + TRAIT::latin1ToString("046.md");
+        const typename TRAIT::String label =
+            TRAIT::latin1ToString("#heading-3/") + wd + TRAIT::latin1ToString("046.md");
 
         REQUIRE(h->label() == label);
 
@@ -2357,17 +2362,20 @@ TEST_CASE("051")
 
     REQUIRE(doc->items().size() == 8);
 
-    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(0).get())->label() == wd + TRAIT::latin1ToString("/051.md"));
+    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(0).get())->label()
+            == wd + TRAIT::latin1ToString("/051.md"));
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::PageBreak);
 
-    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(3).get())->label() == wd + TRAIT::latin1ToString("/051-1.md"));
+    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(3).get())->label()
+            == wd + TRAIT::latin1ToString("/051-1.md"));
 
     REQUIRE(doc->items().at(4)->type() == MD::ItemType::Paragraph);
     REQUIRE(doc->items().at(5)->type() == MD::ItemType::PageBreak);
 
-    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(6).get())->label() == wd + TRAIT::latin1ToString("/051-2.md"));
+    REQUIRE(static_cast<MD::Anchor<TRAIT> *>(doc->items().at(6).get())->label()
+            == wd + TRAIT::latin1ToString("/051-2.md"));
 
     REQUIRE(doc->items().at(7)->type() == MD::ItemType::Paragraph);
 }
@@ -2503,7 +2511,8 @@ TEST_CASE("055")
 
         REQUIRE(doc->footnotesMap().size() == 1);
 
-        const typename TRAIT::String label = TRAIT::latin1ToString("#^footnote/") + wd + TRAIT::latin1ToString("055.md");
+        const typename TRAIT::String label =
+            TRAIT::latin1ToString("#^footnote/") + wd + TRAIT::latin1ToString("055.md");
 
         const auto fit = doc->footnotesMap().find(label);
         REQUIRE(fit != doc->footnotesMap().cend());
@@ -2705,7 +2714,14 @@ TEST_CASE("059")
     REQUIRE(b->endColumn() == 57);
     REQUIRE(b->endLine() == 7);
     REQUIRE(b->delims()
-            == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0}, {0, 1, 0, 1}, {0, 2, 0, 2}, {0, 3, 0, 3}, {0, 4, 0, 4}, {0, 5, 0, 5}, {0, 6, 0, 6}, {0, 7, 0, 7}});
+            == MD::Blockquote<TRAIT>::Delims{{0, 0, 0, 0},
+                                             {0, 1, 0, 1},
+                                             {0, 2, 0, 2},
+                                             {0, 3, 0, 3},
+                                             {0, 4, 0, 4},
+                                             {0, 5, 0, 5},
+                                             {0, 6, 0, 6},
+                                             {0, 7, 0, 7}});
 
     REQUIRE(b->items().size() == 4);
 

@@ -160,7 +160,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onParagraph(Paragraph<Trait> *p, bool,  bool skipOpeningWrap = false) override
+    void onParagraph(Paragraph<Trait> *p,
+                     bool,
+                     bool skipOpeningWrap = false) override
     {
         MD_UNUSED(skipOpeningWrap)
 
@@ -275,7 +277,9 @@ protected:
         if (!t->isEmpty() && inc.nextAllowed()) {
             int columns = 0;
 
-            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend(); th != last; ++th) {
+            for (auto th = (*t->rows().cbegin())->cells().cbegin(), last = (*t->rows().cbegin())->cells().cend();
+                 th != last;
+                 ++th) {
                 this->onTableCell(th->get());
 
                 ++columns;
@@ -396,7 +400,9 @@ protected:
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
      */
-    void onListItem(ListItem<Trait> *i, bool, bool skipOpeningWrap = false) override
+    void onListItem(ListItem<Trait> *i,
+                    bool,
+                    bool skipOpeningWrap = false) override
     {
         MD_UNUSED(skipOpeningWrap)
 
@@ -509,8 +515,8 @@ protected:
          */
         bool allowed(ItemType t) const
         {
-            return ((m_maxNestingLevel == 0 || m_level <= m_maxNestingLevel) &&
-                    std::find(m_types.cbegin(), m_types.cend(), t) != m_types.cend());
+            return ((m_maxNestingLevel == 0 || m_level <= m_maxNestingLevel)
+                    && std::find(m_types.cbegin(), m_types.cend(), t) != m_types.cend());
         }
 
         /*!
@@ -552,11 +558,10 @@ protected:
  * \a maxNestingLevel Maximun nesting level. 0 means infinity, 1 - only top level items...
  */
 template<class Trait>
-inline void forEach(
-    const typename Trait::template Vector<ItemType> &types,
-    std::shared_ptr<Document<Trait>> doc,
-    ItemFunctor<Trait> func,
-    unsigned int maxNestingLevel = 0)
+inline void forEach(const typename Trait::template Vector<ItemType> &types,
+                    std::shared_ptr<Document<Trait>> doc,
+                    ItemFunctor<Trait> func,
+                    unsigned int maxNestingLevel = 0)
 {
     details::AlgoVisitor<Trait> v(maxNestingLevel, types, func);
 

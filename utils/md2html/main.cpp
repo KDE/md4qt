@@ -16,7 +16,8 @@
 #include <QFileInfo>
 #include <QTextStream>
 
-int main(int argc, char **argv)
+int main(int argc,
+         char **argv)
 {
     QCoreApplication app(argc, argv);
 
@@ -29,7 +30,8 @@ int main(int argc, char **argv)
     QCommandLineOption htmlArg(QStringList() << QStringLiteral("o") << QStringLiteral("html"),
                                QStringLiteral("Output HTML file name."),
                                QStringLiteral("html"));
-    QCommandLineOption recursiveArg(QStringList() << QStringLiteral("r") << QStringLiteral("recursive"), QStringLiteral("Read all linked Markdown files?"));
+    QCommandLineOption recursiveArg(QStringList() << QStringLiteral("r") << QStringLiteral("recursive"),
+                                    QStringLiteral("Read all linked Markdown files?"));
     argParser.addOption(markdownArg);
     argParser.addOption(htmlArg);
     argParser.addOption(recursiveArg);

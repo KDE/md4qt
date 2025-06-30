@@ -30,6 +30,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMSetupVersion)
 include(ECMGenerateQDoc)
+include(KDEGitCommitHooks)
 
 set(CMAKE_WIN32_EXECUTABLE FALSE)
 set(CMAKE_MACOSX_BUNDLE FALSE)
@@ -135,6 +136,7 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     endif()
 
     ecm_generate_qdoc(md4qt docs/md4qt.qdocconf)
+    kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
 
 else()
 
