@@ -15,6 +15,7 @@ if(BUILD_MD4QT_QT_TESTS)
     add_subdirectory(algo)
     add_subdirectory(poscache)
     add_subdirectory(html)
+    add_subdirectory(plugins)
 endif()
 
 if(BUILD_TEST_BENCH)

@@ -42,6 +42,7 @@ This library parses Markdown into tree structure.
 * [Is it possible to find `Markdown` item by its position?](#is-it-possible-to-find-markdown-item-by-its-position)
 * [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
 * [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
+* [Why writing plugin for new emphasis is not so trivial?](#why-writing-plugin-for-new-emphasis-is-not-so-trivial)
 
 # Example
 
@@ -515,3 +516,19 @@ So you can inherit from any `MD::Item` class and return from `type()` method
 value greater or equal `MD::ItemType::UserData`. To handle user-defined types of
 items in `MD::Visitor` class now exists method `void onUserDefined(MD::Item<Trait> *item)`.
 So you can handle your custom items and do what you need.
+
+# Why writing plugin for new emphasis is not so trivial?
+
+ * This task is not very trivial, this is true. But it's not so hard, a developer just need
+to be a little attentive. But I decided to simplify you the life a little, and in
+version `4.3.0` has appeared new include file `md4qt/plugins.h` where is implemented a function.
+
+   ```cpp
+   template<class Trait>
+   inline void emphasisTemplatePlugin(std::shared_ptr<Paragraph<Trait>> p,
+                                      TextParsingOpts<Trait> &po,
+                                      const typename Trait::StringList &opts)
+   ```
+
+   Adding this function to `MD::Parser` allows to have new emphasises. Read the documentation
+   for further details.
