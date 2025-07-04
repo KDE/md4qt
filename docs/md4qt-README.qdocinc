@@ -37,6 +37,7 @@ This library parses Markdown into tree structure.
     \li \l {#Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/KDE/md4qt/README.md} {Is it possible to find \c {Markdown} item by its position?}
     \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/KDE/md4qt/README.md} {How can I walk through the document and find all items of given type?}
     \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/KDE/md4qt/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
+    \li \l {#Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/KDE/md4qt/README.md} {Why writing plugin for new emphasis is not so trivial?}
 \endlist
 
 \target #Example//home/igor/Work/KDE/md4qt/README.md
@@ -654,6 +655,28 @@ resolved, welcome to discussion.
         value greater or equal \c {MD::ItemType::UserData}. To handle user-defined types of
         items in \c {MD::Visitor} class now exists method \c {void onUserDefined(MD::Item<Trait> *item)}.
         So you can handle your custom items and do what you need.
+\endlist
+
+\target #Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/KDE/md4qt/README.md
+\section1 Why writing plugin for new emphasis is not so trivial?
+
+
+\list
+    \li This task is not very trivial, this is true. But it's not so hard, a developer just need
+        to be a little attentive. But I decided to simplify you the life a little, and in
+        version \c {4.3.0} has appeared new include file \c {md4qt/plugins.h} where is implemented a function.
+
+        \code /
+        template<class Trait>
+        inline void emphasisTemplatePlugin(std::shared_ptr<Paragraph<Trait>> p,
+                                           TextParsingOpts<Trait> &po,
+                                           const typename Trait::StringList &opts)
+        \endcode
+
+        Adding this function to \c {MD::Parser} allows to have new emphasises. Read the documentation
+        for further details.
+
+
 \endlist
 
 
