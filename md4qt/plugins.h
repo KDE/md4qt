@@ -401,6 +401,7 @@ inline long long int addOpenStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
                                     {tmp, rawText.m_pos + pos + count, rawText.m_line});
         } else {
             po.m_rawTextData[rawIdx].m_str = rawText.m_str.sliced(count);
+            po.m_rawTextData[rawIdx].m_pos += count;
             oldTextItem->setText(removeBackslashes<Trait>(replaceEntity<Trait>(po.m_rawTextData[rawIdx].m_str)));
 
             addOpenDelimiters(oldTextItem, oldTextItem, oldTextItem->startColumn(), true);
@@ -488,11 +489,8 @@ inline long long int addCloseStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
             text->setOpts(oldTextItem->opts());
             text->closeStyles() = closeStyles;
 
-            ++index;
-            ++rawTextIndex;
-
-            p->insertItem(index, text);
-            po.m_rawTextData.insert(po.m_rawTextData.begin() + rawTextIndex,
+            p->insertItem(index + 1, text);
+            po.m_rawTextData.insert(po.m_rawTextData.begin() + rawTextIndex + 1,
                                     {tmp, rawText.m_pos + start + count, rawText.m_line});
         } else {
             po.m_rawTextData[rawTextIndex].m_str = rawText.m_str.sliced(count);
@@ -533,6 +531,8 @@ inline void closeStyle(std::shared_ptr<Paragraph<Trait>> p,
     const auto endIdx = addCloseStyleDelimiter(p, po, index, style, rawTextIndex, start, count);
 
     setStyleValue(p, style, startIdx, endIdx + 1);
+
+    openers.erase(openers.cbegin() + openerIndex);
 }
 
 template<class Trait>

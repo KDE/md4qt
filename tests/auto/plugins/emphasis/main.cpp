@@ -1181,3 +1181,38 @@ TEST_CASE("028")
         REQUIRE(t->opts() == MD::StrikethroughText);
     }
 }
+
+/*
+^text^ text ^text^
+
+*/
+TEST_CASE("029")
+{
+    auto doc = loadTest<TRAIT>(TRAIT::latin1ToString("029"));
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 3);
+
+    {
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->opts() == 8);
+    }
+
+    {
+        REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString(" text "));
+        REQUIRE(t->opts() == MD::TextWithoutFormat);
+    }
+
+    {
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->opts() == 8);
+    }
+}
