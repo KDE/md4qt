@@ -7368,6 +7368,14 @@ inline typename Trait::String Parser<Trait>::toSingleLine(const typename MdBlock
     return res;
 }
 
+/*
+ * At this time in case of nested links this approach goes through the N-1 recursion each time to the
+ * very nested. This leads to some performance slowdown and can be optimized - full recursion to the
+ * very nested link needed only one time, and then we can go to the very nested link and move beyond
+ * the very nested link at the first pass. I didn't do it because nested links is a something very
+ * artifical and in real world should not appear anywhere. But in test.bench.qt you can see slowdown
+ * in inline_links_nested test...
+ */
 template<class Trait>
 inline std::shared_ptr<Link<Trait>> Parser<Trait>::makeLink(const typename Trait::String &url,
                                                             const typename MdBlock<Trait>::Data &text,
