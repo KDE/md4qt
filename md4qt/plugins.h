@@ -38,8 +38,8 @@ struct OpenerInfo {
     bool m_bothFlanking = false;
 };
 
-bool operator==(const OpenerInfo &o1,
-                const OpenerInfo &o2)
+inline bool operator==(const OpenerInfo &o1,
+                       const OpenerInfo &o2)
 {
     return (o1.m_line == o2.m_line && o1.m_startColumn == o2.m_startColumn && o1.m_endColumn == o2.m_endColumn);
 }
