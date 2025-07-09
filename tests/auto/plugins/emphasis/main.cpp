@@ -1216,3 +1216,53 @@ TEST_CASE("029")
         REQUIRE(t->opts() == 8);
     }
 }
+
+/*
+text ^=text@text@=^
+
+*/
+TEST_CASE("030")
+{
+    MD::Parser<TRAIT> parser;
+    parser.addTextPlugin(MD::UserDefinedPluginID,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));
+    parser.addTextPlugin(MD::UserDefinedPluginID + 1,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("@") << TRAIT::latin1ToString("16"));
+    parser.addTextPlugin(MD::UserDefinedPluginID + 2,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("=") << TRAIT::latin1ToString("32"));
+    const auto doc = parser.parse(TRAIT::latin1ToString("tests/plugins/emphasis/data/030.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 3);
+
+    {
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("text "));
+        REQUIRE(t->opts() == MD::TextWithoutFormat);
+    }
+
+    {
+        REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->opts() == (8 | 32));
+    }
+
+    {
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("text"));
+        REQUIRE(t->opts() == (8 | 16 | 32));
+        REQUIRE(t->closeStyles().size() == 3);
+    }
+}

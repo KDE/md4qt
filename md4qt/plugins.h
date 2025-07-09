@@ -498,6 +498,15 @@ inline long long int addCloseStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
             oldTextItem->setStartColumn(oldTextItem->startColumn() + count);
         }
     } else if (start == 0) {
+        const auto itemWithOpts = static_cast<ItemWithOpts<Trait> *>(p->items().at(index).get());
+        auto prevItemWithOpts = static_cast<ItemWithOpts<Trait> *>(p->items().at(index - 1).get());
+
+        if (!itemWithOpts->closeStyles().empty()) {
+            std::copy(itemWithOpts->closeStyles().cbegin(),
+                      itemWithOpts->closeStyles().cend(),
+                      std::back_inserter(prevItemWithOpts->closeStyles()));
+        }
+
         p->removeItemAt(index);
         po.m_rawTextData.erase(po.m_rawTextData.begin() + rawTextIndex);
 
