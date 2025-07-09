@@ -368,13 +368,13 @@ inline long long int addOpenStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
             std::swap(closeStyles, oldTextItem->closeStyles());
         }
 
-        if (index == openerIndex) {
+        if (index == open.m_index) {
             closingDelimPos -= pos;
         }
     }
 
     if (pos + count < rawText.m_str.length()) {
-        if (index == openerIndex) {
+        if (index == open.m_index) {
             closingDelimPos -= count;
         }
 
