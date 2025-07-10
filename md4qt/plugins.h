@@ -384,7 +384,7 @@ inline long long int addOpenStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
             text->setStartColumn(virginPos + count);
             text->setStartLine(oldTextItem->startLine());
             const auto tmp = rawText.m_str.sliced(pos + count);
-            text->setEndColumn(virginPos + rawText.m_pos + pos + count + tmp.length());
+            text->setEndColumn(virginPos + count + tmp.length() - 1);
             text->setEndLine(oldTextItem->endLine());
             text->setText(removeBackslashes<Trait>(replaceEntity<Trait>(tmp)));
             text->setOpts(oldTextItem->opts());
