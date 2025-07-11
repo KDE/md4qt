@@ -494,6 +494,7 @@ inline long long int addCloseStyleDelimiter(std::shared_ptr<Paragraph<Trait>> p,
                                     {tmp, rawText.m_pos + start + count, rawText.m_line});
         } else {
             po.m_rawTextData[rawTextIndex].m_str = rawText.m_str.sliced(count);
+            po.m_rawTextData[rawTextIndex].m_pos += count;
             oldTextItem->setText(removeBackslashes<Trait>(replaceEntity<Trait>(po.m_rawTextData[rawTextIndex].m_str)));
             oldTextItem->setStartColumn(oldTextItem->startColumn() + count);
         }

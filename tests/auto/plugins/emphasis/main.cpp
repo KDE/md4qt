@@ -1331,3 +1331,88 @@ TEST_CASE("031")
         REQUIRE(t->endColumn() == 15);
     }
 }
+
+/*
+H ^2 ^3^^ -2 -3--
+
+*/
+TEST_CASE("032")
+{
+    MD::Parser<TRAIT> parser;
+    parser.addTextPlugin(MD::UserDefinedPluginID,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));
+    parser.addTextPlugin(MD::UserDefinedPluginID + 1,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("-") << TRAIT::latin1ToString("16"));
+    parser.addTextPlugin(MD::UserDefinedPluginID + 2,
+                         MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
+                         true,
+                         typename TRAIT::StringList() << TRAIT::latin1ToString("=") << TRAIT::latin1ToString("32"));
+    const auto doc = parser.parse(TRAIT::latin1ToString("tests/plugins/emphasis/data/032.md"),
+                                  false,
+                                  {TRAIT::latin1ToString("md")},
+                                  false);
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 6);
+
+    {
+        REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("H "));
+        REQUIRE(t->opts() == MD::TextWithoutFormat);
+        REQUIRE(t->openStyles().size() == 0);
+        REQUIRE(t->closeStyles().size() == 0);
+    }
+
+    {
+        REQUIRE(p->items().at(1)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(1).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("2 "));
+        REQUIRE(t->opts() == 8);
+        REQUIRE(t->openStyles().size() == 1);
+        REQUIRE(t->closeStyles().size() == 0);
+    }
+
+    {
+        REQUIRE(p->items().at(2)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(2).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("3"));
+        REQUIRE(t->opts() == 8);
+        REQUIRE(t->openStyles().size() == 1);
+        REQUIRE(t->closeStyles().size() == 2);
+    }
+
+    {
+        REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString(" "));
+        REQUIRE(t->opts() == MD::TextWithoutFormat);
+        REQUIRE(t->openStyles().size() == 0);
+        REQUIRE(t->closeStyles().size() == 0);
+    }
+
+    {
+        REQUIRE(p->items().at(4)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(4).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("2 "));
+        REQUIRE(t->opts() == 16);
+        REQUIRE(t->openStyles().size() == 1);
+        REQUIRE(t->closeStyles().size() == 0);
+    }
+
+    {
+        REQUIRE(p->items().at(5)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(5).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("3"));
+        REQUIRE(t->opts() == 16);
+        REQUIRE(t->openStyles().size() == 1);
+        REQUIRE(t->closeStyles().size() == 2);
+    }
+}
