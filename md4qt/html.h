@@ -712,8 +712,9 @@ protected:
                 }
 
                 m_fns.push_back({ref->id(), 1, 0});
-            } else if (!m_justCollectFootnoteRefs)
+            } else if (!m_justCollectFootnoteRefs) {
                 m_html.push_back(Trait::latin1ToString(std::to_string(std::distance(m_fns.begin(), r) + 1).c_str()));
+            }
 
             if (!m_justCollectFootnoteRefs) {
                 m_html.push_back(Trait::latin1ToString("</a></sup>"));
@@ -816,6 +817,7 @@ protected:
 
         int i = 1;
 
+        // This copy is needed. First time we want to iterate on non-modified container.
         const auto tmpFns = m_fns;
         m_justCollectFootnoteRefs = true;
 
