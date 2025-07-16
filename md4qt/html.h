@@ -816,10 +816,10 @@ protected:
 
         int i = 1;
 
-        const auto tmpm_fns = m_fns;
+        const auto tmpFns = m_fns;
         m_justCollectFootnoteRefs = true;
 
-        for (const auto &id : tmpm_fns) {
+        for (const auto &id : tmpFns) {
             const auto fit = this->m_doc->footnotesMap().find(id.m_id);
 
             if (fit != this->m_doc->footnotesMap().cend()) {
