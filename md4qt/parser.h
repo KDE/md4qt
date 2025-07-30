@@ -598,10 +598,14 @@ template<class Trait>
 class StringListStream final
 {
 public:
-    StringListStream(typename MdBlock<Trait>::Data &stream)
+    StringListStream(typename MdBlock<Trait>::Data &stream,
+                     long long int lineNumber = -1)
         : m_stream(stream)
         , m_pos(0)
     {
+        if (lineNumber != -1) {
+            setLineNumber(lineNumber);
+        }
     }
 
     /*!
@@ -1357,14 +1361,14 @@ enum class OptimizeParagraphType {
  *
  * \brief ID of text plugin.
  *
- * \value UnknownPluginID Unknown plugin.
- * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
- * \value UserDefinedPluginID First user defined plugin ID.
+ * \value Unknown Unknown plugin.
+ * \value GitHubAutoLink GitHub's autolinks plugin.
+ * \value UserDefined First user defined plugin ID.
  */
-enum TextPlugin : int {
-    UnknownPluginID = 0,
-    GitHubAutoLinkPluginID = 1,
-    UserDefinedPluginID = 255
+enum class TextPlugin : int {
+    Unknown = 0,
+    GitHubAutoLink = 1,
+    UserDefined = 255
 }; // enum TextPlugin
 
 //
@@ -1420,6 +1424,43 @@ inline TextOption styleToTextOption(Style s)
     }
 }
 
+/*!
+ * \enum MD::BlockType
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Type of a block in Markdown.
+ *
+ * \value Unknown Unknown.
+ * \value EmptyLine Empty line.
+ * \value Text Text.
+ * \value List List.
+ * \value ListWithFirstEmptyLine List with first empty line.
+ * \value CodeIndentedBySpaces Code indented by spaces.
+ * \value Code Code.
+ * \value Blockquote Blockquote.
+ * \value Heading Heading.
+ * \value SomethingInList Something in list.
+ * \value FensedCodeInList Fensed code in list.
+ * \value Footnote Footnote.
+ * \value UserDefined First user defined block.
+ */
+enum class BlockType : int {
+    Unknown = 0,
+    EmptyLine,
+    Text,
+    List,
+    ListWithFirstEmptyLine,
+    CodeIndentedBySpaces,
+    Code,
+    Blockquote,
+    Heading,
+    SomethingInList,
+    FensedCodeInList,
+    Footnote,
+    UserDefined = 255
+}; // enum BlockType
+
 //
 // TextPluginFunc
 //
@@ -1438,6 +1479,76 @@ template<class Trait>
 using TextPluginFunc = std::function<
     void(std::shared_ptr<Paragraph<Trait>>, TextParsingOpts<Trait> &, const typename Trait::StringList &)>;
 
+/*!
+ * \class MD::BlockPlugin
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Base class for block plugins.
+ */
+template<class Trait>
+class BlockPlugin
+{
+protected:
+    /*!
+     * Default constructor.
+     */
+    BlockPlugin() = default;
+
+public:
+    /*!
+     * Destructor.
+     */
+    virtual ~BlockPlugin() = default;
+
+    /*!
+     * Returns whether the given line is a start of a block that this plugin handles.
+     *
+     * \note position of \a stream is on next line after \a startLine.
+     *
+     * \note After checking in \a stream next lines on return from this method \a stream should be in state what it was
+     *       before.
+     *
+     * \a startLine Start line.
+     *
+     * \a stream Stream.
+     *
+     * \a emptyLinesBefore Count of empty lines before. May be 0 even if there are empty lines before, but
+     *                     in this case you will get access to full stream. In case when not full stream is
+     *                     passed to this method you will get correct amount of empty lines before.
+     */
+    virtual bool isItYou(typename Trait::InternalString &startLine,
+                         StringListStream<Trait> &stream,
+                         long long int emptyLinesBefore) = 0;
+
+    /*!
+     * Returns ID of a block.
+     */
+    virtual BlockType id() const = 0;
+
+    /*!
+     * Returns count of lines in the last detected block of this type.
+     */
+    virtual long long int linesCountOfLastBlock() const = 0;
+
+    /*!
+     * Process a block.
+     *
+     * \a fr Fragment of a document.
+     *
+     * \a parent Parent where new block should be added.
+     *
+     * \a doc Document.
+     *
+     * \a collectRefLinks Indicates that this is first go through the document and we just collecting reference links.
+     *                    Most of block plugins may just do nothing when this flag is true.
+     */
+    virtual void process(MdBlock<Trait> &fr,
+                         std::shared_ptr<Block<Trait>> parent,
+                         std::shared_ptr<Document<Trait>> doc,
+                         bool collectRefLinks) = 0;
+}; // BlockPlugin
+
 //
 // TextPluginsMap
 //
@@ -1450,7 +1561,17 @@ using TextPluginFunc = std::function<
  * \brief Type of the map of text plugins.
  */
 template<class Trait>
-using TextPluginsMap = std::map<int, std::tuple<TextPluginFunc<Trait>, bool, typename Trait::StringList>>;
+using TextPluginsMap = std::map<TextPlugin, std::tuple<TextPluginFunc<Trait>, bool, typename Trait::StringList>>;
+
+/*!
+ * \typealias MD::BlockPluginsMap
+ * \inmodule md4qt
+ * \inheaderfile md4qt/parser.h
+ *
+ * \brief Type of the map of block plugins.
+ */
+template<class Trait>
+using BlockPluginsMap = std::map<BlockType, std::shared_ptr<BlockPlugin<Trait>>>;
 
 //
 // TextParsingOpts
@@ -2199,7 +2320,7 @@ public:
      */
     Parser()
     {
-        addTextPlugin(GitHubAutoLinkPluginID, githubAutolinkPlugin<Trait>, false, {});
+        addTextPlugin(TextPlugin::GitHubAutoLink, githubAutolinkPlugin<Trait>, false, {});
     }
 
     ~Parser() = default;
@@ -2279,7 +2400,7 @@ public:
     /*!
      * Add text plugin.
      *
-     * \a id ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
+     * \a id ID of a plugin. Use TextPlugin::TextPlugin::UserDefined value for start ID.
      *
      * \a plugin Function of a plugin, that will be invoked to processs raw text.
      *
@@ -2287,7 +2408,7 @@ public:
      *
      * \a userData User data that will be passed to plugin function.
      */
-    void addTextPlugin(int id,
+    void addTextPlugin(TextPlugin id,
                        TextPluginFunc<Trait> plugin,
                        bool processInLinks,
                        const typename Trait::StringList &userData)
@@ -2300,9 +2421,29 @@ public:
      *
      * \a id ID of plugin that should be removed.
      */
-    void removeTextPlugin(int id)
+    void removeTextPlugin(TextPlugin id)
     {
         m_textPlugins.erase(id);
+    }
+
+    /*!
+     * Add block plugin.
+     *
+     * \a plugin Plugin.
+     */
+    void addBlockPlugin(std::shared_ptr<BlockPlugin<Trait>> plugin)
+    {
+        m_blockPlugins.insert({plugin->id(), plugin});
+    }
+
+    /*!
+     * Remove block plugin.
+     *
+     * \a id ID.
+     */
+    void removeBlockPlugin(BlockType id)
+    {
+        m_blockPlugins.erase(id);
     }
 
 private:
@@ -2324,27 +2465,14 @@ private:
 
     void clearCache();
 
-    enum class BlockType {
-        Unknown,
-        EmptyLine,
-        Text,
-        List,
-        ListWithFirstEmptyLine,
-        CodeIndentedBySpaces,
-        Code,
-        Blockquote,
-        Heading,
-        SomethingInList,
-        FensedCodeInList,
-        Footnote
-    }; // enum BlockType
-
     struct ListIndent {
         long long int m_level = -1;
         long long int m_indent = -1;
     }; // struct ListIndent
 
     BlockType whatIsTheLine(typename Trait::InternalString &str,
+                            StringListStream<Trait> &stream,
+                            long long int emptyLinesBefore = 0,
                             bool inList = false,
                             bool inListWithFirstEmptyLine = false,
                             bool fensedCodeInList = false,
@@ -2903,6 +3031,7 @@ private:
 private:
     typename Trait::StringList m_parsedFiles;
     TextPluginsMap<Trait> m_textPlugins;
+    BlockPluginsMap<Trait> m_blockPlugins;
     bool m_fullyOptimizeParagraphs = true;
 
     MD_DISABLE_COPY(Parser)
@@ -3354,6 +3483,8 @@ inline void Parser<Trait>::eatFootnote(typename Parser<Trait>::ParserContext &ct
             parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
 
             ctx.m_lineType = whatIsTheLine(line,
+                                           stream,
+                                           emptyLinesCount,
                                            false,
                                            false,
                                            false,
@@ -3522,7 +3653,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
                               bool collectRefLinks)
 {
     while (!stream.atEnd()) {
-        const auto currentLineNumber = stream.currentLineNumber();
+        auto currentLineNumber = stream.currentLineNumber();
 
         typename Trait::InternalString line;
         bool mayBreak;
@@ -3534,6 +3665,8 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
         }
 
         ctx.m_lineType = whatIsTheLine(line,
+                                       stream,
+                                       0,
                                        (ctx.m_emptyLineInList || isListType(ctx.m_type)),
                                        ctx.m_prevLineType == BlockType::ListWithFirstEmptyLine,
                                        ctx.m_fensedCodeInList,
@@ -3542,6 +3675,29 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
                                        ctx.m_lineType == BlockType::EmptyLine,
                                        true,
                                        &ctx.m_indents);
+
+        if (ctx.m_lineType >= BlockType::UserDefined) {
+            const auto it = m_blockPlugins.find(ctx.m_lineType);
+
+            if (it != m_blockPlugins.cend()) {
+                ctx.m_emptyLinesBefore = ctx.m_emptyLinesCount;
+                ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
+
+                for (long long int i = 1; i < it->second->linesCountOfLastBlock(); ++i) {
+                    currentLineNumber = stream.currentLineNumber();
+                    std::tie(line, mayBreak) = readLine(ctx, stream);
+                    ctx.m_fragment.push_back({line, {currentLineNumber, ctx.m_htmlCommentData, mayBreak}});
+                }
+
+                ctx.m_emptyLinesCount =
+                    (!stream.atEnd() ? (stream.lineAt(stream.currentStreamPos()).toString().trimmed().isEmpty() ? 1 : 0)
+                                     : 1);
+
+                parseFragment(ctx, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
+
+                continue;
+            }
+        }
 
         if (isListType(ctx.m_type) && ctx.m_lineType == BlockType::FensedCodeInList) {
             ctx.m_fensedCodeInList = !ctx.m_fensedCodeInList;
@@ -3691,7 +3847,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
                 }
 
                 ctx.m_lineType =
-                    whatIsTheLine(line, false, false, false, nullptr, nullptr, true, false, &ctx.m_indents);
+                    whatIsTheLine(line, stream, 0, false, false, false, nullptr, nullptr, true, false, &ctx.m_indents);
 
                 makeLineMain(ctx, line, empty, currentIndent, ns, currentLineNumber);
 
@@ -4151,21 +4307,33 @@ inline long long int listLevel(const std::vector<long long int> &indents,
 }
 
 template<class Trait>
-inline typename Parser<Trait>::BlockType Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
-                                                                      bool inList,
-                                                                      bool inListWithFirstEmptyLine,
-                                                                      bool fensedCodeInList,
-                                                                      typename Trait::InternalString *startOfCode,
-                                                                      ListIndent *indent,
-                                                                      bool emptyLinePreceded,
-                                                                      bool calcIndent,
-                                                                      const std::vector<long long int> *indents)
+inline BlockType Parser<Trait>::whatIsTheLine(typename Trait::InternalString &str,
+                                              StringListStream<Trait> &stream,
+                                              long long int emptyLinesBefore,
+                                              bool inList,
+                                              bool inListWithFirstEmptyLine,
+                                              bool fensedCodeInList,
+                                              typename Trait::InternalString *startOfCode,
+                                              ListIndent *indent,
+                                              bool emptyLinePreceded,
+                                              bool calcIndent,
+                                              const std::vector<long long int> *indents)
 {
     replaceTabs<Trait>(str);
 
     const auto first = skipSpaces(0, str);
 
     if (first < str.length()) {
+        BlockType userDefined = BlockType::Unknown;
+
+        for (auto it = m_blockPlugins.cbegin(), last = m_blockPlugins.cend(); it != last; ++it) {
+            if (it->second->isItYou(str, stream, emptyLinesBefore)) {
+                userDefined = static_cast<BlockType>(it->second->id());
+
+                break;
+            }
+        }
+
         auto s = str.sliced(first);
 
         const bool isBlockquote = s.startsWith(s_greaterSignString<Trait>);
@@ -4237,11 +4405,16 @@ inline typename Parser<Trait>::BlockType Parser<Trait>::whatIsTheLine(typename T
                     && !isBlockquote
                     && !(fensedCode && first < 4)
                     && !emptyLinePreceded
-                    && !inListWithFirstEmptyLine) {
+                    && !inListWithFirstEmptyLine
+                    && (userDefined == BlockType::Unknown)) {
                     return BlockType::SomethingInList;
                 }
             }
         } else {
+            if (userDefined != BlockType::Unknown) {
+                return userDefined;
+            }
+
             bool isFirstLineEmpty = false;
 
             const auto orderedList = isOrderedList<Trait>(str, nullptr, nullptr, nullptr, &isFirstLineEmpty);
@@ -4304,7 +4477,10 @@ inline long long int Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
             resetHtmlTag(html);
         }
 
-        switch (whatIsTheLine(fr.m_data.front().first)) {
+        auto stream = StringListStream<Trait>(fr.m_data, fr.m_data.front().second.m_lineNumber + 1);
+        const auto type = whatIsTheLine(fr.m_data.front().first, stream, fr.m_emptyLinesBefore);
+
+        switch (type) {
         case BlockType::Footnote:
             parseFootnote(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks);
             break;
@@ -4339,8 +4515,15 @@ inline long long int Parser<Trait>::parseFragment(MdBlock<Trait> &fr,
         case BlockType::ListWithFirstEmptyLine:
             return parseList(fr, parent, doc, linksToParse, workingPath, fileName, collectRefLinks, html);
 
-        default:
-            break;
+        default: {
+            if (type >= BlockType::UserDefined) {
+                const auto it = m_blockPlugins.find(type);
+
+                if (it != m_blockPlugins.cend()) {
+                    it->second->process(fr, parent, doc, collectRefLinks);
+                }
+            }
+        } break;
         }
     }
 
@@ -6403,18 +6586,19 @@ inline bool Parser<Trait>::isNewBlockIn(MdBlock<Trait> &fr,
                                         long long int endLine)
 {
     for (auto i = startLine + 1; i <= endLine; ++i) {
-        const auto type = whatIsTheLine(fr.m_data[i].first);
+        auto stream = StringListStream<Trait>(fr.m_data, fr.m_data[i].second.m_lineNumber + 1);
+        const auto type = whatIsTheLine(fr.m_data[i].first, stream, fr.m_emptyLinesBefore);
 
         switch (type) {
-        case Parser<Trait>::BlockType::Footnote:
-        case Parser<Trait>::BlockType::FensedCodeInList:
-        case Parser<Trait>::BlockType::SomethingInList:
-        case Parser<Trait>::BlockType::List:
-        case Parser<Trait>::BlockType::ListWithFirstEmptyLine:
-        case Parser<Trait>::BlockType::Code:
-        case Parser<Trait>::BlockType::Blockquote:
-        case Parser<Trait>::BlockType::Heading:
-        case Parser<Trait>::BlockType::EmptyLine:
+        case BlockType::Footnote:
+        case BlockType::FensedCodeInList:
+        case BlockType::SomethingInList:
+        case BlockType::List:
+        case BlockType::ListWithFirstEmptyLine:
+        case BlockType::Code:
+        case BlockType::Blockquote:
+        case BlockType::Heading:
+        case BlockType::EmptyLine:
             return true;
 
         default:
@@ -9955,23 +10139,27 @@ inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait>
 
             if (po.m_checkLineOnNewType) {
                 if (po.m_line + 1 < static_cast<long long int>(po.m_fr.m_data.size())) {
-                    const auto type = Parser<Trait>::whatIsTheLine(po.m_fr.m_data[po.m_line + 1].first);
+                    auto stream =
+                        StringListStream<Trait>(po.m_fr.m_data, po.m_fr.m_data[po.m_line + 1].second.m_lineNumber + 1);
+                    const auto type = Parser<Trait>::whatIsTheLine(po.m_fr.m_data[po.m_line + 1].first,
+                                                                   stream,
+                                                                   po.m_fr.m_emptyLinesBefore);
 
                     bool doBreak = false;
 
                     switch (type) {
-                    case Parser<Trait>::BlockType::CodeIndentedBySpaces:
+                    case BlockType::CodeIndentedBySpaces:
                         po.m_detected = TextParsingOpts<Trait>::Detected::Code;
                         doBreak = true;
                         break;
 
-                    case Parser<Trait>::BlockType::List:
-                    case Parser<Trait>::BlockType::ListWithFirstEmptyLine:
+                    case BlockType::List:
+                    case BlockType::ListWithFirstEmptyLine:
                         po.m_detected = TextParsingOpts<Trait>::Detected::List;
                         doBreak = true;
                         break;
 
-                    case Parser<Trait>::BlockType::Blockquote:
+                    case BlockType::Blockquote:
                         po.m_detected = TextParsingOpts<Trait>::Detected::Blockquote;
                         doBreak = true;
                         break;
@@ -10165,7 +10353,8 @@ inline long long int Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                 it->first = it->first.sliced(
                     gt + (it->first.length() > gt + 1 ? (it->first[gt + 1] == s_spaceChar<Trait> ? 1 : 0) : 0) + 1);
 
-                bt = whatIsTheLine(it->first);
+                auto stream = StringListStream<Trait>(fr.m_data, it->second.m_lineNumber + 1);
+                bt = whatIsTheLine(it->first, stream, fr.m_emptyLinesBefore);
             }
             // Process lazyness...
             else {
@@ -10174,7 +10363,8 @@ inline long long int Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                     break;
                 }
 
-                const auto tmpBt = whatIsTheLine(it->first);
+                auto stream = StringListStream<Trait>(fr.m_data, it->second.m_lineNumber + 1);
+                const auto tmpBt = whatIsTheLine(it->first, stream, fr.m_emptyLinesBefore);
 
                 if (isListType(tmpBt)) {
                     line = it->second.m_lineNumber;
@@ -10843,7 +11033,8 @@ inline long long int Parser<Trait>::parseListItem(MdBlock<Trait> &fr,
                                 ? it->first.sliced(indent)
                                 : it->first;
 
-                            const auto type = whatIsTheLine(currentStr);
+                            auto stream = StringListStream<Trait>(fr.m_data, it->second.m_lineNumber + 1);
+                            const auto type = whatIsTheLine(currentStr, stream, fr.m_emptyLinesBefore);
 
                             bool mayBreak = false;
 

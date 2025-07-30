@@ -38,6 +38,7 @@ This library parses Markdown into tree structure.
     \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/KDE/md4qt/README.md} {How can I walk through the document and find all items of given type?}
     \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/KDE/md4qt/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
     \li \l {#Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/KDE/md4qt/README.md} {Why writing plugin for new emphasis is not so trivial?}
+    \li \l {#You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/KDE/md4qt/README.md} {You have API for text plugins, but where is for blocks?}
 \endlist
 
 \target #Example//home/igor/Work/KDE/md4qt/README.md
@@ -675,6 +676,26 @@ resolved, welcome to discussion.
 
         Adding this function to \c {MD::Parser} allows to have new emphasises. Read the documentation
         for further details.
+
+
+\endlist
+
+\target #You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/KDE/md4qt/README.md
+\section1 You have API for text plugins, but where is for blocks?
+
+
+\list
+    \li Since version \c {4.4.0} in \c {md4qt} exists
+
+        \code /
+        template<class Trait>
+        class BlockPlugin;
+        \endcode
+
+        class to create a block plugin. And in \c {MD::Parser} exist new methods to add and
+        remove block plugins from parser. You can make block plugins since this version.
+        An example of ready one block plugin you can see in \c {md4qt/plugins.h} header file,
+        where is implemented \c {YAML} header plugin for Markdown.
 
 
 \endlist

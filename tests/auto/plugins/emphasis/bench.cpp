@@ -20,7 +20,7 @@ private Q_SLOTS:
     {
         QBENCHMARK {
             MD::Parser<TRAIT> p;
-            p.addTextPlugin(MD::UserDefinedPluginID,
+            p.addTextPlugin(MD::TextPlugin::UserDefined,
                             MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                             true,
                             typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));

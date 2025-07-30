@@ -198,7 +198,7 @@ www.google.com
 TEST_CASE("231-1")
 {
     MD::Parser<TRAIT> parser;
-    parser.removeTextPlugin(MD::GitHubAutoLinkPluginID);
+    parser.removeTextPlugin(MD::TextPlugin::GitHubAutoLink);
 
     auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/231.md"));
 

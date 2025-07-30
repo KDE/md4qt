@@ -16,7 +16,7 @@ template<class Trait>
 std::shared_ptr<MD::Document<Trait>> loadTest(const typename Trait::String &name)
 {
     MD::Parser<TRAIT> p;
-    p.addTextPlugin(MD::UserDefinedPluginID,
+    p.addTextPlugin(MD::TextPlugin::UserDefined,
                     MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                     true,
                     typename Trait::StringList() << Trait::latin1ToString("^") << Trait::latin1ToString("8"));
@@ -1224,15 +1224,15 @@ text ^=text@text@=^
 TEST_CASE("030")
 {
     MD::Parser<TRAIT> parser;
-    parser.addTextPlugin(MD::UserDefinedPluginID,
+    parser.addTextPlugin(MD::TextPlugin::UserDefined,
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 1,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 1),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("@") << TRAIT::latin1ToString("16"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 2,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 2),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("=") << TRAIT::latin1ToString("32"));
@@ -1274,15 +1274,15 @@ TEST_CASE("030")
 TEST_CASE("031")
 {
     MD::Parser<TRAIT> parser;
-    parser.addTextPlugin(MD::UserDefinedPluginID,
+    parser.addTextPlugin(MD::TextPlugin::UserDefined,
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 1,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 1),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("-") << TRAIT::latin1ToString("16"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 2,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 2),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("=") << TRAIT::latin1ToString("32"));
@@ -1339,15 +1339,15 @@ H ^2 ^3^^ -2 -3--
 TEST_CASE("032")
 {
     MD::Parser<TRAIT> parser;
-    parser.addTextPlugin(MD::UserDefinedPluginID,
+    parser.addTextPlugin(MD::TextPlugin::UserDefined,
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("^") << TRAIT::latin1ToString("8"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 1,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 1),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("-") << TRAIT::latin1ToString("16"));
-    parser.addTextPlugin(MD::UserDefinedPluginID + 2,
+    parser.addTextPlugin(static_cast<MD::TextPlugin>(static_cast<int>(MD::TextPlugin::UserDefined) + 2),
                          MD::EmphasisPlugin::emphasisTemplatePlugin<TRAIT>,
                          true,
                          typename TRAIT::StringList() << TRAIT::latin1ToString("=") << TRAIT::latin1ToString("32"));

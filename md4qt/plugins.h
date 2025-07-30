@@ -8,6 +8,7 @@
 
 // md4qt include.
 #include "parser.h"
+#include "utils.h"
 
 // C++ include.
 #include <vector>
@@ -795,6 +796,288 @@ inline void emphasisTemplatePlugin(std::shared_ptr<Paragraph<Trait>> p,
 }
 
 } /* namespace EmphasisPlugin */
+
+//
+// YAMLHeader
+//
+
+/*!
+ * \class MD::YAMLHeader
+ * \inmodule md4qt
+ * \inheaderfile md4qt/plugins.h
+ *
+ * \brief YAML header item in the document.
+ */
+template<class Trait>
+class YAMLHeader : public Item<Trait>
+{
+public:
+    YAMLHeader() = default;
+    ~YAMLHeader() override = default;
+
+    /*!
+     * Returns type of the item.
+     */
+    ItemType type() const override
+    {
+        return static_cast<ItemType>(static_cast<int>(ItemType::UserDefined) + 1);
+    }
+
+    /*!
+     * Clone this item.
+     *
+     * \a doc Parent of new item.
+     */
+    std::shared_ptr<Item<Trait>> clone(Document<Trait> *doc = nullptr) const override
+    {
+        MD_UNUSED(doc)
+
+        auto h = std::make_shared<YAMLHeader<Trait>>();
+        h->applyPositions(*this);
+        h->setYaml(yaml());
+        h->setStartDelim(startDelim());
+        h->setEndDelim(endDelim());
+
+        return h;
+    }
+
+    /*!
+     * Returns YAML content.
+     */
+    const typename Trait::String &yaml() const
+    {
+        return m_yaml;
+    }
+
+    /*!
+     * Set YAML content.
+     *
+     * \a y YAML content.
+     */
+    void setYaml(const typename Trait::String &y)
+    {
+        m_yaml = y;
+    }
+
+    /*!
+     * Returns start delimiter position.
+     */
+    const WithPosition &startDelim() const
+    {
+        return m_startDelim;
+    }
+
+    /*!
+     * Set start delimiter position.
+     *
+     * \a p Position.
+     */
+    void setStartDelim(const WithPosition &p)
+    {
+        m_startDelim = p;
+    }
+
+    /*!
+     * Returns end delimiter position.
+     */
+    const WithPosition &endDelim() const
+    {
+        return m_endDelim;
+    }
+
+    /*!
+     * Set end delimiter position.
+     *
+     * \a p Position.
+     */
+    void setEndDelim(const WithPosition &p)
+    {
+        m_endDelim = p;
+    }
+
+private:
+    /*!
+     * YAML content.
+     */
+    typename Trait::String m_yaml;
+    /*!
+     * Start delimiter of YAML block.
+     */
+    WithPosition m_startDelim;
+    /*!
+     * End delimitier of YAML block.
+     */
+    WithPosition m_endDelim;
+}; // class YAMLHeader
+
+//
+// YAMLBlockPlugin
+//
+
+/*!
+ * \class MD::YAMLBlockPlugin
+ * \inmodule md4qt
+ * \inheaderfile md4qt/plugins.h
+ *
+ * \brief Plugin for YAML header.
+ */
+template<class Trait>
+class YAMLBlockPlugin : public BlockPlugin<Trait>
+{
+public:
+    YAMLBlockPlugin() = default;
+    ~YAMLBlockPlugin() override = default;
+
+    /*!
+     * Returns whether the given line is a start of a block that this plugin handles.
+     *
+     * \note Position of \a stream is on next line after \a startLine.
+     *
+     * \note After checking in \a stream next lines on return from this method \a stream should be in state what it was
+     *       before.
+     *
+     * \a startLine Start line.
+     *
+     * \a stream Stream.
+     *
+     * \a emptyLinesBefore Count of empty lines before. May be 0 even if there are empty lines before, but
+     *                     in this case you will get access to full stream. In case when not full stream is
+     *                     passed to this method you will get correct amount of empty lines before.
+     */
+    bool isItYou(typename Trait::InternalString &startLine,
+                 StringListStream<Trait> &stream,
+                 long long int emptyLinesBefore) override
+    {
+        m_linesCount = -1;
+
+        const auto ns = skipSpaces(0, startLine);
+
+        if (startLine.toString().trimmed() == s_startString && ns == 0 && startLine.virginPos(0) == 0) {
+            const auto lineNumber = stream.currentLineNumber() - 1;
+
+            if (lineNumber != 0) {
+                const auto linesInStream = stream.currentStreamPos() - 1;
+
+                if (linesInStream + emptyLinesBefore == lineNumber) {
+                    for (long long int i = 0; i < linesInStream; ++i) {
+                        const auto internal = stream.lineAt(i);
+
+                        if (skipSpaces(0, internal) != internal.length()) {
+                            return false;
+                        }
+                    }
+                } else {
+                    return false;
+                }
+            }
+
+            auto i = stream.currentStreamPos();
+
+            for (; i < stream.size(); ++i) {
+                const auto internal = stream.lineAt(i);
+                const auto str = internal.toString().trimmed();
+                const auto ns = skipSpaces(0, internal);
+
+                if ((str == s_startString || str == s_endString) && internal.virginPos(0) == 0 && ns == 0) {
+                    break;
+                }
+            }
+
+            if (i < stream.size()) {
+                m_linesCount = i - stream.currentStreamPos() + 2;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /*!
+     * Returns ID of a block.
+     */
+    BlockType id() const override
+    {
+        return static_cast<BlockType>(static_cast<int>(BlockType::UserDefined) + 1);
+    }
+
+    /*!
+     * Returns count of lines in the last detected block of this type.
+     */
+    long long int linesCountOfLastBlock() const override
+    {
+        return m_linesCount;
+    }
+
+    /*!
+     * Process a block.
+     *
+     * \a fr Fragment of a document.
+     *
+     * \a parent Parent where new block should be added.
+     *
+     * \a doc Document.
+     *
+     * \a collectRefLinks Indicates that this is first go through the document and we just collecting reference links.
+     *                    Most of block plugins may just do nothing when this flag is true.
+     */
+    void process(MdBlock<Trait> &fr,
+                 std::shared_ptr<Block<Trait>> parent,
+                 std::shared_ptr<Document<Trait>> doc,
+                 bool collectRefLinks) override
+    {
+        MD_UNUSED(doc)
+
+        if (!collectRefLinks) {
+            typename Trait::String yaml;
+
+            for (long long int i = 1; i < fr.m_data.size() - 1; ++i) {
+                yaml.append(fr.m_data[i].first.toString());
+                yaml.append(s_newLineString<Trait>);
+            }
+
+            auto h = std::make_shared<YAMLHeader<Trait>>();
+            const auto startPos = fr.m_data.front().first.virginPos(0);
+            h->setStartColumn(startPos);
+            h->setStartLine(fr.m_data.front().second.m_lineNumber);
+            const auto endPos = fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1);
+            h->setEndColumn(endPos);
+            h->setEndLine(fr.m_data.back().second.m_lineNumber);
+
+            h->setYaml(yaml);
+
+            h->setStartDelim({startPos,
+                              fr.m_data.front().second.m_lineNumber,
+                              fr.m_data.front().first.virginPos(fr.m_data.front().first.length() - 1),
+                              fr.m_data.front().second.m_lineNumber});
+            h->setEndDelim({fr.m_data.back().first.virginPos(0),
+                            fr.m_data.back().second.m_lineNumber,
+                            endPos,
+                            fr.m_data.back().second.m_lineNumber});
+
+            parent->appendItem(h);
+        }
+    }
+
+private:
+    /*!
+     * Start sequence for YAML block.
+     */
+    static const typename Trait::String s_startString;
+    /*!
+     * Alternative sequnce that may be used at end of YAML block.
+     */
+    static const typename Trait::String s_endString;
+    /*!
+     * Count of lines in last detected YAML block.
+     */
+    long long int m_linesCount = -1;
+}; // class YAMLBlockPlugin
+
+template<class Trait>
+const typename Trait::String YAMLBlockPlugin<Trait>::s_startString = Trait::latin1ToString("---");
+template<class Trait>
+const typename Trait::String YAMLBlockPlugin<Trait>::s_endString = Trait::latin1ToString("...");
 
 } /* namespace MD */
 

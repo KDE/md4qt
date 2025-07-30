@@ -43,6 +43,7 @@ This library parses Markdown into tree structure.
 * [How can I walk through the document and find all items of given type?](#how-can-i-walk-through-the-document-and-find-all-items-of-given-type)
 * [How can I add and process a custom (user-defined) item in `MD::Document`?](#how-can-i-add-and-process-a-custom-user-defined-item-in-mddocument)
 * [Why writing plugin for new emphasis is not so trivial?](#why-writing-plugin-for-new-emphasis-is-not-so-trivial)
+* [You have API for text plugins, but where is for blocks?](#you-have-api-for-text-plugins-but-where-is-for-blocks)
 
 # Example
 
@@ -532,3 +533,17 @@ version `4.3.0` has appeared new include file `md4qt/plugins.h` where is impleme
 
    Adding this function to `MD::Parser` allows to have new emphasises. Read the documentation
    for further details.
+
+# You have API for text plugins, but where is for blocks?
+
+ * Since version `4.4.0` in `md4qt` exists
+
+   ```cpp
+   template<class Trait>
+   class BlockPlugin;
+   ```
+
+   class to create a block plugin. And in `MD::Parser` exist new methods to add and
+   remove block plugins from parser. You can make block plugins since this version.
+   An example of ready one block plugin you can see in `md4qt/plugins.h` header file,
+   where is implemented `YAML` header plugin for Markdown.

@@ -7,4 +7,5 @@ kde_enable_exceptions()
 
 if(BUILD_MD4QT_QT_TESTS)
     add_subdirectory(emphasis)
+    add_subdirectory(yaml)
 endif()
