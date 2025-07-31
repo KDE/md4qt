@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
 # SPDX-License-Identifier: MIT
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.19)
 
 SET(CMAKE_CXX_STANDARD 17)
 

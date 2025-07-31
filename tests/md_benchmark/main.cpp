@@ -76,7 +76,7 @@ private Q_SLOTS:
     {
         QBENCHMARK {
             MD::Parser<MD::QStringTrait> parser;
-            parser.removeTextPlugin(MD::GitHubAutoLinkPluginID);
+            parser.removeTextPlugin(MD::TextPlugin::GitHubAutoLink);
 
             QTextStream stream(m_qtData);
 
