@@ -868,3 +868,56 @@ TEST_CASE("307")
     REQUIRE(l->endLine() == 0);
     REQUIRE(l->url() == TRAIT::latin1ToString("http://www.google.com"));
 }
+
+/*
+|
+|
+|   ----
+|  /    \
+| /      \
+______________
+
+*/
+TEST_CASE("308")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/308.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::HorizontalLine);
+}
+
+/*
+|
+||
+|   ----
+|  /    \
+| /      \
+______________
+
+*/
+TEST_CASE("309")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/309.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Table);
+    auto t = static_cast<MD::Table<TRAIT> *>(doc->items().at(2).get());
+    REQUIRE(t->rows().size() == 4);
+    REQUIRE(t->rows().at(0)->cells().size() == 1);
+    REQUIRE(t->rows().at(0)->cells().at(0)->isEmpty());
+    auto r = static_cast<MD::TableRow<TRAIT> *>(t->rows().at(1).get());
+    REQUIRE(r->cells().size() == 1);
+    auto c = static_cast<MD::TableCell<TRAIT> *>(r->cells().at(0).get());
+    REQUIRE(c->items().size() == 1);
+    REQUIRE(c->items().at(0)->type() == MD::ItemType::Text);
+    auto text = static_cast<MD::Text<TRAIT> *>(c->items().at(0).get());
+    REQUIRE(text->text() == TRAIT::latin1ToString("/    \\"));
+}

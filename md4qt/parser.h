@@ -4552,7 +4552,13 @@ inline int isTableHeader(const String &s)
 
         const auto tmp = s.simplified();
         const auto p = tmp.startsWith(s_verticalLineString<Trait>) ? 1 : 0;
-        const auto n = tmp.length() - p - (tmp.endsWith(s_verticalLineString<Trait>) && tmp.length() > 1 ? 1 : 0);
+        const auto endsWithVertLine = tmp.endsWith(s_verticalLineString<Trait>) && tmp.length() > 1;
+        const auto n = tmp.length() - p - (endsWithVertLine ? 1 : 0);
+
+        if (n == 0 && !endsWithVertLine) {
+            return 0;
+        }
+
         const auto v = tmp.sliced(p, n);
 
         ReverseSolidusHandler<Trait> reverseSolidus;
