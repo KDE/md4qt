@@ -887,6 +887,22 @@ TEST_CASE("308")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 3);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 6);
+
+    {
+        REQUIRE(p->items().at(3)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(3).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("|  /    "));
+    }
+
+    REQUIRE(p->items().at(4)->type() == MD::ItemType::LineBreak);
+
+    {
+        REQUIRE(p->items().at(5)->type() == MD::ItemType::Text);
+        auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(5).get());
+        REQUIRE(t->text() == TRAIT::latin1ToString("| /      \\"));
+    }
     REQUIRE(doc->items().at(2)->type() == MD::ItemType::HorizontalLine);
 }
 
@@ -920,4 +936,48 @@ TEST_CASE("309")
     REQUIRE(c->items().at(0)->type() == MD::ItemType::Text);
     auto text = static_cast<MD::Text<TRAIT> *>(c->items().at(0).get());
     REQUIRE(text->text() == TRAIT::latin1ToString("/    \\"));
+}
+
+/*
+text \
+___
+
+*/
+TEST_CASE("310")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/310.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 1);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
+    REQUIRE(t->text() == TRAIT::latin1ToString("text \\"));
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::HorizontalLine);
+}
+
+/*
+text
+___
+
+*/
+TEST_CASE("311")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/311.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 1);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text<TRAIT> *>(p->items().at(0).get());
+    REQUIRE(t->text() == TRAIT::latin1ToString("text    "));
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::HorizontalLine);
 }

@@ -5676,9 +5676,10 @@ inline void makeTextObjectWithLineBreak(const typename Trait::String &text,
                                         long long int startPos,
                                         long long int startLine,
                                         long long int endPos,
-                                        long long int endLine)
+                                        long long int endLine,
+                                        bool removeSpacesAtEnd)
 {
-    makeTextObject(text, po, startPos, startLine, endPos, endLine, true);
+    makeTextObject(text, po, startPos, startLine, endPos, endLine, removeSpacesAtEnd);
 
     std::shared_ptr<LineBreak<Trait>> hr;
 
@@ -5780,13 +5781,15 @@ inline void makeText(long long int lastLine,
     const auto makeTOWLB = [&]() {
         if (po.m_line != (long long int)(po.m_fr.m_data.size() - 1)) {
             const auto &line = po.m_fr.m_data.at(po.m_line).first;
+            const auto breakLength = lineBreakLength<Trait>(line);
 
             makeTextObjectWithLineBreak(text,
                                         po,
                                         startPos,
                                         startLine,
-                                        line.length() - lineBreakLength<Trait>(line) - 1,
-                                        po.m_line);
+                                        line.length() - breakLength - 1,
+                                        po.m_line,
+                                        (breakLength > 1));
 
             startPos = 0;
             startLine = po.m_line + 1;
@@ -9665,55 +9668,6 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
                         TextParsingOpts<Trait> &po)
 {
     if (!collectRefLinks) {
-        if (p->items().back()->type() == ItemType::LineBreak) {
-            auto lb = std::static_pointer_cast<LineBreak<Trait>>(p->items().back());
-            const auto lineBreakBySpaces = isSpacesOrEmpty(lb->text());
-
-            p = makeParagraph<Trait>(p->items().cbegin(), std::prev(p->items().cend()));
-            const auto lineBreakPos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
-
-            if (!p->isEmpty()) {
-                if (p->items().back()->type() == ItemType::Text) {
-                    auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
-
-                    if (!lineBreakBySpaces) {
-                        auto text =
-                            po.m_fr.m_data.at(lineBreakPos.second).first.fullVirginString().sliced(lt->startColumn());
-                        po.m_rawTextData.back().m_str = text;
-
-                        if (!lt->text()[0].isSpace()) {
-                            const auto notSpacePos = skipSpaces(0, text);
-
-                            text.remove(0, notSpacePos);
-                        }
-
-                        lt->setText(removeBackslashes<Trait>(replaceEntity<Trait>(text)));
-                    }
-
-                    lt->setEndColumn(lt->endColumn() + lb->text().length());
-                } else {
-                    if (!lineBreakBySpaces) {
-                        const auto lastItemVirginPos = lastVirginPositionInParagraph<Trait>(p->items().back().get());
-                        const auto lastItemPos = localPosFromVirgin(po.m_fr, lastItemVirginPos, lineBreakPos.second);
-                        const auto endOfLine =
-                            po.m_fr.m_data.at(lineBreakPos.second).first.virginSubString(lastItemPos.first + 1);
-                        auto t = std::make_shared<Text<Trait>>();
-                        t->setText(endOfLine);
-                        t->setStartColumn(lastItemVirginPos + 1);
-                        t->setStartLine(lb->startLine());
-                        t->setEndColumn(lb->endColumn());
-                        t->setEndLine(lb->endLine());
-
-                        p->appendItem(t);
-
-                        const auto pos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
-
-                        po.m_rawTextData.push_back({lb->text(), pos.first, pos.second});
-                    }
-                }
-            }
-        }
-
         std::pair<typename Trait::String, WithPosition> label;
 
         if (p->items().back()->type() == ItemType::Text) {
@@ -9922,6 +9876,68 @@ inline void makeHorLine(const typename MdBlock<Trait>::Line &line,
     parent->appendItem(hr);
 }
 
+/*!
+ * \inheaderfile md4qt/parser.h
+ *
+ * Replace last line break in paragraph with corresponding text.
+ *
+ * \a p Paragraph.
+ *
+ * \a po Text parsing options.
+ *
+ * \a collectRefLicks Are we collecting reference links?
+ */
+template<class Trait>
+inline void replaceLastLineBreakWithText(std::shared_ptr<Paragraph<Trait>> &p,
+                                         TextParsingOpts<Trait> &po,
+                                         bool collectRefLinks,
+                                         bool replaceLineBreakBySpacessToo)
+{
+    if (!collectRefLinks) {
+        if (!p->isEmpty() && p->items().back()->type() == ItemType::LineBreak) {
+            auto lb = std::static_pointer_cast<LineBreak<Trait>>(p->items().back());
+            const auto lineBreakBySpaces = isSpacesOrEmpty(lb->text());
+
+            p = makeParagraph<Trait>(p->items().cbegin(), std::prev(p->items().cend()));
+            const auto lineBreakPos = localPosFromVirgin(po.m_fr, lb->startColumn(), lb->startLine());
+
+            if (!p->isEmpty()) {
+                if (p->items().back()->type() == ItemType::Text) {
+                    auto lt = std::static_pointer_cast<Text<Trait>>(p->items().back());
+
+                    if (!lineBreakBySpaces || replaceLineBreakBySpacessToo) {
+                        const auto text =
+                            po.m_fr.m_data.at(lineBreakPos.second).first.fullVirginString().sliced(lt->startColumn());
+                        po.m_rawTextData.back().m_str = text;
+                        lt->setText(removeBackslashes<Trait>(replaceEntity<Trait>(text)));
+                    }
+
+                    lt->setEndColumn(lt->endColumn() + lb->text().length());
+                } else {
+                    if (!lineBreakBySpaces || replaceLineBreakBySpacessToo) {
+                        const auto lastItemVirginPos = lastVirginPositionInParagraph<Trait>(p->items().back().get());
+                        const auto endOfLine = po.m_fr.m_data.at(lineBreakPos.second)
+                                                   .first.fullVirginString()
+                                                   .sliced(lastItemVirginPos + 1);
+                        auto t = std::make_shared<Text<Trait>>();
+                        t->setText(removeBackslashes<Trait>(replaceEntity<Trait>(endOfLine)));
+                        t->setStartColumn(lastItemVirginPos + 1);
+                        t->setStartLine(lb->startLine());
+                        t->setEndColumn(lb->endColumn());
+                        t->setEndLine(lb->endLine());
+
+                        p->appendItem(t);
+
+                        const auto pos = localPosFromVirgin(po.m_fr, lastItemVirginPos + 1, lb->startLine());
+
+                        po.m_rawTextData.push_back({endOfLine, pos.first, pos.second});
+                    }
+                }
+            }
+        }
+    }
+}
+
 template<class Trait>
 inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait> &fr,
                                                                   std::shared_ptr<Block<Trait>> parent,
@@ -10033,12 +10049,16 @@ inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait>
                 p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
 
                 if (!h2 || !po.m_headingAllowed) {
+                    replaceLastLineBreakWithText(p, po, collectRefLinks, true);
+
                     if (!collectRefLinks && !p->isEmpty()) {
                         parent->appendItem(p);
                     }
 
                     h2 = false;
                 } else {
+                    replaceLastLineBreakWithText(p, po, collectRefLinks, false);
+
                     makeHeading(
                         parent,
                         doc,
@@ -10093,6 +10113,8 @@ inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait>
                 p = splitParagraphsAndFreeHtml(parent, p, po, collectRefLinks, m_fullyOptimizeParagraphs);
 
                 if (po.m_headingAllowed) {
+                    replaceLastLineBreakWithText(p, po, collectRefLinks, false);
+
                     makeHeading(
                         parent,
                         doc,
