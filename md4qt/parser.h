@@ -5673,6 +5673,8 @@ inline void makeTextObject(const typename Trait::String &text,
  * \a endPos End text position.
  *
  * \a endLine End line number.
+ *
+ * \a removeSpacesAtEnd Indicates whether spaces at end should be removed or no.
  */
 template<class Trait>
 inline void makeTextObjectWithLineBreak(const typename Trait::String &text,
@@ -9889,7 +9891,10 @@ inline void makeHorLine(const typename MdBlock<Trait>::Line &line,
  *
  * \a po Text parsing options.
  *
- * \a collectRefLicks Are we collecting reference links?
+ * \a collectRefLinks Are we collecting reference links?
+ *
+ * \a replaceLineBreakBySpacessToo Indicates whether line break set with spaces at end should get back to the text too,
+ *                                 as set with reverse solidus character.
  */
 template<class Trait>
 inline void replaceLastLineBreakWithText(std::shared_ptr<Paragraph<Trait>> &p,
