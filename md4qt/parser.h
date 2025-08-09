@@ -4959,6 +4959,10 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
                 return false;
             }
 
+            if (isHorizontalLine<Trait>(row.sliced(p))) {
+                return false;
+            }
+
             if (line[p] == s_verticalLineChar<Trait>) {
                 line.remove(0, p + 1);
             }
