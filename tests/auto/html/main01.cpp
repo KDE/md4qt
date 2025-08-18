@@ -208,7 +208,7 @@ TEST_CASE("012")
     MD::Parser<TRAIT> p;
     auto html = MD::toHtml(p.parse(TRAIT::latin1ToString("tests/html/data/012.md")),
                            false,
-                           TRAIT::latin1ToString("qrc://ref.png"),
+                           TRAIT::latin1ToString("<img src=\"qrc://ref.png\" />"),
                            false);
     const TRAIT::String required = TRAIT::latin1ToString("<p dir=\"auto\">text<sup><a href=\"##^1/")
         + path
