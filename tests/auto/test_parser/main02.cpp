@@ -1648,7 +1648,7 @@ TEST_CASE("044")
     REQUIRE(li->items().at(1)->type() == MD::ItemType::Blockquote);
 
     auto bq = static_cast<MD::Blockquote<TRAIT> *>(li->items().at(1).get());
-    REQUIRE(bq->startColumn() == 2);
+    REQUIRE(bq->startColumn() == 4);
     REQUIRE(bq->startLine() == 2);
     REQUIRE(bq->endColumn() == 10);
     REQUIRE(bq->endLine() == 2);

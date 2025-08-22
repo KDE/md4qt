@@ -10363,7 +10363,6 @@ inline long long int Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
                                                     RawHtmlBlock<Trait> &)
 {
     const long long int pos = fr.m_data.front().first.indexOf(s_greaterSignString<Trait>);
-    long long int extra = 0;
 
     long long int line = -1;
 
@@ -10381,11 +10380,6 @@ inline long long int Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
             if (gt > -1) {
                 const auto dp = it->first.virginPos(gt);
                 delims.push_back({dp, it->second.m_lineNumber, dp, it->second.m_lineNumber});
-
-                if (it == fr.m_data.begin()) {
-                    extra =
-                        gt + (it->first.length() > gt + 1 ? (it->first[gt + 1] == s_spaceChar<Trait> ? 1 : 0) : 0) + 1;
-                }
 
                 it->first = it->first.sliced(
                     gt + (it->first.length() > gt + 1 ? (it->first[gt + 1] == s_spaceChar<Trait> ? 1 : 0) : 0) + 1);
@@ -10447,7 +10441,7 @@ inline long long int Parser<Trait>::parseBlockquote(MdBlock<Trait> &fr,
         StringListStream<Trait> stream(tmp);
 
         std::shared_ptr<Blockquote<Trait>> bq(new Blockquote<Trait>);
-        bq->setStartColumn(fr.m_data.at(0).first.virginPos(0) - extra);
+        bq->setStartColumn(delims.front().startColumn());
         bq->setStartLine(fr.m_data.at(0).second.m_lineNumber);
         bq->setEndColumn(it->first.virginPos(it->first.length() - 1));
         bq->setEndLine(it->second.m_lineNumber);
