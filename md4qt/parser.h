@@ -3664,17 +3664,19 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
             ctx.m_prevLineType = ctx.m_lineType;
         }
 
-        ctx.m_lineType = whatIsTheLine(line,
-                                       stream,
-                                       0,
-                                       (ctx.m_emptyLineInList || isListType(ctx.m_type)),
-                                       ctx.m_prevLineType == BlockType::ListWithFirstEmptyLine,
-                                       ctx.m_fensedCodeInList,
-                                       &ctx.m_startOfCodeInList,
-                                       &ctx.m_indent,
-                                       ctx.m_lineType == BlockType::EmptyLine,
-                                       true,
-                                       &ctx.m_indents);
+        ctx.m_lineType = whatIsTheLine(
+            line,
+            stream,
+            0,
+            ((ctx.m_emptyLineInList || isListType(ctx.m_type))
+             && !(ctx.m_type == BlockType::ListWithFirstEmptyLine && ctx.m_lineType == BlockType::EmptyLine)),
+            ctx.m_prevLineType == BlockType::ListWithFirstEmptyLine,
+            ctx.m_fensedCodeInList,
+            &ctx.m_startOfCodeInList,
+            &ctx.m_indent,
+            ctx.m_lineType == BlockType::EmptyLine,
+            true,
+            &ctx.m_indents);
 
         if (ctx.m_lineType >= BlockType::UserDefined) {
             const auto it = m_blockPlugins.find(ctx.m_lineType);
@@ -3722,7 +3724,7 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
         }
 
         if (ctx.m_type == BlockType::ListWithFirstEmptyLine && ctx.m_lineCounter == 2 && !isListType(ctx.m_lineType)) {
-            if (ctx.m_emptyLinesCount > 0) {
+            if (ctx.m_emptyLinesCount > 0 && ctx.m_lineType != BlockType::EmptyLine) {
                 const auto l = parseFragmentAndMakeNextLineMain(ctx,
                                                                 parent,
                                                                 doc,
@@ -3741,13 +3743,17 @@ Parser<Trait>::parseFirstStep(ParserContext &ctx,
 
                 continue;
             } else {
-                ctx.m_emptyLineInList = false;
-                ctx.m_emptyLinesCount = 0;
+                if (ctx.m_lineType != BlockType::EmptyLine) {
+                    ctx.m_emptyLineInList = false;
+                }
+
+                ctx.m_type = BlockType::List;
             }
         }
 
-        if (ctx.m_type == BlockType::ListWithFirstEmptyLine && ctx.m_lineCounter == 2) {
-            ctx.m_type = BlockType::List;
+        if (isListType(ctx.m_lineType) && isListType(ctx.m_type)) {
+            ctx.m_lineCounter = 0;
+            ctx.m_type = ctx.m_lineType;
         }
 
         // Footnote.

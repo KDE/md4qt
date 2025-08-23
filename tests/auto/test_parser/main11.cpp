@@ -47,3 +47,71 @@ TEST_CASE("313")
     REQUIRE(b->endColumn() == 1);
     REQUIRE(b->endLine() == 0);
 }
+
+/*
+* list
+
+  ```cpp
+  code
+*
+
+  ```
+
+*/
+TEST_CASE("314")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/314.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(l->items().size() == 2);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Code);
+}
+
+/*
+*
+
+  ```cpp
+  code
+*
+
+  ```
+
+*/
+TEST_CASE("315")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/315.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 3);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(l->items().size() == 1);
+    REQUIRE(doc->items().at(2)->type() == MD::ItemType::Code);
+}
+
+/*
+*
+
+
+*
+
+*/
+TEST_CASE("316")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/316.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
+    auto l = static_cast<MD::List<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(l->items().size() == 2);
+}
