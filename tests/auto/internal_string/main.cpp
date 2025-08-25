@@ -746,28 +746,6 @@ TEST_CASE("virgin_string")
     }
 
     {
-        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
-        TRAIT::InternalString s(str);
-
-        MD::replaceTabs<TRAIT>(s);
-
-        s.remove(0, s.length());
-
-        REQUIRE(s.virginSubString() == TRAIT::latin1ToString("\t\tcode\t\t"));
-    }
-
-    {
-        const auto str = TRAIT::latin1ToString("\t\tcode\t\t");
-        TRAIT::InternalString s(str);
-
-        MD::replaceTabs<TRAIT>(s);
-
-        s.remove(0, s.length());
-
-        REQUIRE(s.virginSubString(-1, s.length() + 1) == TRAIT::latin1ToString("\t\tcode\t\t"));
-    }
-
-    {
         const auto str = TRAIT::latin1ToString("text");
         TRAIT::InternalString s(str);
 

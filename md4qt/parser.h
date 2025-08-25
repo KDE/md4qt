@@ -287,7 +287,9 @@ inline long long int skipIfBackward(long long int startPos,
 
     if (startPos > lastPos) {
         startPos = lastPos;
-    } else if (startPos < 0) {
+    }
+
+    if (startPos < 0) {
         return -1;
     }
 
@@ -3087,17 +3089,11 @@ inline std::shared_ptr<Document<Trait>> Parser<Trait>::parse(const typename Trai
     std::shared_ptr<Document<Trait>> doc(new Document<Trait>);
 
     typename Trait::String wd;
-    auto i = workingDirectory.length() - 1;
-
-    i = skipIfBackward(workingDirectory.length() - 1, workingDirectory, [](const typename Trait::Char &ch) {
+    auto i = skipIfBackward(workingDirectory.length() - 1, workingDirectory, [](const typename Trait::Char &ch) {
         return (ch == s_reverseSolidusChar<Trait> || ch == s_solidusChar<Trait>);
     });
 
-    if (i < 0) {
-        i = 0;
-    }
-
-    if (i == 0 && workingDirectory[i] == s_solidusChar<Trait>) {
+    if ((i == 0 && workingDirectory[i] == s_solidusChar<Trait>) || i < 0) {
         wd = s_solidusString<Trait>;
     } else if (i > 0) {
         wd = workingDirectory.sliced(0, i + 1);
@@ -4788,7 +4784,7 @@ inline void Parser<Trait>::parseHeading(MdBlock<Trait> &fr,
         std::shared_ptr<Heading<Trait>> h(new Heading<Trait>);
         h->setStartColumn(line.virginPos(skipSpaces(0, line)));
         h->setStartLine(fr.m_data.front().second.m_lineNumber);
-        h->setEndColumn(line.virginPos(line.length() - 1));
+        h->setEndColumn(line.virginPos((line.isEmpty() ? 0 : line.length() - 1)));
         h->setEndLine(h->startLine());
 
         long long int pos = 0;
@@ -4948,7 +4944,8 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
         std::shared_ptr<Table<Trait>> table(new Table<Trait>);
         table->setStartColumn(fr.m_data.front().first.virginPos(0));
         table->setStartLine(fr.m_data.front().second.m_lineNumber);
-        table->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+        table->setEndColumn(fr.m_data.back().first.virginPos(
+            fr.m_data.back().first.isEmpty() ? 0 : fr.m_data.back().first.length() - 1));
         table->setEndLine(fr.m_data.back().second.m_lineNumber);
 
         const auto parseTableRow = [&](const typename MdBlock<Trait>::Line &lineData) -> bool {
@@ -4985,12 +4982,12 @@ inline void Parser<Trait>::parseTable(MdBlock<Trait> &fr,
 
             auto columns = splitTableRow<Trait>(line);
             columns.second.insert(columns.second.begin(), row.virginPos(0));
-            columns.second.push_back(row.virginPos(row.length() - 1));
+            columns.second.push_back(row.virginPos(row.isEmpty() ? 0 : row.length() - 1));
 
             std::shared_ptr<TableRow<Trait>> tr(new TableRow<Trait>);
             tr->setStartColumn(row.virginPos(0));
             tr->setStartLine(lineData.second.m_lineNumber);
-            tr->setEndColumn(row.virginPos(row.length() - 1));
+            tr->setEndColumn(row.virginPos(row.isEmpty() ? 0 : row.length() - 1));
             tr->setEndLine(lineData.second.m_lineNumber);
 
             int col = 0;
@@ -5196,7 +5193,9 @@ prevPosition(const MdBlock<Trait> &fr,
     for (long long int i = 0; i < static_cast<long long int>(fr.m_data.size()); ++i) {
         if (fr.m_data.at(i).second.m_lineNumber == line) {
             if (i > 0) {
-                return {fr.m_data.at(i - 1).first.virginPos(fr.m_data.at(i - 1).first.length() - 1), line - 1};
+                return {fr.m_data.at(i - 1).first.virginPos(
+                            fr.m_data.at(i - 1).first.isEmpty() ? 0 : fr.m_data.at(i - 1).first.length() - 1),
+                        line - 1};
             }
         }
     }
@@ -5224,7 +5223,9 @@ nextPosition(const MdBlock<Trait> &fr,
 {
     for (long long int i = 0; i < static_cast<long long int>(fr.m_data.size()); ++i) {
         if (fr.m_data.at(i).second.m_lineNumber == line) {
-            if (fr.m_data.at(i).first.virginPos(fr.m_data.at(i).first.length() - 1) >= pos + 1) {
+            if (fr.m_data.at(i).first.virginPos(fr.m_data.at(i).first.isEmpty() ? 0
+                                                                                : fr.m_data.at(i).first.length() - 1)
+                >= pos + 1) {
                 return {pos + 1, line};
             } else if (i + 1 < static_cast<long long int>(fr.m_data.size())) {
                 return {fr.m_data.at(i + 1).first.virginPos(0), fr.m_data.at(i + 1).second.m_lineNumber};
@@ -5554,7 +5555,7 @@ template<class Trait>
 inline typename Trait::String removeLineBreak(const typename Trait::String &s)
 {
     if (s.endsWith(s_reverseSolidusString<Trait>)) {
-        return s.sliced(0, s.size() - 1);
+        return s.sliced(0, s.length() - 1);
     } else {
         return s;
     }
@@ -5607,7 +5608,8 @@ inline void makeTextObject(const typename Trait::String &text,
                            bool doRemoveSpacesAtEnd = false)
 {
     if (endPos < 0 && endLine - 1 >= 0) {
-        endPos = po.m_fr.m_data.at(endLine - 1).first.length() - 1;
+        endPos =
+            (po.m_fr.m_data.at(endLine - 1).first.isEmpty() ? 0 : po.m_fr.m_data.at(endLine - 1).first.length() - 1);
         --endLine;
     }
 
@@ -5700,7 +5702,8 @@ inline void makeTextObjectWithLineBreak(const typename Trait::String &text,
         hr->setText(po.m_fr.m_data.at(endLine).first.sliced(endPos + 1).toString());
         hr->setStartColumn(po.m_fr.m_data.at(endLine).first.virginPos(endPos + 1));
         hr->setStartLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
-        hr->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(po.m_fr.m_data.at(endLine).first.length() - 1));
+        hr->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(
+            po.m_fr.m_data.at(endLine).first.isEmpty() ? 0 : po.m_fr.m_data.at(endLine).first.length() - 1));
         hr->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
         po.m_parent->setEndColumn(hr->endColumn());
         po.m_parent->setEndLine(hr->endLine());
@@ -6518,7 +6521,9 @@ inline void eatRawHtml(long long int line,
         }
 
         po.m_html.m_html->setEndColumn(po.m_fr.m_data.at(endLine).first.virginPos(
-            endColumn >= 0 ? endColumn - 1 : po.m_fr.m_data.at(endLine).first.length() - 1));
+            endColumn >= 0
+                ? endColumn - 1
+                : (po.m_fr.m_data.at(endLine).first.isEmpty() ? 0 : po.m_fr.m_data.at(endLine).first.length() - 1)));
         po.m_html.m_html->setEndLine(po.m_fr.m_data.at(endLine).second.m_lineNumber);
 
         po.m_line = (toPos >= 0 ? toLine : toLine + 1);
@@ -7015,7 +7020,7 @@ inline int Parser<Trait>::htmlTagRule(typename Delims::iterator it,
     }
 
     if (tag.endsWith(s_solidusString<Trait>)) {
-        tag.remove(tag.size() - 1, 1);
+        tag.remove(tag.length() - 1, 1);
     }
 
     if (tag.isEmpty()) {
@@ -7295,9 +7300,12 @@ inline void Parser<Trait>::makeInlineCode(long long int startLine,
 
     po.m_line = lastLine;
 
-    if (c[0] == s_spaceChar<Trait> && c[c.size() - 1] == s_spaceChar<Trait> && skipSpaces(0, c) < c.length()) {
+    if (c.length() > 1
+        && c[0] == s_spaceChar<Trait>
+        && c[c.length() - 1] == s_spaceChar<Trait>
+        && skipSpaces(0, c) < c.length()) {
         c.remove(0, 1);
-        c.remove(c.size() - 1, 1);
+        c.remove(c.length() - 1, 1);
         ++startPos;
         --lastPos;
     }
@@ -9682,7 +9690,7 @@ inline void makeHeading(std::shared_ptr<Block<Trait>> parent,
     if (!collectRefLinks) {
         std::pair<typename Trait::String, WithPosition> label;
 
-        if (p->items().back()->type() == ItemType::Text) {
+        if (!p->items().empty() && p->items().back()->type() == ItemType::Text) {
             auto t = std::static_pointer_cast<Text<Trait>>(p->items().back());
 
             if (t->opts() == TextWithoutFormat) {
@@ -9883,7 +9891,7 @@ inline void makeHorLine(const typename MdBlock<Trait>::Line &line,
     std::shared_ptr<Item<Trait>> hr(new HorizontalLine<Trait>);
     hr->setStartColumn(line.first.virginPos(skipSpaces(0, line.first)));
     hr->setStartLine(line.second.m_lineNumber);
-    hr->setEndColumn(line.first.virginPos(line.first.length() - 1));
+    hr->setEndColumn(line.first.virginPos(line.first.isEmpty() ? 0 : line.first.length() - 1));
     hr->setEndLine(line.second.m_lineNumber);
     parent->appendItem(hr);
 }
@@ -10056,8 +10064,10 @@ inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait>
                 checkForTextPlugins<Trait>(p, po, m_textPlugins, inLink);
 
                 if (it->m_line - 1 >= 0) {
-                    p->setEndColumn(
-                        fr.m_data.at(it->m_line - 1).first.virginPos(fr.m_data.at(it->m_line - 1).first.length() - 1));
+                    p->setEndColumn(fr.m_data.at(it->m_line - 1)
+                                        .first.virginPos(fr.m_data.at(it->m_line - 1).first.isEmpty()
+                                                             ? 0
+                                                             : fr.m_data.at(it->m_line - 1).first.length() - 1));
                     p->setEndLine(fr.m_data.at(it->m_line - 1).second.m_lineNumber);
                 }
 
@@ -10120,8 +10130,10 @@ inline long long int Parser<Trait>::parseFormattedTextLinksImages(MdBlock<Trait>
                 checkForTextPlugins<Trait>(p, po, m_textPlugins, inLink);
 
                 if (it->m_line - 1 >= 0) {
-                    p->setEndColumn(
-                        fr.m_data.at(it->m_line - 1).first.virginPos(fr.m_data.at(it->m_line - 1).first.length() - 1));
+                    p->setEndColumn(fr.m_data.at(it->m_line - 1)
+                                        .first.virginPos(fr.m_data.at(it->m_line - 1).first.isEmpty()
+                                                             ? 0
+                                                             : fr.m_data.at(it->m_line - 1).first.length() - 1));
                     p->setEndLine(fr.m_data.at(it->m_line - 1).second.m_lineNumber);
                 }
 
@@ -10292,7 +10304,8 @@ inline void Parser<Trait>::parseFootnote(MdBlock<Trait> &fr,
         std::shared_ptr<Footnote<Trait>> f(new Footnote<Trait>);
         f->setStartColumn(fr.m_data.front().first.virginPos(0));
         f->setStartLine(fr.m_data.front().second.m_lineNumber);
-        f->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+        f->setEndColumn(fr.m_data.back().first.virginPos(
+            fr.m_data.back().first.isEmpty() ? 0 : fr.m_data.back().first.length() - 1));
         f->setEndLine(fr.m_data.back().second.m_lineNumber);
 
         auto delims = collectDelimiters(fr.m_data);
@@ -11280,7 +11293,8 @@ inline long long int Parser<Trait>::parseCode(MdBlock<Trait> &fr,
         const long long int startPos = fr.m_data.front().first.virginPos(indent);
         const long long int emptyColumn = fr.m_data.front().first.virginPos(fr.m_data.front().first.length());
         const long long int startLine = fr.m_data.front().second.m_lineNumber;
-        const long long int endPos = fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1);
+        const long long int endPos = fr.m_data.back().first.virginPos(
+            fr.m_data.back().first.isEmpty() ? 0 : fr.m_data.back().first.length() - 1);
         const long long int endLine = fr.m_data.back().second.m_lineNumber;
 
         fr.m_data.erase(fr.m_data.cbegin());
@@ -11292,7 +11306,7 @@ inline long long int Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                 endDelim.setStartColumn(it->first.virginPos(skipSpaces(0, it->first)));
                 endDelim.setStartLine(it->second.m_lineNumber);
                 endDelim.setEndLine(endDelim.startLine());
-                endDelim.setEndColumn(it->first.virginPos(it->first.length() - 1));
+                endDelim.setEndColumn(it->first.virginPos(it->first.isEmpty() ? 0 : it->first.length() - 1));
             }
 
             fr.m_data.erase(it);
@@ -11324,7 +11338,8 @@ inline long long int Parser<Trait>::parseCode(MdBlock<Trait> &fr,
                 if (!fr.m_data.empty()) {
                     m->setStartColumn(fr.m_data.front().first.virginPos(0));
                     m->setStartLine(fr.m_data.front().second.m_lineNumber);
-                    m->setEndColumn(fr.m_data.back().first.virginPos(fr.m_data.back().first.length() - 1));
+                    m->setEndColumn(fr.m_data.back().first.virginPos(
+                        fr.m_data.back().first.isEmpty() ? 0 : fr.m_data.back().first.length() - 1));
                     m->setEndLine(fr.m_data.back().second.m_lineNumber);
                 } else {
                     m->setStartColumn(emptyColumn);
@@ -11415,7 +11430,7 @@ inline long long int Parser<Trait>::parseCodeIndentedBySpaces(MdBlock<Trait> &fr
             codeItem->setStartColumn(fr.m_data.front().first.virginPos(startPos));
             codeItem->setStartLine(fr.m_data.front().second.m_lineNumber);
             auto tmp = std::prev(lastIt);
-            codeItem->setEndColumn(tmp->first.virginPos(tmp->first.length() - 1));
+            codeItem->setEndColumn(tmp->first.virginPos(tmp->first.isEmpty() ? 0 : tmp->first.length() - 1));
             codeItem->setEndLine(tmp->second.m_lineNumber);
         } else {
             codeItem->setStartColumn(emptyColumn);
