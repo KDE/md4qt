@@ -3136,21 +3136,29 @@ public:
         bool rFound = false;
 
         while (!atEnd()) {
+            bool decrement = true;
             const auto &c = getChar();
 
-            if (rFound && c != s_newLineChar<Trait>) {
+            if (atEnd() && (c == s_carriageReturnChar<Trait> || c == s_newLineChar<Trait>) && !m_isLastNewLine) {
+                m_isLastNewLine = true;
                 --m_pos;
+                decrement = false;
+            }
+
+            if (rFound && c != s_newLineChar<Trait>) {
+                if (!m_isLastNewLine) {
+                    --m_pos;
+                }
 
                 return typename Trait::StringView(data() + start, m_pos - start - 1);
             }
 
-            if (c == s_carriageReturnChar<Trait>) {
-                rFound = true;
-
-                continue;
-            } else if (c == s_newLineChar<Trait>) {
-                return typename Trait::StringView(data() + start, m_pos - start - 1 - (rFound ? 1 : 0));
+            if (c == s_newLineChar<Trait>) {
+                return
+                    typename Trait::StringView(data() + start, m_pos - start - (decrement ? 1 : 0) - (rFound ? 1 : 0));
             }
+
+            rFound = (c == s_carriageReturnChar<Trait>);
         }
 
         if (!isEmpty()) {
@@ -3181,6 +3189,10 @@ protected:
      * Current position in stream.
      */
     long long int m_pos = 0;
+    /*!
+     * Flags about last new line.
+     */
+    bool m_isLastNewLine = false;
 };
 
 /*!

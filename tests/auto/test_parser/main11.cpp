@@ -144,3 +144,23 @@ TEST_CASE("317")
     REQUIRE(c->endLine() == 1);
     REQUIRE(c->text().isEmpty());
 }
+
+/*
+```cpp
+
+*/
+TEST_CASE("318")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/318.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Code);
+    auto c = static_cast<MD::Code<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(c->startColumn() == 6);
+    REQUIRE(c->startLine() == 0);
+    REQUIRE(c->endColumn() == 6);
+    REQUIRE(c->endLine() == 0);
+}

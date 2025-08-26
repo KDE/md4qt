@@ -2186,7 +2186,7 @@ TEST_CASE("127")
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Code);
         auto c = static_cast<MD::Code<TRAIT> *>(doc->items().at(1).get());
         REQUIRE(!c->isInline());
-        REQUIRE(c->text() == TRAIT::latin1ToString("\n```\naaa"));
+        REQUIRE(c->text() == TRAIT::latin1ToString("\n```\naaa\n"));
     }
 }
 
@@ -2345,7 +2345,7 @@ TEST_CASE("137")
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Code);
         auto c = static_cast<MD::Code<TRAIT> *>(doc->items().at(1).get());
         REQUIRE(!c->isInline());
-        REQUIRE(c->text() == TRAIT::latin1ToString("aaa\n    ```"));
+        REQUIRE(c->text() == TRAIT::latin1ToString("aaa\n    ```\n"));
     }
 }
 
@@ -2380,7 +2380,7 @@ TEST_CASE("139")
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::Code);
         auto c = static_cast<MD::Code<TRAIT> *>(doc->items().at(1).get());
         REQUIRE(!c->isInline());
-        REQUIRE(c->text() == TRAIT::latin1ToString("aaa\n~~~ ~~"));
+        REQUIRE(c->text() == TRAIT::latin1ToString("aaa\n~~~ ~~\n"));
     }
 }
 

@@ -2461,10 +2461,10 @@ TEST_CASE("054")
         REQUIRE(c->syntax() == TRAIT::latin1ToString("java"));
         REQUIRE(!c->isInline());
         REQUIRE(c->text().isEmpty());
-        REQUIRE(c->startColumn() == 7);
-        REQUIRE(c->startLine() == 0);
-        REQUIRE(c->endColumn() == 7);
-        REQUIRE(c->endLine() == 0);
+        REQUIRE(c->startColumn() == 0);
+        REQUIRE(c->startLine() == 1);
+        REQUIRE(c->endColumn() == 0);
+        REQUIRE(c->endLine() == 1);
         REQUIRE(c->startDelim() == MD::WithPosition{0, 0, 2, 0});
         REQUIRE(c->endDelim() == MD::WithPosition{-1, -1, -1, -1});
         REQUIRE(c->syntaxPos() == MD::WithPosition{3, 0, 6, 0});
