@@ -131,6 +131,16 @@ resolved, welcome to discussion.
    And one more cherry on the cake - `md4qt` can parse Markdown recursively.
    What it is described below.
 
+   If you need simple converter into `HTML`, possibly you will find other libraries are
+   better for you. But if you need to do Markdown syntax highlighting, some complex things
+   during editing of Markdown, like checking for Markdown element by its position, some
+   clever things... Possibly you will find API of `md4qt` much more better. Guys, use
+   what you like, but don't cry if something can not be done in a library you used :)
+   I don't want to say that everything is possible in `md4qt`, but this library is 
+   supported. For better support, please, write direct email to
+   igor.mironchik@gmail.com, issues on https://invent.kde.org can be missed by me for a long time,
+   as https://invent.kde.org don't send notifications to me... Sorry :(
+
 # What should I know about links in the document?
 
  * In some cases in Markdown link's URL is something document related. So, when
