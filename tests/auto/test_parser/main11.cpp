@@ -164,3 +164,34 @@ TEST_CASE("318")
     REQUIRE(c->endColumn() == 6);
     REQUIRE(c->endLine() == 0);
 }
+
+/*
+### ---
+
+*/
+TEST_CASE("319")
+{
+    MD::Parser<TRAIT> parser;
+
+    auto doc = parser.parse(TRAIT::latin1ToString("tests/parser/data/319.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Heading);
+    auto h = static_cast<MD::Heading<TRAIT> *>(doc->items().at(1).get());
+    REQUIRE(h->startColumn() == 0);
+    REQUIRE(h->startLine() == 0);
+    REQUIRE(h->endColumn() == 6);
+    REQUIRE(h->endLine() == 0);
+    REQUIRE(h->text()->items().size() == 1);
+    REQUIRE(h->text()->startColumn() == 4);
+    REQUIRE(h->text()->startLine() == 0);
+    REQUIRE(h->text()->endColumn() == 6);
+    REQUIRE(h->text()->endLine() == 0);
+    REQUIRE(h->text()->items().at(0)->type() == MD::ItemType::HorizontalLine);
+    auto l = static_cast<MD::HorizontalLine<TRAIT> *>(h->text()->items().at(0).get());
+    REQUIRE(l->startColumn() == 4);
+    REQUIRE(l->startLine() == 0);
+    REQUIRE(l->endColumn() == 6);
+    REQUIRE(l->endLine() == 0);
+}
