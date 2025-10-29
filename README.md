@@ -98,6 +98,18 @@ major extensions and sugar and cherry on the cake.
 | `md4qt` with `Qt6` | ~2.2 ms |
 | `md4qt` with `Qt6` without `GitHub` auto-links extension | ~1.9 ms |
 
+Initially parser was done by splitting text into blocks and these blocks go for
+processing. I did it so and for performance reason this is a mistake, as canonical
+Markdown parser should get character by character from the input string, next by next
+with making a decision what it can be and doing a parsing. With canonical approach
+performance can be a division by two of `md4qt` result, as a minimum. Ok, mistake is done,
+a lot of things is done... But API of `md4qt` I find a user-friendly, with exception of
+text plugins writing, there a developer can find a process a little complicated.
+Who knows... I guess for desktop applications performance of `md4qt` is enough,
+you can look at [Playground](#playground) and
+[Why another AST Markdown parser?](#why-another-ast-markdown-parser)
+sections for more information.
+
 # Playground
 
 You can play in action with `md4qt` in [Markdown Tools](https://github.com/igormironchik/markdown-tools). There you can find `Markdown` editor/viewer/converter to `PDF`.

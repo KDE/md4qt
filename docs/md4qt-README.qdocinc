@@ -9,39 +9,39 @@ This library parses Markdown into tree structure.
 
 
 \list
-    \li \l {#Example//home/igor/Work/KDE/md4qt/README.md} {Example}
-    \li \l {#License//home/igor/Work/KDE/md4qt/README.md} {License}
-    \li \l {#Benchmark//home/igor/Work/KDE/md4qt/README.md} {Benchmark}
-    \li \l {#Playground//home/igor/Work/KDE/md4qt/README.md} {Playground}
-    \li \l {#Release-notes//home/igor/Work/KDE/md4qt/README.md} {Release notes}
-    \li \l {#Known-issues//home/igor/Work/KDE/md4qt/README.md} {Known issues}
-    \li \l {#Why-another-AST-Markdown-parser//home/igor/Work/KDE/md4qt/README.md} {Why another AST Markdown parser?}
-    \li \l {#What-should-I-know-about-links-in-the-document//home/igor/Work/KDE/md4qt/README.md} {What should I know about links in the document?}
-    \li \l {#What-is-the-second-argument-of-MDParserparse//home/igor/Work/KDE/md4qt/README.md} {What is the second argument of \c {MD::Parser::parse()}?}
-    \li \l {#What-is-an-MDAnchor//home/igor/Work/KDE/md4qt/README.md} {What is an \c {MD::Anchor}?}
-    \li \l {#Does-the-library-throw-exceptions//home/igor/Work/KDE/md4qt/README.md} {Does the library throw exceptions?}
-    \li \l {#Why-MDParser-and-MDDocument-are-templates//home/igor/Work/KDE/md4qt/README.md} {Why \c {MD::Parser} and \c {MD::Document} are templates?}
-    \li \l {#So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/KDE/md4qt/README.md} {So, how can I use \c {md4qt} with \c {Qt6}?}
-    \li \l {#Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/KDE/md4qt/README.md} {Why is parsing wrong on Windows with \c {std::ifstream}?}
-    \li \l {#How-can-I-convert-MDDocument-into-HTML//home/igor/Work/KDE/md4qt/README.md} {How can I convert \c {MD::Document} into \c {HTML}?}
-    \li \l {#How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/KDE/md4qt/README.md} {How can I obtain positions of blocks/elements in \c {Markdown} file?}
-    \li \l {#How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/KDE/md4qt/README.md} {How can I easily traverse through the \c {MD::Document}?}
-    \li \l {#Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/KDE/md4qt/README.md} {Is it possible to write custom text plugin for this parser?}
-    \li \l {#What-is-a-ID-of-a-plugin//home/igor/Work/KDE/md4qt/README.md} {What is a \c {ID} of a plugin?}
-    \li \l {#What-is-a-MDTextPluginFuncTrait//home/igor/Work/KDE/md4qt/README.md} {What is a \c {MD::TextPluginFunc<Trait>}?}
-    \li \l {#What-is-processInLinks-flag-for//home/igor/Work/KDE/md4qt/README.md} {What is \c {processInLinks} flag for?}
-    \li \l {#What-for-is-a-userData-argument//home/igor/Work/KDE/md4qt/README.md} {What for is a \c {userData} argument?}
-    \li \l {#Could-you-show-an-example-of-a-plugin//home/igor/Work/KDE/md4qt/README.md} {Could you show an example of a plugin?}
-    \li \l {#I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/KDE/md4qt/README.md} {I didn't understand how raw text data correlates with a paragraph.}
-    \li \l {#How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/KDE/md4qt/README.md} {How can I get a string of \c {MD::StyleDelim}?}
-    \li \l {#Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/KDE/md4qt/README.md} {Is it possible to find \c {Markdown} item by its position?}
-    \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/KDE/md4qt/README.md} {How can I walk through the document and find all items of given type?}
-    \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/KDE/md4qt/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
-    \li \l {#Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/KDE/md4qt/README.md} {Why writing plugin for new emphasis is not so trivial?}
-    \li \l {#You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/KDE/md4qt/README.md} {You have API for text plugins, but where is for blocks?}
+    \li \l {#Example//home/igor/Work/Projects/md4qt/README.md} {Example}
+    \li \l {#License//home/igor/Work/Projects/md4qt/README.md} {License}
+    \li \l {#Benchmark//home/igor/Work/Projects/md4qt/README.md} {Benchmark}
+    \li \l {#Playground//home/igor/Work/Projects/md4qt/README.md} {Playground}
+    \li \l {#Release-notes//home/igor/Work/Projects/md4qt/README.md} {Release notes}
+    \li \l {#Known-issues//home/igor/Work/Projects/md4qt/README.md} {Known issues}
+    \li \l {#Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md} {Why another AST Markdown parser?}
+    \li \l {#What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/md4qt/README.md} {What should I know about links in the document?}
+    \li \l {#What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/md4qt/README.md} {What is the second argument of \c {MD::Parser::parse()}?}
+    \li \l {#What-is-an-MDAnchor//home/igor/Work/Projects/md4qt/README.md} {What is an \c {MD::Anchor}?}
+    \li \l {#Does-the-library-throw-exceptions//home/igor/Work/Projects/md4qt/README.md} {Does the library throw exceptions?}
+    \li \l {#Why-MDParser-and-MDDocument-are-templates//home/igor/Work/Projects/md4qt/README.md} {Why \c {MD::Parser} and \c {MD::Document} are templates?}
+    \li \l {#So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/Projects/md4qt/README.md} {So, how can I use \c {md4qt} with \c {Qt6}?}
+    \li \l {#Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/md4qt/README.md} {Why is parsing wrong on Windows with \c {std::ifstream}?}
+    \li \l {#How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/md4qt/README.md} {How can I convert \c {MD::Document} into \c {HTML}?}
+    \li \l {#How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/md4qt/README.md} {How can I obtain positions of blocks/elements in \c {Markdown} file?}
+    \li \l {#How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/md4qt/README.md} {How can I easily traverse through the \c {MD::Document}?}
+    \li \l {#Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/Projects/md4qt/README.md} {Is it possible to write custom text plugin for this parser?}
+    \li \l {#What-is-a-ID-of-a-plugin//home/igor/Work/Projects/md4qt/README.md} {What is a \c {ID} of a plugin?}
+    \li \l {#What-is-a-MDTextPluginFuncTrait//home/igor/Work/Projects/md4qt/README.md} {What is a \c {MD::TextPluginFunc<Trait>}?}
+    \li \l {#What-is-processInLinks-flag-for//home/igor/Work/Projects/md4qt/README.md} {What is \c {processInLinks} flag for?}
+    \li \l {#What-for-is-a-userData-argument//home/igor/Work/Projects/md4qt/README.md} {What for is a \c {userData} argument?}
+    \li \l {#Could-you-show-an-example-of-a-plugin//home/igor/Work/Projects/md4qt/README.md} {Could you show an example of a plugin?}
+    \li \l {#I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/Projects/md4qt/README.md} {I didn't understand how raw text data correlates with a paragraph.}
+    \li \l {#How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/Projects/md4qt/README.md} {How can I get a string of \c {MD::StyleDelim}?}
+    \li \l {#Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/md4qt/README.md} {Is it possible to find \c {Markdown} item by its position?}
+    \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/md4qt/README.md} {How can I walk through the document and find all items of given type?}
+    \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/md4qt/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
+    \li \l {#Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/Projects/md4qt/README.md} {Why writing plugin for new emphasis is not so trivial?}
+    \li \l {#You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/Projects/md4qt/README.md} {You have API for text plugins, but where is for blocks?}
 \endlist
 
-\target #Example//home/igor/Work/KDE/md4qt/README.md
+\target #Example//home/igor/Work/Projects/md4qt/README.md
 \section1 Example
 
 \code /
@@ -73,7 +73,7 @@ int main()
 }
 \endcode
 
-\target #License//home/igor/Work/KDE/md4qt/README.md
+\target #License//home/igor/Work/Projects/md4qt/README.md
 \section1 License
 
 \code /
@@ -83,7 +83,7 @@ int main()
 *\1
 \endcode
 
-\target #Benchmark//home/igor/Work/KDE/md4qt/README.md
+\target #Benchmark//home/igor/Work/Projects/md4qt/README.md
 \section1 Benchmark
 
 Approximate benchmark with \l {https://github.com/github/cmark-gfm} {cmark-gfm} says,
@@ -120,14 +120,26 @@ major extensions and sugar and cherry on the cake.
 
 \endtable
 
-\target #Playground//home/igor/Work/KDE/md4qt/README.md
+Initially parser was done by splitting text into blocks and these blocks go for
+processing. I did it so and for performance reason this is a mistake, as canonical
+Markdown parser should get character by character from the input string, next by next
+with making a decision what it can be and doing a parsing. With canonical approach
+performance can be a division by two of \c {md4qt} result, as a minimum. Ok, mistake is done,
+a lot of things is done... But API of \c {md4qt} I find a user-friendly, with exception of
+text plugins writing, there a developer can find a process a little complicated.
+Who knows... I guess for desktop applications performance of \c {md4qt} is enough,
+you can look at \l {#Playground//home/igor/Work/Projects/md4qt/README.md} {Playground} and
+\l {#Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md} {Why another AST Markdown parser?}
+sections for more information.
+
+\target #Playground//home/igor/Work/Projects/md4qt/README.md
 \section1 Playground
 
 You can play in action with \c {md4qt} in \l {https://github.com/igormironchik/markdown-tools} {Markdown Tools}. There you can find \c {Markdown} editor/viewer/converter to \c {PDF}.
 
 And \l {https://invent.kde.org/office/klevernotes} {KleverNotes} from \c {KDE} uses \c {md4qt} too.
 
-\target #Release-notes//home/igor/Work/KDE/md4qt/README.md
+\target #Release-notes//home/igor/Work/Projects/md4qt/README.md
 \section1 Release notes
 
 
@@ -138,14 +150,14 @@ And \l {https://invent.kde.org/office/klevernotes} {KleverNotes} from \c {KDE} u
         Markdown, so keep it in mind.
 \endlist
 
-\target #Known-issues//home/igor/Work/KDE/md4qt/README.md
+\target #Known-issues//home/igor/Work/Projects/md4qt/README.md
 \section1 Known issues
 
 You can find a list of know issues \l {md4qt-known_issues.md.html} {here}. These issues are controversial
 a little, so at this time they exists as is in \c {md4qt}. But if you'd like to see any of them
 resolved, welcome to discussion.
 
-\target #Why-another-AST-Markdown-parser//home/igor/Work/KDE/md4qt/README.md
+\target #Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md
 \section1 Why another AST Markdown parser?
 
 
@@ -175,7 +187,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-should-I-know-about-links-in-the-document//home/igor/Work/KDE/md4qt/README.md
+\target #What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/md4qt/README.md
 \section1 What should I know about links in the document?
 
 
@@ -200,7 +212,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-is-the-second-argument-of-MDParserparse//home/igor/Work/KDE/md4qt/README.md
+\target #What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/md4qt/README.md
 \section1 What is the second argument of \c {MD::Parser::parse()}?
 
 
@@ -211,7 +223,7 @@ resolved, welcome to discussion.
         then they will be parsed too and will exist in the resulting document.
 \endlist
 
-\target #What-is-an-MDAnchor//home/igor/Work/KDE/md4qt/README.md
+\target #What-is-an-MDAnchor//home/igor/Work/Projects/md4qt/README.md
 \section1 What is an \c {MD::Anchor}?
 
 
@@ -222,7 +234,7 @@ resolved, welcome to discussion.
         the document you reached new file.
 \endlist
 
-\target #Does-the-library-throw-exceptions//home/igor/Work/KDE/md4qt/README.md
+\target #Does-the-library-throw-exceptions//home/igor/Work/Projects/md4qt/README.md
 \section1 Does the library throw exceptions?
 
 
@@ -233,7 +245,7 @@ resolved, welcome to discussion.
         example.
 \endlist
 
-\target #Why-MDParser-and-MDDocument-are-templates//home/igor/Work/KDE/md4qt/README.md
+\target #Why-MDParser-and-MDDocument-are-templates//home/igor/Work/Projects/md4qt/README.md
 \section1 Why \c {MD::Parser} and \c {MD::Document} are templates?
 
 
@@ -250,7 +262,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/KDE/md4qt/README.md
+\target #So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/Projects/md4qt/README.md
 \section1 So, how can I use \c {md4qt} with \c {Qt6}?
 
 
@@ -261,7 +273,7 @@ resolved, welcome to discussion.
         receive \c {Qt6}.
 \endlist
 
-\target #Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/KDE/md4qt/README.md
+\target #Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/md4qt/README.md
 \section1 Why is parsing wrong on Windows with \c {std::ifstream}?
 
 
@@ -271,7 +283,7 @@ resolved, welcome to discussion.
         flag. And yes, I expect to receive UTF-8 encoded content...
 \endlist
 
-\target #How-can-I-convert-MDDocument-into-HTML//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I convert \c {MD::Document} into \c {HTML}?
 
 
@@ -300,7 +312,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I obtain positions of blocks/elements in \c {Markdown} file?
 
 
@@ -311,7 +323,7 @@ resolved, welcome to discussion.
         of any element will point to the last symbol in this element.
 \endlist
 
-\target #How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I easily traverse through the \c {MD::Document}?
 
 
@@ -332,7 +344,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/KDE/md4qt/README.md
+\target #Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/Projects/md4qt/README.md
 \section1 Is it possible to write custom text plugin for this parser?
 
 
@@ -362,7 +374,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-is-a-ID-of-a-plugin//home/igor/Work/KDE/md4qt/README.md
+\target #What-is-a-ID-of-a-plugin//home/igor/Work/Projects/md4qt/README.md
 \section1 What is a \c {ID} of a plugin?
 
 
@@ -395,7 +407,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-is-a-MDTextPluginFuncTrait//home/igor/Work/KDE/md4qt/README.md
+\target #What-is-a-MDTextPluginFuncTrait//home/igor/Work/Projects/md4qt/README.md
 \section1 What is a \c {MD::TextPluginFunc<Trait>}?
 
 
@@ -484,7 +496,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-is-processInLinks-flag-for//home/igor/Work/KDE/md4qt/README.md
+\target #What-is-processInLinks-flag-for//home/igor/Work/Projects/md4qt/README.md
 \section1 What is \c {processInLinks} flag for?
 
 
@@ -495,7 +507,7 @@ resolved, welcome to discussion.
         for your plugin.
 \endlist
 
-\target #What-for-is-a-userData-argument//home/igor/Work/KDE/md4qt/README.md
+\target #What-for-is-a-userData-argument//home/igor/Work/Projects/md4qt/README.md
 \section1 What for is a \c {userData} argument?
 
 
@@ -504,7 +516,7 @@ resolved, welcome to discussion.
         that can be handy for plugin implementation.
 \endlist
 
-\target #Could-you-show-an-example-of-a-plugin//home/igor/Work/KDE/md4qt/README.md
+\target #Could-you-show-an-example-of-a-plugin//home/igor/Work/Projects/md4qt/README.md
 \section1 Could you show an example of a plugin?
 
 
@@ -548,7 +560,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/KDE/md4qt/README.md
+\target #I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/Projects/md4qt/README.md
 \section1 I didn't understand how raw text data correlates with a paragraph.
 
 
@@ -568,7 +580,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I get a string of \c {MD::StyleDelim}?
 
 
@@ -614,7 +626,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/KDE/md4qt/README.md
+\target #Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/md4qt/README.md
 \section1 Is it possible to find \c {Markdown} item by its position?
 
 
@@ -624,7 +636,7 @@ resolved, welcome to discussion.
         nested first children by given position with \c {MD::PosCache::findFirstInCache()} method.
 \endlist
 
-\target #How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I walk through the document and find all items of given type?
 
 
@@ -656,7 +668,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/KDE/md4qt/README.md
+\target #How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/md4qt/README.md
 \section1 How can I add and process a custom (user-defined) item in \c {MD::Document}?
 
 
@@ -668,7 +680,7 @@ resolved, welcome to discussion.
         So you can handle your custom items and do what you need.
 \endlist
 
-\target #Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/KDE/md4qt/README.md
+\target #Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/Projects/md4qt/README.md
 \section1 Why writing plugin for new emphasis is not so trivial?
 
 
@@ -690,7 +702,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/KDE/md4qt/README.md
+\target #You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/Projects/md4qt/README.md
 \section1 You have API for text plugins, but where is for blocks?
 
 
