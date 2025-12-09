@@ -1,19 +1,21 @@
-
 /*
-    SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+    SPDX-FileCopyrightText: 2025 Igor Mironchik <igor.mironchik@gmail.com>
     SPDX-License-Identifier: MIT
 */
 
-#define MD4QT_QT_SUPPORT
-#include <md4qt/doc.h>
-#include <md4qt/html.h>
-#include <md4qt/parser.h>
-#include <md4qt/poscache.h>
+// md4qt include.
+#include <src/doc.h>
+#include <src/gfm_autolink_parser.h>
+#include <src/html.h>
+#include <src/parser.h>
+#include <src/poscache.h>
 
+// QT include.
 #include <QFile>
 #include <QObject>
 #include <QTest>
 
+// cmark-gfm include.
 #include <cmark-gfm-core-extensions.h>
 #include <cmark-gfm.h>
 #include <registry.h>
@@ -25,7 +27,7 @@ class MdBenchmark : public QObject
 private Q_SLOTS:
     void initTestCase()
     {
-        m_qtFileName = MD::QStringTrait::latin1ToString("tests/manual/complex.md");
+        m_qtFileName = QStringLiteral("tests/manual/complex.md");
         m_qtWd = QDir().absolutePath();
 
         QFile file(m_qtFileName);
@@ -41,17 +43,17 @@ private Q_SLOTS:
     void md4qt_with_qt6()
     {
         QBENCHMARK {
-            MD::Parser<MD::QStringTrait> parser;
+            MD::Parser parser;
 
             QTextStream stream(m_qtData);
 
-            parser.parse(stream, m_qtWd, m_qtFileName, false);
+            parser.parse(stream, m_qtWd, m_qtFileName);
         }
     }
 
     void md4qt_to_html()
     {
-        MD::Parser<MD::QStringTrait> parser;
+        MD::Parser parser;
 
         const auto doc = parser.parse(QStringLiteral("tests/manual/complex.md"), false);
 
@@ -62,25 +64,30 @@ private Q_SLOTS:
 
     void md4qt_poscache_walk()
     {
-        MD::Parser<MD::QStringTrait> parser;
+        MD::Parser parser;
 
         const auto doc = parser.parse(QStringLiteral("tests/manual/complex.md"), false);
 
         QBENCHMARK {
-            MD::PosCache<MD::QStringTrait> cache;
+            MD::PosCache cache;
             cache.initialize(doc);
         }
     }
 
     void md4qt_with_qt6_without_autolinks()
     {
+        auto inlines = MD::Parser::makeDefaultInlineParsersPipeline();
+        inlines.removeIf([](const auto &i) {
+            return dynamic_cast<MD::GfmAutolinkParser *>(i.get());
+        });
+
         QBENCHMARK {
-            MD::Parser<MD::QStringTrait> parser;
-            parser.removeTextPlugin(MD::TextPlugin::GitHubAutoLink);
+            MD::Parser parser;
+            parser.setInlineParsers(inlines);
 
             QTextStream stream(m_qtData);
 
-            parser.parse(stream, m_qtWd, m_qtFileName, false);
+            parser.parse(stream, m_qtWd, m_qtFileName);
         }
     }
 

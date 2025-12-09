@@ -4,9 +4,8 @@
 */
 
 // md4qt include.
-#define MD4QT_QT_SUPPORT
-#include <md4qt/html.h>
-#include <md4qt/parser.h>
+#include "html.h"
+#include "parser.h"
 
 // Qt include.
 #include <QCommandLineOption>
@@ -48,7 +47,7 @@ int main(int argc,
 
     if (mdFileInfo.exists()) {
         if (mdFileInfo.suffix() == QStringLiteral("md") || mdFileInfo.suffix() == QStringLiteral("markdown")) {
-            MD::Parser<MD::QStringTrait> parser;
+            MD::Parser parser;
 
             const auto doc = parser.parse(markdownFileName, recursive);
 

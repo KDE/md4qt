@@ -37,4 +37,4 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../manual/complex.md
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../../bin/tests/manual)
 
 target_link_libraries(md_benchmark libcmark-gfm-extensions_static
-    libcmark-gfm_static Qt::Test Qt::Core)
+    libcmark-gfm_static md4qt::md4qt Qt::Test Qt::Core)

@@ -1,56 +1,40 @@
-\c {md4qt} is a header-only C++ library for parsing Markdown.
+\c {md4qt} is a static C++ library for parsing Markdown.
 
 \c {md4qt} supports CommonMark 0.31.2 Spec, and some GitHub extensions, such as
 tables, footnotes, tasks lists, strikethroughs, LaTeX Maths injections, GitHub's auto-links.
-
-\c {md4qt} can be built with Qt6 or you can implement your own custom traits for other libraries.
 
 This library parses Markdown into tree structure.
 
 
 \list
-    \li \l {#Example//home/igor/Work/Projects/md4qt/README.md} {Example}
-    \li \l {#License//home/igor/Work/Projects/md4qt/README.md} {License}
-    \li \l {#Benchmark//home/igor/Work/Projects/md4qt/README.md} {Benchmark}
-    \li \l {#Playground//home/igor/Work/Projects/md4qt/README.md} {Playground}
-    \li \l {#Release-notes//home/igor/Work/Projects/md4qt/README.md} {Release notes}
-    \li \l {#Known-issues//home/igor/Work/Projects/md4qt/README.md} {Known issues}
-    \li \l {#Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md} {Why another AST Markdown parser?}
-    \li \l {#What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/md4qt/README.md} {What should I know about links in the document?}
-    \li \l {#What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/md4qt/README.md} {What is the second argument of \c {MD::Parser::parse()}?}
-    \li \l {#What-is-an-MDAnchor//home/igor/Work/Projects/md4qt/README.md} {What is an \c {MD::Anchor}?}
-    \li \l {#Does-the-library-throw-exceptions//home/igor/Work/Projects/md4qt/README.md} {Does the library throw exceptions?}
-    \li \l {#Why-MDParser-and-MDDocument-are-templates//home/igor/Work/Projects/md4qt/README.md} {Why \c {MD::Parser} and \c {MD::Document} are templates?}
-    \li \l {#So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/Projects/md4qt/README.md} {So, how can I use \c {md4qt} with \c {Qt6}?}
-    \li \l {#Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/md4qt/README.md} {Why is parsing wrong on Windows with \c {std::ifstream}?}
-    \li \l {#How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/md4qt/README.md} {How can I convert \c {MD::Document} into \c {HTML}?}
-    \li \l {#How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/md4qt/README.md} {How can I obtain positions of blocks/elements in \c {Markdown} file?}
-    \li \l {#How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/md4qt/README.md} {How can I easily traverse through the \c {MD::Document}?}
-    \li \l {#Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/Projects/md4qt/README.md} {Is it possible to write custom text plugin for this parser?}
-    \li \l {#What-is-a-ID-of-a-plugin//home/igor/Work/Projects/md4qt/README.md} {What is a \c {ID} of a plugin?}
-    \li \l {#What-is-a-MDTextPluginFuncTrait//home/igor/Work/Projects/md4qt/README.md} {What is a \c {MD::TextPluginFunc<Trait>}?}
-    \li \l {#What-is-processInLinks-flag-for//home/igor/Work/Projects/md4qt/README.md} {What is \c {processInLinks} flag for?}
-    \li \l {#What-for-is-a-userData-argument//home/igor/Work/Projects/md4qt/README.md} {What for is a \c {userData} argument?}
-    \li \l {#Could-you-show-an-example-of-a-plugin//home/igor/Work/Projects/md4qt/README.md} {Could you show an example of a plugin?}
-    \li \l {#I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/Projects/md4qt/README.md} {I didn't understand how raw text data correlates with a paragraph.}
-    \li \l {#How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/Projects/md4qt/README.md} {How can I get a string of \c {MD::StyleDelim}?}
-    \li \l {#Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/md4qt/README.md} {Is it possible to find \c {Markdown} item by its position?}
-    \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/md4qt/README.md} {How can I walk through the document and find all items of given type?}
-    \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/md4qt/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
-    \li \l {#Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/Projects/md4qt/README.md} {Why writing plugin for new emphasis is not so trivial?}
-    \li \l {#You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/Projects/md4qt/README.md} {You have API for text plugins, but where is for blocks?}
+    \li \l {#Example//home/igor/Work/Projects/next/README.md} {Example}
+    \li \l {#License//home/igor/Work/Projects/next/README.md} {License}
+    \li \l {#Benchmark//home/igor/Work/Projects/next/README.md} {Benchmark}
+    \li \l {#Playground//home/igor/Work/Projects/next/README.md} {Playground}
+    \li \l {#Release-notes//home/igor/Work/Projects/next/README.md} {Release notes}
+    \li \l {#Known-issues//home/igor/Work/Projects/next/README.md} {Known issues}
+    \li \l {#What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/next/README.md} {What should I know about links in the document?}
+    \li \l {#What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/next/README.md} {What is the second argument of \c {MD::Parser::parse()}?}
+    \li \l {#What-is-an-MDAnchor//home/igor/Work/Projects/next/README.md} {What is an \c {MD::Anchor}?}
+    \li \l {#Does-the-library-throw-exceptions//home/igor/Work/Projects/next/README.md} {Does the library throw exceptions?}
+    \li \l {#Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/next/README.md} {Why is parsing wrong on Windows with \c {std::ifstream}?}
+    \li \l {#How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/next/README.md} {How can I convert \c {MD::Document} into \c {HTML}?}
+    \li \l {#How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/next/README.md} {How can I obtain positions of blocks/elements in \c {Markdown} file?}
+    \li \l {#How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/next/README.md} {How can I easily traverse through the \c {MD::Document}?}
+    \li \l {#Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/next/README.md} {Is it possible to find \c {Markdown} item by its position?}
+    \li \l {#How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/next/README.md} {How can I walk through the document and find all items of given type?}
+    \li \l {#How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/next/README.md} {How can I add and process a custom (user-defined) item in \c {MD::Document}?}
 \endlist
 
-\target #Example//home/igor/Work/Projects/md4qt/README.md
+\target #Example//home/igor/Work/Projects/next/README.md
 \section1 Example
 
 \code /
-#define MD4QT_QT_SUPPORT
 #include <md4qt\1parser.hpp>
 
 int main()
 {
-    MD::Parser<MD::QStringTrait> p;
+    MD::Parser p;
 
     auto doc = p.parse(QStringLiteral("your_markdown.md"));
 
@@ -59,7 +43,7 @@ int main()
         {
         case MD::ItemType::Anchor :
         {
-            auto a = static_cast<MD::Anchor<MD::QStringTrait>*> (it->get());
+            auto a = static_cast<MD::Anchor *> (it->get());
             qDebug() << a->label();
         }
             break;
@@ -73,21 +57,21 @@ int main()
 }
 \endcode
 
-\target #License//home/igor/Work/Projects/md4qt/README.md
+\target #License//home/igor/Work/Projects/next/README.md
 \section1 License
 
 \code /
 \1*
-    SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+    SPDX-FileCopyrightText: 2025 Igor Mironchik <igor.mironchik@gmail.com>
     SPDX-License-Identifier: MIT
 *\1
 \endcode
 
-\target #Benchmark//home/igor/Work/Projects/md4qt/README.md
+\target #Benchmark//home/igor/Work/Projects/next/README.md
 \section1 Benchmark
 
 Approximate benchmark with \l {https://github.com/github/cmark-gfm} {cmark-gfm} says,
-that Qt6 version of \c {md4qt} is slower ~10 times.
+that Qt6 version of \c {md4qt} is slower ~8 times.
 But you will get complete C++ tree structure of the Markdown document with all
 major extensions and sugar and cherry on the cake.
 
@@ -104,90 +88,48 @@ major extensions and sugar and cherry on the cake.
 
         \li \l {https://github.com/github/cmark-gfm} {cmark-gfm}
 
-        \li ~0.2 ms
+        \li ~0.22 ms
 
     \row
 
         \li \c {md4qt} with \c {Qt6}
 
-        \li ~2.2 ms
+        \li ~1.7 ms
 
     \row
 
         \li \c {md4qt} with \c {Qt6} without \c {GitHub} auto-links extension
 
-        \li ~1.9 ms
+        \li ~1.2 ms
 
 \endtable
 
-Initially parser was done by splitting text into blocks and these blocks go for
-processing. I did it so and for performance reason this is a mistake, as canonical
-Markdown parser should get character by character from the input string, next by next
-with making a decision what it can be and doing a parsing. With canonical approach
-performance can be a division by two of \c {md4qt} result, as a minimum. Ok, mistake is done,
-a lot of things is done... But API of \c {md4qt} I find a user-friendly, with exception of
-text plugins writing, there a developer can find a process a little complicated.
-Who knows... I guess for desktop applications performance of \c {md4qt} is enough,
-you can look at \l {#Playground//home/igor/Work/Projects/md4qt/README.md} {Playground} and
-\l {#Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md} {Why another AST Markdown parser?}
-sections for more information.
-
-\target #Playground//home/igor/Work/Projects/md4qt/README.md
+\target #Playground//home/igor/Work/Projects/next/README.md
 \section1 Playground
 
 You can play in action with \c {md4qt} in \l {https://github.com/igormironchik/markdown-tools} {Markdown Tools}. There you can find \c {Markdown} editor/viewer/converter to \c {PDF}.
 
 And \l {https://invent.kde.org/office/klevernotes} {KleverNotes} from \c {KDE} uses \c {md4qt} too.
 
-\target #Release-notes//home/igor/Work/Projects/md4qt/README.md
+\target #Release-notes//home/igor/Work/Projects/next/README.md
 \section1 Release notes
 
 
 \list
+    \li Notes that version \b{5.0.0} is API incompatible with \b{4.x.x}. Version \b{5.0.0} was
+    \li fully refactored for better performance and be more user-friendly.
     \li Note that version \b{4.0.0} is API incompatible with \b{3.0.0}. In version \b{4.0.0} were
         changed rules with spaces, this version fully supports CommonMark standard in this question.
         Methods \c {isSpaceBefore()}, \c {isSpaceAfter()} were removed, and spaces are presented as in
         Markdown, so keep it in mind.
 \endlist
 
-\target #Known-issues//home/igor/Work/Projects/md4qt/README.md
+\target #Known-issues//home/igor/Work/Projects/next/README.md
 \section1 Known issues
 
-You can find a list of know issues \l {md4qt-known_issues.md.html} {here}. These issues are controversial
-a little, so at this time they exists as is in \c {md4qt}. But if you'd like to see any of them
-resolved, welcome to discussion.
+You can find a list of know issues \l {md4qt-known_issues.md.html} {here}.
 
-\target #Why-another-AST-Markdown-parser//home/igor/Work/Projects/md4qt/README.md
-\section1 Why another AST Markdown parser?
-
-
-\list
-    \li When I wrote this library I knew about \c {md4c} parser, but not about \c {cmark-gfm}.
-        \c {md4c} was not suitable for my purposes, whereas \c {cmark-gfm} could do
-        everything I needed. But God did it so, so I wrote \c {md4qt} and only later
-        knew about \c {cmark-gfm}. Ok, code is written and tested. Let it be.
-
-        What I can say yet, is that this library is C++. And for some people can be
-        easier to use C++ code instead of C with freeing memory by hand. Qt do things
-        easier by handling text encoding... So let it be, guys.
-
-        And one more cherry on the cake - \c {md4qt} can parse Markdown recursively.
-        What it is described below.
-
-        If you need simple converter into \c {HTML}, possibly you will find other libraries are
-        better for you. But if you need to do Markdown syntax highlighting, some complex things
-        during editing of Markdown, like checking for Markdown element by its position, some
-        clever things... Possibly you will find API of \c {md4qt} much more better. Guys, use
-        what you like, but don't cry if something can not be done in a library you used :)
-        I don't want to say that everything is possible in \c {md4qt}, but this library is
-        supported. For better support, please, write direct email to
-        \l {mailto:igor.mironchik@gmail.com} {mailto:igor.mironchik@gmail.com}, issues on \l {https://invent.kde.org} {https://invent.kde.org} can be missed by me for a long time,
-        as \l {https://invent.kde.org} {https://invent.kde.org} don't send notifications to me... Sorry :(
-
-
-\endlist
-
-\target #What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/md4qt/README.md
+\target #What-should-I-know-about-links-in-the-document//home/igor/Work/Projects/next/README.md
 \section1 What should I know about links in the document?
 
 
@@ -198,7 +140,7 @@ resolved, welcome to discussion.
         labelled links, look:
 
         \code /
-        MD::Link<MD::QStringTrait> *item = ...;
+        MD::Link *item = ...;
         
         QString url = item->url();
         
@@ -212,7 +154,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/md4qt/README.md
+\target #What-is-the-second-argument-of-MDParserparse//home/igor/Work/Projects/next/README.md
 \section1 What is the second argument of \c {MD::Parser::parse()}?
 
 
@@ -223,7 +165,7 @@ resolved, welcome to discussion.
         then they will be parsed too and will exist in the resulting document.
 \endlist
 
-\target #What-is-an-MDAnchor//home/igor/Work/Projects/md4qt/README.md
+\target #What-is-an-MDAnchor//home/igor/Work/Projects/next/README.md
 \section1 What is an \c {MD::Anchor}?
 
 
@@ -234,7 +176,7 @@ resolved, welcome to discussion.
         the document you reached new file.
 \endlist
 
-\target #Does-the-library-throw-exceptions//home/igor/Work/Projects/md4qt/README.md
+\target #Does-the-library-throw-exceptions//home/igor/Work/Projects/next/README.md
 \section1 Does the library throw exceptions?
 
 
@@ -245,35 +187,7 @@ resolved, welcome to discussion.
         example.
 \endlist
 
-\target #Why-MDParser-and-MDDocument-are-templates//home/igor/Work/Projects/md4qt/README.md
-\section1 Why \c {MD::Parser} and \c {MD::Document} are templates?
-
-
-\list
-    \li Since version \c {2.0.0} \c {md4qt} can be built not only with \c {Qt6}, but with
-        \c {STL} too. The code of the parser is the same in both cases. I just added two
-        ready traits to support different C++ worlds. With \c {STL} I use \c {ICU} library
-        for Unicode handling, and \c {uriparser} library to parse and check URLs.
-        These dependencies can be installed with the Conan package manager.
-
-        Since version \c {4.2.0} \c {ICU} support was dropped. This version uses string views,
-        that \c {ICU} doesn't support.
-
-
-\endlist
-
-\target #So-how-can-I-use-md4qt-with-Qt6//home/igor/Work/Projects/md4qt/README.md
-\section1 So, how can I use \c {md4qt} with \c {Qt6}?
-
-
-\list
-    \li To build with \c {Qt6} support you need to define \c {MD4QT_QT_SUPPORT}.
-        In this case you will get access to \c {MD::QStringTrait} to work with
-        Qt's classes and functions. In this case in dependencies you will
-        receive \c {Qt6}.
-\endlist
-
-\target #Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/md4qt/README.md
+\target #Why-is-parsing-wrong-on-Windows-with-stdifstream//home/igor/Work/Projects/next/README.md
 \section1 Why is parsing wrong on Windows with \c {std::ifstream}?
 
 
@@ -283,7 +197,7 @@ resolved, welcome to discussion.
         flag. And yes, I expect to receive UTF-8 encoded content...
 \endlist
 
-\target #How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/md4qt/README.md
+\target #How-can-I-convert-MDDocument-into-HTML//home/igor/Work/Projects/next/README.md
 \section1 How can I convert \c {MD::Document} into \c {HTML}?
 
 
@@ -293,13 +207,12 @@ resolved, welcome to discussion.
 
         \code /
         #define MD4QT_QT_SUPPORT
-        #include <md4qt\1traits.h>
         #include <md4qt\1parser.h>
         #include <md4qt\1html.h>
         
         int main()
         {
-            MD::Parser<MD::QStringTrait> p;
+            MD::Parse p;
         
             auto doc = p.parse(QStringLiteral("your_markdown.md"));
         
@@ -312,7 +225,7 @@ resolved, welcome to discussion.
 
 \endlist
 
-\target #How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/md4qt/README.md
+\target #How-can-I-obtain-positions-of-blockselements-in-Markdown-file//home/igor/Work/Projects/next/README.md
 \section1 How can I obtain positions of blocks/elements in \c {Markdown} file?
 
 
@@ -323,7 +236,7 @@ resolved, welcome to discussion.
         of any element will point to the last symbol in this element.
 \endlist
 
-\target #How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/md4qt/README.md
+\target #How-can-I-easily-traverse-through-the-MDDocument//home/igor/Work/Projects/next/README.md
 \section1 How can I easily traverse through the \c {MD::Document}?
 
 
@@ -338,295 +251,13 @@ resolved, welcome to discussion.
          *
          * \a h Heading.
          *\1
-        virtual void onHeading(Heading<Trait> *h) = 0;
+        virtual void onHeading(Heading *h) = 0;
         \endcode
 
 
 \endlist
 
-\target #Is-it-possible-to-write-custom-text-plugin-for-this-parser//home/igor/Work/Projects/md4qt/README.md
-\section1 Is it possible to write custom text plugin for this parser?
-
-
-\list
-    \li Since version \c {3.0.0} in the \c {MD::Parser} was added a method for adding custom
-        text plugins.
-
-        \code /
-        \1*!
-         * Add text plugin.
-         *
-         * \a id ID of a plugin. Use TextPlugin::UserDefinedPluginID value for start ID.
-         *
-         * \a plugin Function of a plugin, that will be invoked to processs raw text.
-         *
-         * \a processInLinks Should this plugin be used in parsing of internals of links?
-         *
-         * \a userData User data that will be passed to plugin function.
-         *\1
-        void
-        addTextPlugin(int id,
-                      TextPluginFunc<Trait> plugin,
-                      bool processInLinks,
-                      const typename Trait::StringList &userData);
-        \endcode
-
-
-\endlist
-
-\target #What-is-a-ID-of-a-plugin//home/igor/Work/Projects/md4qt/README.md
-\section1 What is a \c {ID} of a plugin?
-
-
-\list
-    \li \c {ID} of a plugin is a regular \c {int} that should be (but not mandatory) started from
-
-        \code /
-        \1*!
-         * \enum MD::TextPlugin
-         * \inmodule md4qt
-         * \inheaderfile md4qt\1parser.h
-         *
-         * \brief ID of text plugin.
-         *
-         * \value UnknownPluginID Unknown plugin.
-         * \value GitHubAutoLinkPluginID GitHub's autolinks plugin.
-         * \value UserDefinedPluginID First user defined plugin ID.
-         *\1
-        enum TextPlugin : int {
-            UnknownPluginID = 0,
-            GitHubAutoLinkPluginID = 1,
-            UserDefinedPluginID = 255
-        }; \1\1 enum TextPlugin
-        \endcode
-
-        \c {MD::UserDefinedPluginID} value. Note that plugins will be invoked corresponding
-        to its \c {ID} from smallest to largest, so a developer can handle an order of text
-        plugins.
-
-
-\endlist
-
-\target #What-is-a-MDTextPluginFuncTrait//home/igor/Work/Projects/md4qt/README.md
-\section1 What is a \c {MD::TextPluginFunc<Trait>}?
-
-
-\list
-    \li Text plugin is a usual function with a signature
-
-        \code /
-        \1*!
-         * \typealias MD::TextPluginFunc
-         * \inmodule md4qt
-         * \inheaderfile md4qt\1parser.h
-         *
-         * \brief Functor type for text plugin.
-         *\1
-        template<class Trait>
-        using TextPluginFunc = std::function<void(std::shared_ptr<Paragraph<Trait>>,
-                                                  TextParsingOpts<Trait> &,
-                                                  const typename Trait::StringList &)>;
-        \endcode
-
-        You will get already parsed \c {MD::Paragraph} with all items in it. And you are
-        able to process remaining raw text data and check it for what you need.
-
-        \c {MD::TextParsingOpts} is an auxiliary structure with some data. You are interested
-        in \c {bool collectRefLinks;}, when this flag is \c {true} the parser is in a state of
-        collecting reference links, and on this stage plugin may do nothing.
-
-        A last argument of plugin function is a user data, that was passed to
-        \c {MD::Parser::addTextPlugin()} method.
-
-        A most important thing in \c {MD::TextParsingOpts} structure is a
-        \c {std::vector<TextData> m_rawTextData;}. This vector contains not processed raw
-        text data from \c {Markdown}. The size of \c {m_rawTextData} is the same as a count of
-        \c {MD::Text} items in \c {MD::Paragraph}, and theirs sizes should remain equal. So, if you replace
-        one of text item with something, for example link, corresponding text item
-        should be removed from \c {MD::Paragraph} and \c {m_rawTextData}. Or if you replace just
-        a part of text item - it should be modified in \c {MD::Paragraph} and \c {m_rawTextData}.
-        Be careful, it's UB, if you will make a mistake here, possibly you will crash.
-
-        One more thing - don't forget to set positions of elements in \c {MD::Document} to new
-        values if you change something, and don't forget about such things like
-        \c {MD::ItemWithOpts::openStyles()} and \c {MD::ItemWithOpts::closeStyles()}. Document should
-        remain correct after your manipulations, so any syntax highlighter, for example,
-        won't do a mistake.
-
-        Note, that \c {MD::TextData} is
-
-        \code /
-        \1*!
-         * \class MD::TextParsingOpts::TextData
-         * \inmodule md4qt
-         * \inheaderfile md4qt\1parser.h
-         *
-         * \brief Raw text data.
-         *
-         * Raw text data for corresponding text item in paragraph. Here text is not pre-processed
-         * with anything.
-         *\1
-        struct TextData {
-            \1*!
-             * String.
-             *\1
-            typename Trait::String m_str;
-            \1*!
-             * Local start position of string.
-             *\1
-            long long int m_pos = -1;
-            \1*!
-             * Local line number.
-             *\1
-            long long int m_line = -1;
-        };
-        \endcode
-
-        And \c {m_pos} and \c {m_line} here is relative to \c {MD::MdBlock<Trait> & fr;} member of
-        \c {MD::TextParsingOpts}, but document require absolute positions in the \c {Markdown}
-        text. So when you will set positions to new items, use, for example, a following
-        code.
-
-        \code /
-        setEndColumn(po.fr.data.at(s.line).first.virginPos(s.pos));
-        \endcode
-
-        where \c {s} is an object of \c {MD::TextData} type.
-
-
-\endlist
-
-\target #What-is-processInLinks-flag-for//home/igor/Work/Projects/md4qt/README.md
-\section1 What is \c {processInLinks} flag for?
-
-
-\list
-    \li \c {processInLinks} flag should be set to false if you desire to not process your
-        plugin in link's captions, as, for example, links can't contain other links, so
-        if you are implementing a plugin for new links this flag should be set to \c {false}
-        for your plugin.
-\endlist
-
-\target #What-for-is-a-userData-argument//home/igor/Work/Projects/md4qt/README.md
-\section1 What for is a \c {userData} argument?
-
-
-\list
-    \li This list of strings will be passed to plugin function. This is auxiliary data
-        that can be handy for plugin implementation.
-\endlist
-
-\target #Could-you-show-an-example-of-a-plugin//home/igor/Work/Projects/md4qt/README.md
-\section1 Could you show an example of a plugin?
-
-
-\list
-    \li In \c {md4qt} already exists one text plugin for handling GitHub's auto-link. A
-        plugin function is quite simple, look.
-
-        \code /
-        \1*!
-         * \inheaderfile md4qt\1parser.h
-         *
-         * GitHub autolinks plugin.
-         *
-         * \a p Paragraph.
-         *
-         * \a po Text parsing options.
-         *\1
-        template<class Trait>
-        inline void
-        githubAutolinkPlugin(std::shared_ptr<Paragraph<Trait>> p,
-                             TextParsingOpts<Trait> &po,
-                             const typename Trait::StringList &)
-        {
-            if (!po.m_collectRefLinks) {
-                long long int i = 0;
-        
-                while (i >= 0 && i < (long long int)po.m_rawTextData.size()) {
-                    i = processGitHubAutolinkExtension(p, po, i);
-        
-                    ++i;
-                }
-            }
-        }
-        \endcode
-
-        But \c {MD::processGitHubAutolinkExtension()} is not so trivial :) Have a look
-        at its implementation to have a good example, it's placed in \c {parser.h}.
-
-        Good luck with plugining. :)
-
-
-\endlist
-
-\target #I-didnt-understand-how-raw-text-data-correlates-with-a-paragraph//home/igor/Work/Projects/md4qt/README.md
-\section1 I didn't understand how raw text data correlates with a paragraph.
-
-
-\list
-    \li Let I will show you on example how raw text data correlate with paragraph. Just two
-        diagrams and you won't have any more questions. Look.
-
-        Consider we want to replace any occurrence of \c {@X} by some kind of a link. Before
-        modifications we had.
-
-        \image ./docs/pics/paragraph_before.svg
-
-        And after work of your plugin we should have.
-
-        \image ./docs/pics/paragraph_after.svg
-
-
-\endlist
-
-\target #How-can-I-get-a-string-of-MDStyleDelim//home/igor/Work/Projects/md4qt/README.md
-\section1 How can I get a string of \c {MD::StyleDelim}?
-
-
-\list
-    \li Since version \c {3.0.0} was added a function to get a substring from text fragment with given
-        virgin positions.
-
-        \code /
-        \1*!
-         * \inheaderfile md4qt\1parser.h
-         *
-         * Returns substring from fragment with given virgin positions.
-         *
-         * \a fr Text fragment (list of lines).
-         *
-         * \a virginPos Virgin coordinates of text in fragment.
-         *\1
-        template<class Trait>
-        inline typename Trait::String
-        virginSubstr(const MdBlock<Trait> &fr, const WithPosition &virginPos);
-        \endcode
-
-        And a function to get local position from virgin one.
-
-        \code /
-        \1*!
-         * \inheaderfile md4qt\1parser.h
-         *
-         * Returns local position ( { column, line } ) in fragment for given virgin position if exists.
-         * Returns { -1, -1 } if there is no given position.
-         *
-         * \a fr Text fragment (list of lines).
-         *
-         * \a virginColumn Virgin position of character.
-         *
-         * \a virginLine Virgin line number.
-         *\1
-        template<class Trait>
-        inline std::pair<long long int, long long int>
-        localPosFromVirgin(const MdBlock<Trait> &fr, long long int virginColumn, long long int virginLine);
-        \endcode
-
-
-\endlist
-
-\target #Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/md4qt/README.md
+\target #Is-it-possible-to-find-Markdown-item-by-its-position//home/igor/Work/Projects/next/README.md
 \section1 Is it possible to find \c {Markdown} item by its position?
 
 
@@ -636,7 +267,7 @@ resolved, welcome to discussion.
         nested first children by given position with \c {MD::PosCache::findFirstInCache()} method.
 \endlist
 
-\target #How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/md4qt/README.md
+\target #How-can-I-walk-through-the-document-and-find-all-items-of-given-type//home/igor/Work/Projects/next/README.md
 \section1 How can I walk through the document and find all items of given type?
 
 
@@ -657,18 +288,17 @@ resolved, welcome to discussion.
          *
          * \a maxNestingLevel Maximun nesting level. 0 means infinity, 1 - only top level items...
          *\1
-        template<class Trait>
         inline void forEach(
-            const typename Trait::template Vector<ItemType> &types,
-            std::shared_ptr<Document<Trait>> doc,
-            ItemFunctor<Trait> func,
+            const QVector<ItemType> &types,
+            QSharedPointer<Document> doc,
+            ItemFunctor func,
             unsigned int maxNestingLevel = 0);
         \endcode
 
 
 \endlist
 
-\target #How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/md4qt/README.md
+\target #How-can-I-add-and-process-a-custom-user-defined-item-in-MDDocument//home/igor/Work/Projects/next/README.md
 \section1 How can I add and process a custom (user-defined) item in \c {MD::Document}?
 
 
@@ -676,50 +306,8 @@ resolved, welcome to discussion.
     \li Since version \c {3.0.0} in \c {MD::ItemType} enum appeared \c {MD::UserDefined} enumerator.
         So you can inherit from any \c {MD::Item} class and return from \c {type()} method
         value greater or equal \c {MD::ItemType::UserData}. To handle user-defined types of
-        items in \c {MD::Visitor} class now exists method \c {void onUserDefined(MD::Item<Trait> *item)}.
+        items in \c {MD::Visitor} class now exists method \c {void onUserDefined(MD::Item *item)}.
         So you can handle your custom items and do what you need.
-\endlist
-
-\target #Why-writing-plugin-for-new-emphasis-is-not-so-trivial//home/igor/Work/Projects/md4qt/README.md
-\section1 Why writing plugin for new emphasis is not so trivial?
-
-
-\list
-    \li This task is not very trivial, this is true. But it's not so hard, a developer just need
-        to be a little attentive. But I decided to simplify you the life a little, and in
-        version \c {4.3.0} has appeared new include file \c {md4qt/plugins.h} where is implemented a function.
-
-        \code /
-        template<class Trait>
-        inline void emphasisTemplatePlugin(std::shared_ptr<Paragraph<Trait>> p,
-                                           TextParsingOpts<Trait> &po,
-                                           const typename Trait::StringList &opts)
-        \endcode
-
-        Adding this function to \c {MD::Parser} allows to have new emphasises. Read the documentation
-        for further details.
-
-
-\endlist
-
-\target #You-have-API-for-text-plugins-but-where-is-for-blocks//home/igor/Work/Projects/md4qt/README.md
-\section1 You have API for text plugins, but where is for blocks?
-
-
-\list
-    \li Since version \c {4.4.0} in \c {md4qt} exists
-
-        \code /
-        template<class Trait>
-        class BlockPlugin;
-        \endcode
-
-        class to create a block plugin. And in \c {MD::Parser} exist new methods to add and
-        remove block plugins from parser. You can make block plugins since this version.
-        An example of ready one block plugin you can see in \c {md4qt/plugins.h} header file,
-        where is implemented \c {YAML} header plugin for Markdown.
-
-
 \endlist
 
 

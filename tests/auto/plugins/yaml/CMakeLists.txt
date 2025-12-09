@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2022-2025 Igor Mironchik <igor.mironchik@gmail.com>
+# SPDX-FileCopyrightText: 2025 Igor Mironchik <igor.mironchik@gmail.com>
 # SPDX-License-Identifier: MIT
 
 project(test.plugins.yaml)
@@ -19,25 +19,21 @@ file(GLOB MD_FILES data/*.md)
 file(COPY ${MD_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../../../../bin/tests/plugins/yaml/data)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../3rdparty)
 
 find_package(Qt6Core REQUIRED)
 find_package(Qt6Test REQUIRED)
 
 add_executable(test.plugins.yaml main.cpp)
-target_compile_definitions(test.plugins.yaml PUBLIC TRAIT=MD::QStringTrait)
-target_compile_definitions(test.plugins.yaml PUBLIC MD4QT_QT_SUPPORT)
-target_link_libraries(test.plugins.yaml Qt6::Core)
+target_link_libraries(test.plugins.yaml md4qt::md4qt Qt6::Core)
 
 add_test(NAME test.plugins.yaml
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../../../../bin/test.plugins.yaml
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../../bin)
 
 add_executable(test.plugins.yaml.bench bench.cpp)
-target_compile_definitions(test.plugins.yaml.bench PUBLIC TRAIT=MD::QStringTrait)
-target_compile_definitions(test.plugins.yaml.bench PUBLIC MD4QT_QT_SUPPORT)
-target_link_libraries(test.plugins.yaml.bench Qt6::Core Qt6::Test)
+target_link_libraries(test.plugins.yaml.bench md4qt::md4qt Qt6::Core Qt6::Test)
 
 add_test(NAME test.plugins.yaml.bench
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../../../../bin/test.plugins.yaml.bench
