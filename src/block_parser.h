@@ -27,10 +27,11 @@ class Parser;
  * \value Stop Means block was finished and next content should go for parsing of other block.
  * \value Continue Means this instance handles this line and parsing should give next lines to this block parser.
  * \value ContinueWithoutAppendingChildCtx Means this instance handles this line and parsing should gibe next lines
- *        to this block parser but child context should not be adder nor updated. \sa MD::ListParser for example of
- *        usage.
+ *        to this block parser but child context should not be adder nor updated.
+ *        \sa MD::ListParser.
  * \value Discard Used on the next lines after check method to break processing with this block and try to process
- *        with other blocks. Example of usage is \sa MD::TableParser.
+ *        with other blocks.
+ *        \sa MD::TableParser.
  */
 enum class BlockState {
     None = 0,
@@ -158,6 +159,14 @@ public:
 
     /*!
      * Return whether this kind of block may break a paragraph.
+     *
+     * \a line Line.
+     *
+     * \a stream Stream.
+     *
+     * \a doc Document.
+     *
+     * \a ctx Context.
      */
     virtual bool mayBreakParagraph(Line &line,
                                    TextStream &stream,
@@ -166,6 +175,14 @@ public:
 
     /*!
      * Returns whether this kind of block can be a lazy line.
+     *
+     * \a line Line.
+     *
+     * \a stream Stream.
+     *
+     * \a doc Document.
+     *
+     * \a ctx Context.
      */
     virtual bool canBeLazyLine(Line &line,
                                TextStream &stream,
@@ -202,6 +219,8 @@ public:
 
     /*!
      * Returns current block.
+     *
+     * \a ctx Context.
      */
     virtual QSharedPointer<Block> currentBlock(const Context &ctx) const;
 
