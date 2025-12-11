@@ -384,4 +384,7 @@ TEST_CASE("326")
     auto p = static_cast<MD::Paragraph *>(doc->items().at(1).get());
     REQUIRE(p->items().size() == 1);
     REQUIRE(p->items().at(0)->type() == MD::ItemType::Link);
+    auto l = static_cast<MD::Link *>(p->items().at(0).get());
+    REQUIRE(l->p()->items().size() == 1);
+    REQUIRE(l->p()->items().at(0)->type() == MD::ItemType::Image);
 }

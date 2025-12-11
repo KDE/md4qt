@@ -192,7 +192,7 @@ LinkImageParser::parseDescription(const State::Delim &startParagraphDelim,
         line = stream.readLine();
 
         if (stream.currentState() == endParagraphDelim.m_streamState) {
-            line = line.sliced(0, endParagraphDelim.m_lineState.m_pos);
+            line = line.sliced(0, endParagraphDelim.m_lineState.m_pos + 1);
             lines.insert(line.lineNumber(), line);
             endLine = line.lineNumber();
             paragraph->setEndColumn(line.length() - 1);
@@ -713,11 +713,13 @@ bool LinkImageParser::checkInlineLinkImage(const State::Delim &startDelim,
         const auto title = readLinkTitle(line, stream, space);
 
         if (title.second) {
-            skipSpaces(line);
-
-            if (pos >= line.length()) {
-                line = stream.readLine();
+            if (line.currentChar() != s_rightParenthesisChar) {
                 skipSpaces(line);
+
+                if (pos >= line.length()) {
+                    line = stream.readLine();
+                    skipSpaces(line);
+                }
             }
 
             if (line.currentChar() == s_rightParenthesisChar) {
