@@ -1,5 +1,5 @@
 maintainer: imironchik
-description: md4qt is a header-only C++ library for parsing Markdown.
+description: C++ library for parsing Markdown.
 platforms:
     - name: Linux
     - name: FreeBSD
@@ -11,7 +11,7 @@ release: true
 cmakename: md4qt
 mailinglist: kde-devel
 public_source_dirs:
-  - md4qt
+  - src
 libraries:
   - license: MIT
     cmake: md4qt
