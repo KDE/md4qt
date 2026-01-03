@@ -34,8 +34,8 @@ public:
 
     /*!
      * Returns check state for the current line and block type. This method should return BlockState::None if
-     * this string is not handled by him. This method should not return BlockState::Stop ever. If this
-     * block parser knows how to handle the current line it should return BlockState::Continue.
+     * this string is not handled by him. If this block parser knows how to handle the current line it should
+     * return BlockState::Continue or BlockState::Stop.
      *
      * \a currentLine Current processing line.
      *
