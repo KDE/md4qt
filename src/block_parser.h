@@ -27,7 +27,7 @@ class Parser;
  * \value Stop Means block was finished and next content should go for parsing of other block.
  * \value Continue Means this instance handles this line and parsing should give next lines to this block parser.
  * \value ContinueWithoutAppendingChildCtx Means this instance handles this line and parsing should give next lines
- *        to this block parser but child context should not be adder nor updated.
+ *        to this block parser but child context should not be added nor updated.
  * \value Discard Used on the next lines after check method to break processing with this block and try to process
  *        with other blocks.
  */
