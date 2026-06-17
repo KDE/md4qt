@@ -11,4 +11,4 @@ Options:
   cppcheck-ignore-files:
     - 3rdparty/
   run-gcovr: True
-  gcovr-arguments: '--exclude 3rdparty/.* --exclude tests/.* --merge-lines --exclude-function-lines --exclude-unreachable-branches --exclude-noncode-lines'
+  gcovr-arguments: '--exclude 3rdparty/.* --exclude tests/.* --merge-lines --exclude-function-lines --exclude-unreachable-branches --exclude-noncode-lines --exclude-throw-branches'
