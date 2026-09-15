@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-project(md4qt VERSION "5.1.3")
+project(md4qt VERSION "5.1.4")
 
 set(MD4QT_VERSION ${PROJECT_VERSION})
 
@@ -93,6 +93,12 @@ if(ECM_FOUND)
     ecm_setup_version(${PROJECT_VERSION}
         VARIABLE_PREFIX MD4QT
         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/config-md4qt.h"
+    )
+
+    set_target_properties(md4qt
+        PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        OUTPUT_NAME md4qt
     )
 
     set(MD4QT_INSTALL_INCLUDEDIR ${KDE_INSTALL_INCLUDEDIR})
