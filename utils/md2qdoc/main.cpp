@@ -531,7 +531,7 @@ int main(int argc,
     QCommandLineOption prefix(QStringList() << QStringLiteral("prefix"),
                               QStringLiteral("Prefix used to create top-level targets."),
                               QStringLiteral("str"),
-                              QStringLiteral(""));
+                              QString());
     QCommandLineOption include(QStringList() << QStringLiteral("i") << QStringLiteral("gen-includes"),
                                QStringLiteral("Generate QDoc includes only, i.e. without \"/*! */\" comment."));
     parser.addOption(out);
