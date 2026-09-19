@@ -81,6 +81,7 @@ int main()
 | -------------------------- |
 | [Markdown Tools](https://github.com/igormironchik/markdown-tools) |
 | [KleverNotes](https://invent.kde.org/office/klevernotes) |
+| [Marknote](https://invent.kde.org/office/marknote) |
 
 # Release notes
 

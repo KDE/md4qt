@@ -115,6 +115,10 @@ int main()
 
         \li \l {https://invent.kde.org/office/klevernotes} {KleverNotes}
 
+    \row
+
+        \li \l {https://invent.kde.org/office/marknote} {Marknote}
+
 \endtable
 
 \target #Release-notes//home/igor/Work/Projects/md4qt/README.md
