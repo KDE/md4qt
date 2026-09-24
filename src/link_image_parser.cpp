@@ -327,6 +327,7 @@ void LinkImageParser::makeLink(const QString &url,
     link->setStartLine(startLinkLine);
     link->setEndColumn(endLinkPos);
     link->setEndLine(endLinkLine);
+    link->setMarkdownContent(getMarkdownContent(stream, startLinkPos, startLinkLine, endLinkPos, endLinkLine));
 
     stream.restoreState(&sState);
 
@@ -371,6 +372,7 @@ void LinkImageParser::makeImage(const QString &url,
     img->setStartLine(startLinkLine);
     img->setEndColumn(endLinkPos);
     img->setEndLine(endLinkLine);
+    img->setMarkdownContent(getMarkdownContent(stream, startLinkPos, startLinkLine, endLinkPos, endLinkLine));
 
     stream.restoreState(&sState);
 
@@ -571,6 +573,11 @@ LinkImageParser::checkShortcutLinkImage(const State::Delim &startDelim,
                 ref->setStartLine(startLinkLine);
                 ref->setEndColumn(endLinkPos);
                 ref->setEndLine(endLinkLine);
+
+                const auto sState = stream.currentState();
+                ref->setMarkdownContent(
+                    getMarkdownContent(stream, startLinkPos, startLinkLine, endLinkPos, endLinkLine));
+                stream.restoreState(&sState);
 
                 ctx.inlines().append(ref);
 
@@ -918,6 +925,13 @@ bool LinkImageParser::checkRefLinkImage(const State::Delim &startDelim,
                 setImgAndP(p, link);
                 removeBackslashes(p.second);
                 link->setText(p.second);
+                const auto st = stream.currentState();
+                link->setMarkdownContent(getMarkdownContent(stream,
+                                                            link->startColumn(),
+                                                            link->startLine(),
+                                                            link->endColumn(),
+                                                            link->endLine()));
+                stream.restoreState(&st);
                 ctx.inlines().append(link);
             } else {
                 auto img = QSharedPointer<Image>::create();
@@ -936,6 +950,10 @@ bool LinkImageParser::checkRefLinkImage(const State::Delim &startDelim,
                 img->setP(p.first);
                 img->setUrlPos(link->textPos());
                 img->setTextPos({startTextPos, startTextLine, endTextPos, endTextLine});
+                const auto st = stream.currentState();
+                img->setMarkdownContent(
+                    getMarkdownContent(stream, img->startColumn(), img->startLine(), img->endColumn(), img->endLine()));
+                stream.restoreState(&st);
                 ctx.inlines().append(img);
             }
 

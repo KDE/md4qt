@@ -9,8 +9,10 @@
 // Qt include.
 #include <QMap>
 #include <QSharedPointer>
+#include <QStack>
 #include <QString>
 #include <QStringList>
+#include <QTextStream>
 #include <QVector>
 #include <QtClassHelperMacros>
 
@@ -79,6 +81,7 @@ enum class ItemType : int {
 //
 // WithPosition
 //
+
 /*!
  * \class MD::WithPosition
  * \inmodule md4qt
@@ -210,6 +213,7 @@ bool operator==(const WithPosition &l,
                 const WithPosition &r);
 
 class Document;
+class SerialiseHelper;
 
 //
 // Item
@@ -238,6 +242,13 @@ public:
     ~Item() override;
 
     /*!
+     * \typealias MD::Item::SharedPointer
+     *
+     * Type of smart pointer to item.
+     */
+    using SharedPointer = QSharedPointer<Item>;
+
+    /*!
      * Returns type of the item.
      */
     virtual ItemType type() const = 0;
@@ -247,11 +258,114 @@ public:
      *
      * \a doc Parent of new item.
      */
-    virtual QSharedPointer<Item> clone(Document *doc = nullptr) const = 0;
+    virtual Item::SharedPointer clone(Document *doc = nullptr) const = 0;
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    virtual void write(QTextStream &stream,
+                       SerialiseHelper *helper) const = 0;
+
+    /*!
+     * Serialise start of line
+     *
+     * \a stream Stream.
+     */
+    virtual void writeStartOfLine(QTextStream &stream) const;
 
 private:
     Q_DISABLE_COPY(Item)
 }; // class Item
+
+/*!
+ * Serialise item into Markdown.
+ *
+ * \a stream Stream.
+ *
+ * \a item Item.
+ */
+QTextStream &operator<<(QTextStream &stream,
+                        const Item &item);
+
+//
+// SerialiseHelper
+//
+
+/*!
+ * \class MD::SerialiseHelper
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Helper for serialisation.
+ *
+ * This helps to handle parenting during serialisation, to
+ * start new lines of parents.
+ */
+class SerialiseHelper final
+{
+public:
+    SerialiseHelper() = default;
+
+    /*!
+     * Push new item.
+     *
+     * \a item Item.
+     */
+    void push(const Item *item);
+
+    /*!
+     * Pop last item.
+     */
+    void pop();
+
+    /*!
+     * Start line.
+     *
+     * \a stream Stream.
+     */
+    void startLine(QTextStream &stream);
+
+    /*!
+     * Returns whether serialiser at the first item in the block.
+     *
+     * \note Only paragraph sets this flag at this time.
+     */
+    bool isFirst() const;
+
+    /*!
+     * Set whether serialiser at the first item in the block.
+     *
+     * \note Only paragraph sets this flag at this time.
+     *
+     * \a on Value.
+     */
+    void setFirst(bool on = true);
+
+private:
+    Q_DISABLE_COPY(SerialiseHelper)
+
+    QStack<const Item *> m_items;
+    bool m_first = false;
+}; // class SerialiseHelper
+
+/*!
+ * \inheaderfile md4qt/doc.h
+ *
+ * Serialise multi-lined content.
+ *
+ * \a text Multi-line data.
+ *
+ * \a stream Stream.
+ *
+ * \a helper Serialiser helper.
+ */
+void writeMultiline(const QString &text,
+                    QTextStream &stream,
+                    SerialiseHelper *helper);
 
 //
 // TextOption
@@ -277,6 +391,31 @@ enum TextOption {
 }; // enum TextOption
 
 //
+// EmphasisSymbol
+//
+
+/*!
+ * \enum MD::EmphasisSymbol
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Emphasis symbol.
+ *
+ * \value Unknown Not set.
+ * \value Asterisk Asterisk.
+ * \value Underline Underline.
+ * \value Tilde Tilde.
+ * \value UserDefined User defined.
+ */
+enum class EmphasisSymbol : int {
+    Unknown = 0,
+    Asterisk,
+    Underline,
+    Tilde,
+    UserDefined
+}; // enum EmphasisSymbol
+
+//
 // StyleDelim
 //
 
@@ -299,7 +438,7 @@ enum TextOption {
  *
  * \sa MD::ItemWithOpts
  */
-class StyleDelim final : public WithPosition
+class StyleDelim : public WithPosition
 {
 public:
     /*!
@@ -314,12 +453,15 @@ public:
      * \a endColumn End column.
      *
      * \a endLine End line.
+     *
+     * \a symbol Symbol.
      */
     StyleDelim(int s,
                qsizetype startColumn,
                qsizetype startLine,
                qsizetype endColumn,
-               qsizetype endLine);
+               qsizetype endLine,
+               EmphasisSymbol symbol = EmphasisSymbol::Unknown);
 
     ~StyleDelim() override;
 
@@ -335,8 +477,32 @@ public:
      */
     void setStyle(int t);
 
+    /*!
+     * Returns emphasis sybol.
+     */
+    EmphasisSymbol symbol() const;
+
+    /*!
+     * Set emphasis symbol.
+     *
+     * \a s Symbol.
+     */
+    void setSymbol(EmphasisSymbol s);
+
+    /*!
+     * Serialise style into Markdown.
+     *
+     * \a stream Stream.
+     */
+    virtual void write(QTextStream &stream) const;
+
 private:
+    // "int" uses here as users may want to implement other emphasises
+    // and use this class to strore theirs delimiters. In this case they
+    // can pass value greater StrikethroughText and process theirs stuff.
+    // This is just simpler to have "int" here.
     int m_style = TextWithoutFormat;
+    EmphasisSymbol m_symbol;
 }; // class StyleDelim
 
 /*!
@@ -455,6 +621,21 @@ public:
      */
     void appendCloseStyles(const Styles &s);
 
+protected:
+    /*!
+     * Serialise open style delimiters.
+     *
+     * \a stream Stream.
+     */
+    void writeOpenStyles(QTextStream &stream) const;
+
+    /*!
+     * Serialise close style delimiters.
+     *
+     * \a stream Stream.
+     */
+    void writeCloseStyles(QTextStream &stream) const;
+
 private:
     /*!
      * Style options.
@@ -507,11 +688,44 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
+
+    /*!
+     * Serialise style into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     Q_DISABLE_COPY(PageBreak)
 }; // class PageBreak
+
+//
+// HorizontalLineSymbol
+//
+
+/*!
+ * \enum MD::HorizontalLineSymbol
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Horizontal line symbol.
+ *
+ * \value Unknown Not set.
+ * \value Asterisk Asterisk.
+ * \value Underline Underline.
+ * \value Dash Dash.
+ */
+enum class HorizontalLineSymbol : int {
+    Unknown = 0,
+    Asterisk,
+    Underline,
+    Dash
+}; // enum HorizontalLineSymbol
 
 //
 // HorizontalLine
@@ -532,7 +746,7 @@ public:
     /*!
      * Default constructor.
      */
-    HorizontalLine();
+    explicit HorizontalLine(HorizontalLineSymbol s = HorizontalLineSymbol::Unknown);
     ~HorizontalLine() override;
 
     /*!
@@ -545,10 +759,34 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
+
+    /*!
+     * Returns horizontal line sybol.
+     */
+    HorizontalLineSymbol symbol() const;
+
+    /*!
+     * Set horizontal line symbol.
+     *
+     * \a s Symbol.
+     */
+    void setSymbol(HorizontalLineSymbol s);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     Q_DISABLE_COPY(HorizontalLine)
+
+    HorizontalLineSymbol m_symbol;
 }; // class HorizontalLine
 
 //
@@ -584,7 +822,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns item type.
@@ -602,6 +840,16 @@ public:
      * \a l New label value.
      */
     void setLabel(const QString &l);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     Q_DISABLE_COPY(Anchor)
@@ -640,7 +888,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -658,6 +906,16 @@ public:
      * \a t New value.
      */
     void setText(const QString &t);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     /*!
@@ -703,7 +961,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -722,14 +980,61 @@ public:
      */
     void setText(const QString &t);
 
+    /*!
+     * Returns original Markdown content.
+     */
+    const QString &markdownContent() const;
+
+    /*!
+     * Set original Markdown content.
+     *
+     * \a v Value.
+     */
+    void setMarkdownContent(const QString &v);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * Text content.
      */
     QString m_text;
+    /*!
+     * Original Markdown content.
+     */
+    QString m_markdown;
 
     Q_DISABLE_COPY(Text)
 }; // class Text
+
+//
+// LineBreakType
+//
+
+/*!
+ * \enum MD::LineBreakType
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Line break type.
+ *
+ * \value Unknown Not set.
+ * \value Spaces Defined with spaces.
+ * \value Backslash Defined with backslash.
+ */
+enum class LineBreakType : int {
+    Unknown = 0,
+    Spaces,
+    Backslash
+}; // enum LineBreakType
 
 //
 // LineBreak
@@ -758,15 +1063,39 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
      */
     ItemType type() const override;
 
+    /*!
+     * Returns type of line break.
+     */
+    LineBreakType symbol() const;
+
+    /*!
+     * Set line break type.
+     *
+     * \a s Symbol.
+     */
+    void setSymbol(LineBreakType s);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     Q_DISABLE_COPY(LineBreak)
+
+    LineBreakType m_symbol;
 }; // class LineBreak
 
 //
@@ -796,17 +1125,11 @@ public:
     ~Block() override;
 
     /*!
-     * \typealias MD::Block::ItemSharedPointer
-     *
-     * Type of pointer to child item.
-     */
-    using ItemSharedPointer = QSharedPointer<Item>;
-    /*!
      * \typealias MD::Block::Items
      *
      * Type of list of children.
      */
-    using Items = QVector<ItemSharedPointer>;
+    using Items = QVector<Item::SharedPointer>;
 
     /*!
      * Apply other block to this.
@@ -838,14 +1161,14 @@ public:
      * \a i Item to insert.
      */
     void insertItem(qsizetype idx,
-                    ItemSharedPointer i);
+                    Item::SharedPointer i);
 
     /*!
      * Append child item.
      *
      * \a i Item to append.
      */
-    void appendItem(ItemSharedPointer i);
+    void appendItem(Item::SharedPointer i);
 
     /*!
      * Remove child item at the given position.
@@ -859,12 +1182,22 @@ public:
      *
      * \a idx Index.
      */
-    ItemSharedPointer getItemAt(qsizetype idx) const;
+    Item::SharedPointer getItemAt(qsizetype idx) const;
 
     /*!
      * Returns whether there are no children.
      */
     bool isEmpty() const;
+
+    /*!
+     * Serialise style into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     /*!
@@ -903,16 +1236,47 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
      */
     ItemType type() const override;
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     Q_DISABLE_COPY(Paragraph)
 }; // class Paragraph
+
+//
+// HeadingType
+//
+
+/*!
+ * \enum MD::HeadingType
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Heading type.
+ *
+ * \value Unknown Not set.
+ * \value Setext Setext heading.
+ * \value ATX ATX heading.
+ */
+enum class HeadingType : int {
+    Unknown = 0,
+    Setext,
+    ATX
+}; // enum HeadingType
 
 //
 // Heading
@@ -948,7 +1312,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1004,6 +1368,18 @@ public:
     void setLabel(const QString &l);
 
     /*!
+     * Returns original (defined in Markdown with syntax {#}) label of the heading.
+     */
+    const QString &originalLabel() const;
+
+    /*!
+     * Set original (defined in Markdown with syntax {#}) label of the heading.
+     *
+     * \a l New value.
+     */
+    void setOriginalLabel(const QString &l);
+
+    /*!
      * Returns list of service characters.
      */
     const Delims &delims() const;
@@ -1053,6 +1429,28 @@ public:
      */
     void appendLabelVariant(const QString &v);
 
+    /*!
+     * Returns heading type.
+     */
+    HeadingType headingType() const;
+
+    /*!
+     * Set heading type.
+     *
+     * \a t Type.
+     */
+    void setHeadingType(HeadingType t);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * Content of the heading.
@@ -1067,6 +1465,10 @@ private:
      */
     QString m_label;
     /*!
+     * Original (defined in Markdown with syntax {#}) label of the heading.
+     */
+    QString m_originalLabel;
+    /*!
      * List of service characters.
      */
     Delims m_delims;
@@ -1078,6 +1480,10 @@ private:
      * Label variants.
      */
     LabelsVector m_labelVariants;
+    /*!
+     * \brief Heading
+     */
+    HeadingType m_type;
 
     Q_DISABLE_COPY(Heading)
 }; // class Heading
@@ -1109,7 +1515,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1142,6 +1548,23 @@ public:
      */
     void appendDelim(const WithPosition &p);
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
+    /*!
+     * Serialise start of line
+     *
+     * \a stream Stream.
+     */
+    void writeStartOfLine(QTextStream &stream) const override;
+
 private:
     /*!
      * List of service characters.
@@ -1150,6 +1573,33 @@ private:
 
     Q_DISABLE_COPY(Blockquote)
 }; // class Blockquote
+
+//
+// ListItemSymbol
+//
+
+/*!
+ * \enum MD::ListItemSymbol
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief List item symbol.
+ *
+ * \value Unknown Not set.
+ * \value Minus Unorder list item starting with "-".
+ * \value Plus Unordered list item starting with "+".
+ * \value Asterisk Unordered list item starting with "*".
+ * \value Dot Ordered list item starting with ".".
+ * \value Bracket Ordered list item starting with ")".
+ */
+enum class ListItemSymbol : int {
+    Unknown = 0,
+    Minus,
+    Plus,
+    Asterisk,
+    Dot,
+    Bracket
+}; // enum ListItemSymbol
 
 //
 // ListItem
@@ -1180,7 +1630,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1297,6 +1747,35 @@ public:
      */
     void setTaskDelim(const WithPosition &d);
 
+    /*!
+     * Returns starting symbol of list item.
+     */
+    ListItemSymbol symbol() const;
+
+    /*!
+     * Set starting symbol of list item.
+     *
+     * \a s Symbol.
+     */
+    void setSymbol(ListItemSymbol s);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
+    /*!
+     * Serialise start of line
+     *
+     * \a stream Stream.
+     */
+    void writeStartOfLine(QTextStream &stream) const override;
+
 private:
     /*!
      * Type of the list.
@@ -1326,6 +1805,14 @@ private:
      * Task list "checkbox" position.
      */
     WithPosition m_taskDelim = {};
+    /*!
+     * Start symbol of list item.
+     */
+    ListItemSymbol m_symbol = ListItemSymbol::Unknown;
+    /*!
+     * Offset to start new line with spaces.
+     */
+    mutable int m_offset = 0;
 
     Q_DISABLE_COPY(ListItem)
 }; // class ListItem
@@ -1358,7 +1845,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1487,6 +1974,28 @@ public:
      */
     void setUrlPos(const WithPosition &pos);
 
+    /*!
+     * Returns Markdown content of whole link.
+     */
+    const QString &markdownContent() const;
+
+    /*!
+     * Set Markdown content of whole link.
+     *
+     * \a md Markdown content.
+     */
+    void setMarkdownContent(const QString &md);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * URL.
@@ -1497,6 +2006,10 @@ private:
      * Not parsed content of link's description.
      */
     QString m_text;
+    /*!
+     * Markdown ontent of whole link.
+     */
+    QString m_markdownContent;
     /*!
      * Parsed content of link's description.
      */
@@ -1540,7 +2053,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1578,7 +2091,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     ~Link() override;
 
@@ -1614,6 +2127,27 @@ private:
 
     Q_DISABLE_COPY(Link)
 }; // class Link
+
+//
+// FensedCodeSymbol
+//
+
+/*!
+ * \enum MD::FensedCodeSymbol
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief Fensed code symbol.
+ *
+ * \value Unknown Not set.
+ * \value Backtick Backtick.
+ * \value Tilde Tilde.
+ */
+enum class FensedCodeSymbol : int {
+    Unknown = 0,
+    Backtick,
+    Tilde
+}; // enum FensedCodeSymbol
 
 //
 // Code
@@ -1658,7 +2192,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1749,17 +2283,55 @@ public:
      */
     void setFensedCode(bool on = true);
 
+    /*!
+     * Returns original Markdown content.
+     */
+    const QString &markdownContent() const;
+
+    /*!
+     * Set original Markdown content.
+     *
+     * \a v New value.
+     */
+    void setMarkdownContent(const QString &v);
+
+    /*!
+     * Returns fensed code symbol.
+     */
+    FensedCodeSymbol fensedCodeSymbol() const;
+
+    /*!
+     * Set fensed code symbol.
+     *
+     * \a s Symbol.
+     */
+    void setFensedCodeSymbol(FensedCodeSymbol s);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * Content of the code.
      */
     QString m_text;
     /*!
+     * Original Markdown content.
+     */
+    QString m_markdowm;
+    /*!
      * Is this code inline?
      */
     bool m_inlined = true;
     /*!
-     * Is this code a fensed code block.
+     * Is this code a fensed code block?
      */
     bool m_fensed = false;
     /*!
@@ -1778,6 +2350,10 @@ private:
      * Position of syntax of fensed code block.
      */
     WithPosition m_syntaxPos = {};
+    /*!
+     * Fensed code symbol.
+     */
+    FensedCodeSymbol m_fensedSymbol = FensedCodeSymbol::Unknown;
 
     Q_DISABLE_COPY(Code)
 }; // class Code
@@ -1809,7 +2385,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1827,6 +2403,16 @@ public:
      * \a e New value.
      */
     void setExpr(const QString &e);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     Q_DISABLE_COPY(Math)
@@ -1861,12 +2447,22 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
      */
     ItemType type() const override;
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     Q_DISABLE_COPY(TableCell)
@@ -1901,7 +2497,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -1945,6 +2541,16 @@ public:
      */
     bool isEmpty() const;
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * List of cells.
@@ -1983,7 +2589,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -2072,6 +2678,16 @@ public:
      */
     bool isEmpty() const;
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * Rows.
@@ -2115,7 +2731,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -2146,11 +2762,37 @@ public:
      */
     void setIdPos(const WithPosition &pos);
 
+    /*!
+     * Returns Markdown content of whole link.
+     */
+    const QString &markdownContent() const;
+
+    /*!
+     * Set Markdown content of whole link.
+     *
+     * \a md Markdown content.
+     */
+    void setMarkdownContent(const QString &md);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * ID.
      */
     QString m_id;
+    /*!
+     * Markdown content.
+     */
+    QString m_markdownContent;
     /*!
      * Position of ID.
      */
@@ -2186,7 +2828,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * Returns type of the item.
@@ -2205,11 +2847,32 @@ public:
      */
     void setIdPos(const WithPosition &pos);
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
+    /*!
+     * Serialise start of line
+     *
+     * \a stream Stream.
+     */
+    void writeStartOfLine(QTextStream &stream) const override;
+
 private:
     /*!
      * Position of ID.
      */
     WithPosition m_idPos = {};
+    /*!
+     * Offset for new line beginning during serialisation.
+     */
+    mutable qsizetype m_offset = 0;
 
     Q_DISABLE_COPY(Footnote)
 }; // class Footnote
@@ -2246,7 +2909,7 @@ public:
      *
      * \a doc Parent of new item.
      */
-    QSharedPointer<Item> clone(Document *doc = nullptr) const override;
+    Item::SharedPointer clone(Document *doc = nullptr) const override;
 
     /*!
      * \typealias MD::Document::FootnoteSharedPointer
@@ -2255,11 +2918,27 @@ public:
      */
     using FootnoteSharedPointer = QSharedPointer<Footnote>;
     /*!
+     * \class MD::Document::FootnoteWithLabel
+     * \inmodule md4qt
+     *
+     * Footnote with its original label.
+     */
+    struct FootnoteWithLabel {
+        /*!
+         * Pointer to footnote.
+         */
+        FootnoteSharedPointer m_footnote;
+        /*!
+         * Original label (as was in Markdown).
+         */
+        QString m_originalLabel;
+    }; // struct FootnoteWithLabel
+    /*!
      * \typealias MD::Document::Footnotes
      *
      * Type of a map of footnotes.
      */
-    using Footnotes = QMap<QString, FootnoteSharedPointer>;
+    using Footnotes = QMap<QString, FootnoteWithLabel>;
 
     /*!
      * Returns map of footnotes.
@@ -2278,9 +2957,12 @@ public:
      *
      * \a id ID.
      *
+     * \a originalLabel Original label.
+     *
      * \a fn Footnote.
      */
     void insertFootnote(const QString &id,
+                        const QString &originalLabel,
                         FootnoteSharedPointer fn);
 
     /*!
@@ -2402,6 +3084,16 @@ public:
      */
     void incrementAuxLabelCounter(const QString &label,
                                   const QString &path);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
 
 private:
     /*!

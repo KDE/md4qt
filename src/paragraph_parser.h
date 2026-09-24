@@ -244,6 +244,7 @@ private:
     RefLinkParserStage m_refLinkStage = RefLinkParserStage::S0;
     QString m_refLinkLabel;
     QString m_refLinkTitle;
+    QString m_refMdContent;
     WithPosition m_refLinkTextPos;
     WithPosition m_refLinkUrlPos;
     WithPosition m_refLinkTitlePos;

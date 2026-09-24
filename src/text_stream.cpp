@@ -88,38 +88,42 @@ Line TextStreamBase::readLine()
     };
 
     const auto start = m_current.m_pos;
-    bool rFound = false;
+    int endLength = 0;
     ++m_current.m_lineNumber;
 
     while (!atEnd()) {
-        bool decrement = true;
         const auto c = getChar();
 
-        if (atEnd() && (c == s_carriageReturnChar || c == s_newLineChar) && !m_current.m_isLastNewLine) {
-            m_current.m_isLastNewLine = true;
-            --m_current.m_pos;
-            decrement = false;
-        }
-
-        if (rFound && c != s_newLineChar) {
-            if (!m_current.m_isLastNewLine) {
-                --m_current.m_pos;
-            }
-
-            return makeLine(QStringView(data() + start, m_current.m_pos - start - 1), m_current);
-        }
-
         if (c == s_newLineChar) {
-            return makeLine(
-                QStringView(data() + start, m_current.m_pos - start - (decrement ? 1 : 0) - (rFound ? 1 : 0)),
-                m_current);
-        }
+            ++endLength;
+            m_current.m_lastLineEnding = true;
+            return makeLine(QStringView(data() + start, m_current.m_pos - start - endLength), m_current);
+        } else if (c == s_carriageReturnChar) {
+            ++endLength;
+            m_current.m_lastLineEnding = true;
 
-        rFound = (c == s_carriageReturnChar);
+            if (endLength > 1) {
+                --m_current.m_pos;
+
+                return makeLine(QStringView(data() + start, m_current.m_pos - start - endLength + 1), m_current);
+            }
+        } else {
+            m_current.m_lastLineEnding = false;
+
+            if (endLength) {
+                --m_current.m_pos;
+
+                return makeLine(QStringView(data() + start, m_current.m_pos - start - endLength), m_current);
+            }
+        }
     }
 
     if (!isEmpty()) {
-        return makeLine(QStringView(data() + start, m_current.m_pos - start - (rFound ? 1 : 0)), m_current);
+        if (start < length()) {
+            return makeLine(QStringView(data() + start, m_current.m_pos - start - endLength), m_current);
+        } else {
+            return makeLine(QStringView(), m_current);
+        }
     } else {
         return Line(QStringView(), -1);
     }
@@ -164,14 +168,15 @@ TextStream::TextStream(QTextStream &stream)
 
 bool TextStream::atEnd() const
 {
-    return (m_current.m_pos == m_data.length());
+    return (m_current.m_pos >= m_data.length() + (m_current.m_lastLineEnding ? 1 : 0));
 }
 
 QChar TextStream::getChar()
 {
-    if (!atEnd()) {
+    if (m_current.m_pos < m_data.length()) {
         return m_data[m_current.m_pos++];
     } else {
+        ++m_current.m_pos;
         return {};
     }
 }
@@ -184,6 +189,11 @@ const QChar *TextStream::data() const
 bool TextStream::isEmpty() const
 {
     return m_data.isEmpty();
+}
+
+qsizetype TextStream::length() const
+{
+    return m_data.length();
 }
 
 //

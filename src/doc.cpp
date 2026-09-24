@@ -5,6 +5,8 @@
 
 // md4qt include.
 #include "doc.h"
+#include "constants.h"
+#include "text_stream.h"
 
 namespace MD
 {
@@ -97,6 +99,51 @@ Item::Item() = default;
 
 Item::~Item() = default;
 
+void Item::writeStartOfLine(QTextStream &) const
+{
+}
+
+QTextStream &operator<<(QTextStream &stream,
+                        const Item &item)
+{
+    SerialiseHelper helper;
+
+    item.write(stream, &helper);
+
+    return stream;
+}
+
+//
+// SerialiseHelper
+//
+
+void SerialiseHelper::push(const Item *item)
+{
+    m_items.push(item);
+}
+
+void SerialiseHelper::pop()
+{
+    m_items.pop();
+}
+
+void SerialiseHelper::startLine(QTextStream &stream)
+{
+    for (const auto &item : std::as_const(m_items)) {
+        item->writeStartOfLine(stream);
+    }
+}
+
+bool SerialiseHelper::isFirst() const
+{
+    return m_first;
+}
+
+void SerialiseHelper::setFirst(bool on)
+{
+    m_first = on;
+}
+
 //
 // StyleDelim
 //
@@ -105,12 +152,14 @@ StyleDelim::StyleDelim(int s,
                        qsizetype startColumn,
                        qsizetype startLine,
                        qsizetype endColumn,
-                       qsizetype endLine)
+                       qsizetype endLine,
+                       EmphasisSymbol symbol)
     : WithPosition(startColumn,
                    startLine,
                    endColumn,
                    endLine)
     , m_style(s)
+    , m_symbol(symbol)
 {
 }
 
@@ -124,6 +173,65 @@ int StyleDelim::style() const
 void StyleDelim::setStyle(int t)
 {
     m_style = t;
+}
+
+EmphasisSymbol StyleDelim::symbol() const
+{
+    return m_symbol;
+}
+
+void StyleDelim::setSymbol(EmphasisSymbol s)
+{
+    m_symbol = s;
+}
+
+void StyleDelim::write(QTextStream &stream) const
+{
+    static const QString s_2Underline = QStringLiteral("__");
+    static const QString s_2Asterisk = QStringLiteral("**");
+    static const QString s_1Underline = QStringLiteral("_");
+    static const QString s_1Asterisk = QStringLiteral("*");
+    static const QString s_2Tilde = QStringLiteral("~~");
+    static const QString s_1Tilde = QStringLiteral("~");
+
+    switch (m_style) {
+    case BoldText: {
+        switch (symbol()) {
+        case EmphasisSymbol::Underline: {
+            stream << s_2Underline;
+        } break;
+
+        case EmphasisSymbol::Asterisk:
+        default: {
+            stream << s_2Asterisk;
+        } break;
+        }
+    } break;
+
+    case ItalicText: {
+        switch (symbol()) {
+        case EmphasisSymbol::Underline: {
+            stream << s_1Underline;
+        } break;
+
+        case EmphasisSymbol::Asterisk:
+        default: {
+            stream << s_1Asterisk;
+        } break;
+        }
+    } break;
+
+    case StrikethroughText: {
+        if (endColumn() - startColumn() > 0) {
+            stream << s_2Tilde;
+        } else {
+            stream << s_1Tilde;
+        }
+    } break;
+
+    default:
+        break;
+    }
 }
 
 bool operator==(const StyleDelim &l,
@@ -200,6 +308,20 @@ void ItemWithOpts::appendCloseStyles(const Styles &s)
     m_closeStyles.append(s);
 }
 
+void ItemWithOpts::writeOpenStyles(QTextStream &stream) const
+{
+    for (const auto &s : openStyles()) {
+        s.write(stream);
+    }
+}
+
+void ItemWithOpts::writeCloseStyles(QTextStream &stream) const
+{
+    for (const auto &s : closeStyles()) {
+        s.write(stream);
+    }
+}
+
 //
 // PageBreak
 //
@@ -213,18 +335,26 @@ ItemType PageBreak::type() const
     return ItemType::PageBreak;
 }
 
-QSharedPointer<Item> PageBreak::clone(Document *doc) const
+Item::SharedPointer PageBreak::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
     return QSharedPointer<PageBreak>::create();
 }
 
+void PageBreak::write(QTextStream &,
+                      SerialiseHelper *) const
+{
+}
+
 //
 // HorizontalLine
 //
 
-HorizontalLine::HorizontalLine() = default;
+HorizontalLine::HorizontalLine(HorizontalLineSymbol s)
+    : m_symbol(s)
+{
+}
 
 HorizontalLine::~HorizontalLine() = default;
 
@@ -233,14 +363,48 @@ ItemType HorizontalLine::type() const
     return ItemType::HorizontalLine;
 }
 
-QSharedPointer<Item> HorizontalLine::clone(Document *doc) const
+Item::SharedPointer HorizontalLine::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
     auto h = QSharedPointer<HorizontalLine>::create();
     h->applyPositions(*this);
+    h->setSymbol(symbol());
 
     return h;
+}
+
+HorizontalLineSymbol HorizontalLine::symbol() const
+{
+    return m_symbol;
+}
+
+void HorizontalLine::setSymbol(HorizontalLineSymbol s)
+{
+    m_symbol = s;
+}
+
+void HorizontalLine::write(QTextStream &stream,
+                           SerialiseHelper *) const
+{
+    static const QString s_asteriskLine = QStringLiteral("***");
+    static const QString s_underlineLine = QStringLiteral("___");
+    static const QString s_dashLine = QStringLiteral("---");
+
+    switch (symbol()) {
+    case HorizontalLineSymbol::Underline: {
+        stream << s_underlineLine;
+    } break;
+
+    case HorizontalLineSymbol::Dash: {
+        stream << s_dashLine;
+    } break;
+
+    case HorizontalLineSymbol::Asterisk:
+    default: {
+        stream << s_asteriskLine;
+    } break;
+    }
 }
 
 //
@@ -254,7 +418,7 @@ Anchor::Anchor(const QString &l)
 
 Anchor::~Anchor() = default;
 
-QSharedPointer<Item> Anchor::clone(Document *doc) const
+Item::SharedPointer Anchor::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -276,6 +440,11 @@ void Anchor::setLabel(const QString &l)
     m_label = l;
 }
 
+void Anchor::write(QTextStream &,
+                   SerialiseHelper *) const
+{
+}
+
 //
 // RawHtml
 //
@@ -284,7 +453,7 @@ RawHtml::RawHtml() = default;
 
 RawHtml::~RawHtml() = default;
 
-QSharedPointer<Item> RawHtml::clone(Document *doc) const
+Item::SharedPointer RawHtml::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -310,6 +479,38 @@ void RawHtml::setText(const QString &t)
     m_text = t;
 }
 
+void writeMultiline(const QString &text,
+                    QTextStream &stream,
+                    SerialiseHelper *helper)
+{
+    QString data = text;
+
+    QTextStream tmp(&data);
+    TextStream s(tmp);
+    bool firstLine = true;
+
+    while (!s.atEnd()) {
+        if (!firstLine) {
+            stream << s_newLineChar;
+            helper->startLine(stream);
+        }
+
+        auto line = s.readLine();
+        stream << line.view();
+        firstLine = false;
+    }
+}
+
+void RawHtml::write(QTextStream &stream,
+                    SerialiseHelper *helper) const
+{
+    writeOpenStyles(stream);
+
+    writeMultiline(text(), stream, helper);
+
+    writeCloseStyles(stream);
+}
+
 //
 // Text
 //
@@ -323,10 +524,11 @@ void Text::applyText(const Text &t)
     if (this != &t) {
         ItemWithOpts::applyItemWithOpts(t);
         setText(t.text());
+        setMarkdownContent(t.markdownContent());
     }
 }
 
-QSharedPointer<Item> Text::clone(Document *doc) const
+Item::SharedPointer Text::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -351,6 +553,42 @@ void Text::setText(const QString &t)
     m_text = t;
 }
 
+const QString &Text::markdownContent() const
+{
+    return m_markdown;
+}
+
+void Text::setMarkdownContent(const QString &v)
+{
+    m_markdown = v;
+}
+
+void Text::write(QTextStream &stream,
+                 SerialiseHelper *helper) const
+{
+    writeOpenStyles(stream);
+
+    QString data = (markdownContent().isEmpty() ? text() : markdownContent());
+
+    for (qsizetype i = 0; i < data.size(); ++i) {
+        if (!data[i].isSpace()) {
+            if (data[i] == s_minusChar || data[i] == s_equalSignChar || data[i] == s_verticalLineChar) {
+                data.insert(i, s_reverseSolidusChar);
+            }
+
+            if (helper->isFirst()) {
+                data.remove(0, i);
+            }
+
+            break;
+        }
+    }
+
+    stream << data;
+
+    writeCloseStyles(stream);
+}
+
 //
 // LineBreak
 //
@@ -359,12 +597,13 @@ LineBreak::LineBreak() = default;
 
 LineBreak::~LineBreak() = default;
 
-QSharedPointer<Item> LineBreak::clone(Document *doc) const
+Item::SharedPointer LineBreak::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
     auto b = QSharedPointer<LineBreak>::create();
     b->applyText(*this);
+    b->setSymbol(symbol());
 
     return b;
 }
@@ -372,6 +611,34 @@ QSharedPointer<Item> LineBreak::clone(Document *doc) const
 ItemType LineBreak::type() const
 {
     return ItemType::LineBreak;
+}
+
+LineBreakType LineBreak::symbol() const
+{
+    return m_symbol;
+}
+
+void LineBreak::setSymbol(LineBreakType s)
+{
+    m_symbol = s;
+}
+
+void LineBreak::write(QTextStream &stream,
+                      SerialiseHelper *) const
+{
+    static const QString s_spaces = QStringLiteral("  ");
+    static const QString s_backslash = QStringLiteral("\\");
+
+    switch (symbol()) {
+    case LineBreakType::Backslash: {
+        stream << s_backslash;
+    } break;
+
+    case LineBreakType::Spaces:
+    default: {
+        stream << s_spaces;
+    } break;
+    }
 }
 
 //
@@ -407,12 +674,12 @@ void Block::setItems(const Items &i)
 }
 
 void Block::insertItem(qsizetype idx,
-                       ItemSharedPointer i)
+                       Item::SharedPointer i)
 {
     m_items.insert(m_items.cbegin() + idx, i);
 }
 
-void Block::appendItem(ItemSharedPointer i)
+void Block::appendItem(Item::SharedPointer i)
 {
     m_items.push_back(i);
 }
@@ -424,7 +691,7 @@ void Block::removeItemAt(qsizetype idx)
     }
 }
 
-Block::ItemSharedPointer Block::getItemAt(qsizetype idx) const
+Item::SharedPointer Block::getItemAt(qsizetype idx) const
 {
     return m_items.at(idx);
 }
@@ -432,6 +699,27 @@ Block::ItemSharedPointer Block::getItemAt(qsizetype idx) const
 bool Block::isEmpty() const
 {
     return m_items.empty();
+}
+
+void Block::write(QTextStream &stream,
+                  SerialiseHelper *helper) const
+{
+    bool firstItem = true;
+
+    for (const auto &item : items()) {
+        if (item->type() != MD::ItemType::Anchor) {
+            if (!firstItem) {
+                stream << s_newLineChar;
+                helper->startLine(stream);
+                stream << s_newLineChar;
+                helper->startLine(stream);
+            }
+
+            item->write(stream, helper);
+
+            firstItem = false;
+        }
+    }
 }
 
 //
@@ -442,7 +730,7 @@ Paragraph::Paragraph() = default;
 
 Paragraph::~Paragraph() = default;
 
-QSharedPointer<Item> Paragraph::clone(Document *doc) const
+Item::SharedPointer Paragraph::clone(Document *doc) const
 {
     auto p = QSharedPointer<Paragraph>::create();
     p->applyBlock(*this, doc);
@@ -455,20 +743,48 @@ ItemType Paragraph::type() const
     return ItemType::Paragraph;
 }
 
+void Paragraph::write(QTextStream &stream,
+                      SerialiseHelper *helper) const
+{
+    qsizetype lineNumber = -1;
+
+    helper->setFirst(true);
+
+    for (const auto &item : items()) {
+        if (lineNumber == -1) {
+            lineNumber = item->startLine();
+        }
+
+        if (item->startLine() != lineNumber) {
+            stream << s_newLineChar;
+
+            helper->startLine(stream);
+        }
+
+        item->write(stream, helper);
+
+        lineNumber = item->endLine();
+
+        helper->setFirst(false);
+    }
+}
+
 //
 // Heading
 //
 
 Heading::Heading()
     : m_text(new Paragraph)
+    , m_type(HeadingType::Unknown)
 {
 }
 
 Heading::~Heading() = default;
 
-QSharedPointer<Item> Heading::clone(Document *doc) const
+Item::SharedPointer Heading::clone(Document *doc) const
 {
     auto h = QSharedPointer<Heading>::create();
+    h->setHeadingType(headingType());
     h->applyPositions(*this);
     h->setText(m_text->clone(doc).staticCast<Paragraph>());
     h->setLevel(m_level);
@@ -476,6 +792,7 @@ QSharedPointer<Item> Heading::clone(Document *doc) const
     h->setDelims(m_delims);
     h->setLabelPos(m_labelPos);
     h->setLabelVariants(m_labelVariants);
+    h->setOriginalLabel(originalLabel());
 
     if (doc && isLabeled()) {
         for (const auto &label : std::as_const(m_labelVariants)) {
@@ -526,6 +843,16 @@ void Heading::setLabel(const QString &l)
     m_label = l;
 }
 
+const QString &Heading::originalLabel() const
+{
+    return m_originalLabel;
+}
+
+void Heading::setOriginalLabel(const QString &l)
+{
+    m_originalLabel = l;
+}
+
 const Heading::Delims &Heading::delims() const
 {
     return m_delims;
@@ -561,6 +888,39 @@ void Heading::appendLabelVariant(const QString &v)
     m_labelVariants.append(v);
 }
 
+HeadingType Heading::headingType() const
+{
+    return m_type;
+}
+
+void Heading::setHeadingType(HeadingType t)
+{
+    m_type = t;
+}
+
+void Heading::write(QTextStream &stream,
+                    SerialiseHelper *helper) const
+{
+    if (headingType() == HeadingType::ATX || headingType() == HeadingType::Unknown) {
+        stream << QString(level(), s_numberSignChar) << s_spaceChar;
+    }
+
+    text()->write(stream, helper);
+
+    if (headingType() == HeadingType::Setext) {
+        stream << s_newLineChar;
+        helper->startLine(stream);
+
+        if (level() == 1) {
+            stream << s_equalSignChar;
+        } else {
+            stream << s_minusChar;
+        }
+    } else if (!originalLabel().isEmpty()) {
+        stream << s_leftCurlyBracketChar << originalLabel() << s_rightCurlyBracketChar;
+    }
+}
+
 //
 // Blockquote
 //
@@ -569,7 +929,7 @@ Blockquote::Blockquote() = default;
 
 Blockquote::~Blockquote() = default;
 
-QSharedPointer<Item> Blockquote::clone(Document *doc) const
+Item::SharedPointer Blockquote::clone(Document *doc) const
 {
     auto b = QSharedPointer<Blockquote>::create();
     b->applyBlock(*this, doc);
@@ -598,6 +958,23 @@ void Blockquote::appendDelim(const WithPosition &p)
     m_delims.append(p);
 }
 
+void Blockquote::write(QTextStream &stream,
+                       SerialiseHelper *helper) const
+{
+    helper->push(this);
+
+    writeStartOfLine(stream);
+
+    Block::write(stream, helper);
+
+    helper->pop();
+}
+
+void Blockquote::writeStartOfLine(QTextStream &stream) const
+{
+    stream << s_greaterSignChar << s_spaceChar;
+}
+
 //
 // ListItem
 //
@@ -606,9 +983,10 @@ ListItem::ListItem() = default;
 
 ListItem::~ListItem() = default;
 
-QSharedPointer<Item> ListItem::clone(Document *doc) const
+Item::SharedPointer ListItem::clone(Document *doc) const
 {
     auto l = QSharedPointer<ListItem>::create();
+    l->setSymbol(symbol());
     l->applyBlock(*this, doc);
     l->setListType(m_listType);
     l->setOrderedListPreState(m_orderedListState);
@@ -696,6 +1074,79 @@ void ListItem::setTaskDelim(const WithPosition &d)
     m_taskDelim = d;
 }
 
+ListItemSymbol ListItem::symbol() const
+{
+    return m_symbol;
+}
+
+void ListItem::setSymbol(ListItemSymbol s)
+{
+    m_symbol = s;
+}
+
+void ListItem::write(QTextStream &stream,
+                     SerialiseHelper *helper) const
+{
+    helper->push(this);
+
+    m_offset = 0;
+
+    switch (symbol()) {
+    case ListItemSymbol::Minus: {
+        stream << s_minusChar;
+        ++m_offset;
+    } break;
+
+    case ListItemSymbol::Plus: {
+        stream << s_plusSignChar;
+        ++m_offset;
+    } break;
+
+    case ListItemSymbol::Dot: {
+        const auto number = QString::number(startNumber());
+        stream << number << s_dotChar;
+        m_offset += number.length() + 1;
+    } break;
+
+    case ListItemSymbol::Bracket: {
+        const auto number = QString::number(startNumber());
+        stream << number << s_rightParenthesisChar;
+        m_offset += number.length() + 1;
+    } break;
+
+    case ListItemSymbol::Asterisk:
+    default: {
+        stream << s_asteriskChar;
+        ++m_offset;
+    } break;
+    }
+
+    stream << s_spaceChar;
+
+    ++m_offset;
+
+    if (isTaskList()) {
+        stream << s_leftSquareBracketChar;
+
+        if (isChecked()) {
+            stream << s_xChar;
+        } else {
+            stream << s_spaceChar;
+        }
+
+        stream << s_rightSquareBracketChar << s_spaceChar;
+    }
+
+    Block::write(stream, helper);
+
+    helper->pop();
+}
+
+void ListItem::writeStartOfLine(QTextStream &stream) const
+{
+    stream << QString(m_offset, s_spaceChar);
+}
+
 //
 // List
 //
@@ -704,7 +1155,7 @@ List::List() = default;
 
 List::~List() = default;
 
-QSharedPointer<Item> List::clone(Document *doc) const
+Item::SharedPointer List::clone(Document *doc) const
 {
     auto l = QSharedPointer<List>::create();
     l->applyBlock(*this, doc);
@@ -739,6 +1190,7 @@ void LinkBase::applyLinkBase(const LinkBase &other,
         setP(other.p()->clone(doc).staticCast<Paragraph>());
         setTextPos(other.textPos());
         setUrlPos(other.urlPos());
+        setMarkdownContent(other.markdownContent());
     }
 }
 
@@ -807,6 +1259,24 @@ void LinkBase::setUrlPos(const WithPosition &pos)
     m_urlPos = pos;
 }
 
+const QString &LinkBase::markdownContent() const
+{
+    return m_markdownContent;
+}
+
+void LinkBase::setMarkdownContent(const QString &md)
+{
+    m_markdownContent = md;
+}
+
+void LinkBase::write(QTextStream &stream,
+                     SerialiseHelper *) const
+{
+    writeOpenStyles(stream);
+    stream << markdownContent();
+    writeCloseStyles(stream);
+}
+
 //
 // Image
 //
@@ -815,7 +1285,7 @@ Image::Image() = default;
 
 Image::~Image() = default;
 
-QSharedPointer<Item> Image::clone(Document *doc) const
+Item::SharedPointer Image::clone(Document *doc) const
 {
     auto i = QSharedPointer<Image>::create();
     i->applyLinkBase(*this, doc);
@@ -840,7 +1310,7 @@ Link::Link()
 
 Link::~Link() = default;
 
-QSharedPointer<Item> Link::clone(Document *doc) const
+Item::SharedPointer Link::clone(Document *doc) const
 {
     auto l = QSharedPointer<Link>::create();
     l->applyLinkBase(*this, doc);
@@ -891,10 +1361,12 @@ void Code::applyCode(const Code &other)
         setStartDelim(other.startDelim());
         setEndDelim(other.endDelim());
         setFensedCode(other.isFensedCode());
+        setFensedCodeSymbol(other.fensedCodeSymbol());
+        setMarkdownContent(other.markdownContent());
     }
 }
 
-QSharedPointer<Item> Code::clone(Document *doc) const
+Item::SharedPointer Code::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -979,6 +1451,72 @@ void Code::setFensedCode(bool on)
     m_fensed = on;
 }
 
+const QString &Code::markdownContent() const
+{
+    return m_markdowm;
+}
+
+void Code::setMarkdownContent(const QString &v)
+{
+    m_markdowm = v;
+}
+
+FensedCodeSymbol Code::fensedCodeSymbol() const
+{
+    return m_fensedSymbol;
+}
+
+void Code::setFensedCodeSymbol(FensedCodeSymbol s)
+{
+    m_fensedSymbol = s;
+}
+
+void Code::write(QTextStream &stream,
+                 SerialiseHelper *helper) const
+{
+    if (isInline()) {
+        writeOpenStyles(stream);
+
+        const QString opener(startDelim().endColumn() - startDelim().startColumn() + 1, s_graveAccentChar);
+
+        stream << opener;
+
+        stream << (markdownContent().isEmpty() ? text() : markdownContent());
+
+        stream << opener;
+
+        writeCloseStyles(stream);
+    } else {
+        helper->push(this);
+
+        qsizetype delimCount = (isFensedCode() ? startDelim().endColumn() - startDelim().startColumn() + 1 : 3);
+        const QChar symbol = (fensedCodeSymbol() == FensedCodeSymbol::Tilde ? s_tildeChar : s_graveAccentChar);
+
+        if (!isFensedCode()) {
+            while (text().indexOf(QString(delimCount, symbol)) != -1) {
+                ++delimCount;
+            }
+        }
+
+        const QString opener(delimCount, symbol);
+
+        stream << opener << syntax() << s_newLineChar;
+        helper->startLine(stream);
+
+        if (!text().isEmpty()) {
+            writeMultiline(text(), stream, helper);
+
+            stream << s_newLineChar;
+
+            helper->startLine(stream);
+        }
+
+        stream << opener;
+
+        helper->pop();
+    }
+}
+
 //
 // Math
 //
@@ -992,7 +1530,7 @@ Math::Math()
 
 Math::~Math() = default;
 
-QSharedPointer<Item> Math::clone(Document *doc) const
+Item::SharedPointer Math::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -1017,6 +1555,32 @@ void Math::setExpr(const QString &e)
     Code::setText(e);
 }
 
+void Math::write(QTextStream &stream,
+                 SerialiseHelper *helper) const
+{
+    const auto writeDelims = [&]() {
+        if (this->isInline()) {
+            stream << s_dollarSignChar;
+        } else {
+            stream << QString(2, s_dollarSignChar);
+        }
+    };
+
+    writeOpenStyles(stream);
+
+    writeDelims();
+
+    writeMultiline(expr(), stream, helper);
+
+    if (expr().isEmpty()) {
+        stream << s_spaceChar;
+    }
+
+    writeDelims();
+
+    writeCloseStyles(stream);
+}
+
 //
 // TableCell
 //
@@ -1025,7 +1589,7 @@ TableCell::TableCell() = default;
 
 TableCell::~TableCell() = default;
 
-QSharedPointer<Item> TableCell::clone(Document *doc) const
+Item::SharedPointer TableCell::clone(Document *doc) const
 {
     auto c = QSharedPointer<TableCell>::create();
     c->applyBlock(*this, doc);
@@ -1038,6 +1602,14 @@ ItemType TableCell::type() const
     return ItemType::TableCell;
 }
 
+void TableCell::write(QTextStream &stream,
+                      SerialiseHelper *helper) const
+{
+    for (const auto &item : items()) {
+        item->write(stream, helper);
+    }
+}
+
 //
 // TableRow
 //
@@ -1046,7 +1618,7 @@ TableRow::TableRow() = default;
 
 TableRow::~TableRow() = default;
 
-QSharedPointer<Item> TableRow::clone(Document *doc) const
+Item::SharedPointer TableRow::clone(Document *doc) const
 {
     auto t = QSharedPointer<TableRow>::create();
     t->applyPositions(*this);
@@ -1083,6 +1655,30 @@ bool TableRow::isEmpty() const
     return m_cells.empty();
 }
 
+void TableRow::write(QTextStream &stream,
+                     SerialiseHelper *helper) const
+{
+    if (cells().isEmpty()) {
+        return;
+    }
+
+    stream << s_verticalLineChar << s_spaceChar;
+
+    bool first = true;
+
+    for (const auto &cell : cells()) {
+        if (!first) {
+            stream << s_spaceChar;
+        }
+
+        cell->write(stream, helper);
+
+        stream << s_spaceChar << s_verticalLineChar;
+
+        first = false;
+    }
+}
+
 //
 // Table
 //
@@ -1091,7 +1687,7 @@ Table::Table() = default;
 
 Table::~Table() = default;
 
-QSharedPointer<Item> Table::clone(Document *doc) const
+Item::SharedPointer Table::clone(Document *doc) const
 {
     auto t = QSharedPointer<Table>::create();
     t->applyPositions(*this);
@@ -1152,6 +1748,69 @@ bool Table::isEmpty() const
     return (m_aligns.empty() || m_rows.empty());
 }
 
+void writeAlignment(Table::Alignment a,
+                    QTextStream &stream)
+{
+    static const QString s_left = QStringLiteral(":---");
+    static const QString s_center = QStringLiteral(":---:");
+    static const QString s_right = QStringLiteral("---:");
+
+    switch (a) {
+    case Table::AlignLeft: {
+        stream << s_left;
+    } break;
+
+    case Table::AlignRight: {
+        stream << s_right;
+    } break;
+
+    case Table::AlignCenter:
+    default: {
+        stream << s_center;
+    } break;
+    }
+}
+
+void Table::write(QTextStream &stream,
+                  SerialiseHelper *helper) const
+{
+    if (rows().isEmpty()) {
+        return;
+    }
+
+    bool first = true;
+
+    for (const auto &row : rows()) {
+        if (!first) {
+            stream << s_newLineChar;
+
+            helper->startLine(stream);
+        }
+
+        row->write(stream, helper);
+
+        if (first) {
+            stream << s_newLineChar;
+
+            helper->startLine(stream);
+
+            for (int i = 0; i < columnsCount(); ++i) {
+                if (i == 0) {
+                    stream << s_verticalLineChar;
+                }
+
+                stream << s_spaceChar;
+
+                writeAlignment(columnAlignment(i), stream);
+
+                stream << s_spaceChar << s_verticalLineChar;
+            }
+
+            first = false;
+        }
+    }
+}
+
 //
 // FootnoteRef
 //
@@ -1163,13 +1822,14 @@ FootnoteRef::FootnoteRef(const QString &i)
 
 FootnoteRef::~FootnoteRef() = default;
 
-QSharedPointer<Item> FootnoteRef::clone(Document *doc) const
+Item::SharedPointer FootnoteRef::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
     auto f = QSharedPointer<FootnoteRef>::create(m_id);
     f->applyText(*this);
     f->setIdPos(m_idPos);
+    f->setMarkdownContent(markdownContent());
 
     return f;
 }
@@ -1199,6 +1859,26 @@ void FootnoteRef::setIdPos(const WithPosition &pos)
     m_idPos = pos;
 }
 
+const QString &FootnoteRef::markdownContent() const
+{
+    return m_markdownContent;
+}
+
+void FootnoteRef::setMarkdownContent(const QString &md)
+{
+    m_markdownContent = md;
+}
+
+void FootnoteRef::write(QTextStream &stream,
+                        SerialiseHelper *) const
+{
+    writeOpenStyles(stream);
+
+    stream << markdownContent();
+
+    writeCloseStyles(stream);
+}
+
 //
 // Footnote
 //
@@ -1207,7 +1887,7 @@ Footnote::Footnote() = default;
 
 Footnote::~Footnote() = default;
 
-QSharedPointer<Item> Footnote::clone(Document *doc) const
+Item::SharedPointer Footnote::clone(Document *doc) const
 {
     auto f = QSharedPointer<Footnote>::create();
     f->applyBlock(*this, doc);
@@ -1231,6 +1911,36 @@ void Footnote::setIdPos(const WithPosition &pos)
     m_idPos = pos;
 }
 
+void Footnote::write(QTextStream &stream,
+                     SerialiseHelper *helper) const
+{
+    helper->push(this);
+
+    bool firstItem = true;
+    m_offset = 0;
+
+    for (const auto &item : items()) {
+        if (!firstItem) {
+            m_offset = 4;
+            stream << s_newLineChar;
+            helper->startLine(stream);
+            stream << s_newLineChar;
+            helper->startLine(stream);
+        }
+
+        item->write(stream, helper);
+
+        firstItem = false;
+    }
+
+    helper->pop();
+}
+
+void Footnote::writeStartOfLine(QTextStream &stream) const
+{
+    stream << QString(m_offset, s_spaceChar);
+}
+
 //
 // Document
 //
@@ -1244,7 +1954,7 @@ ItemType Document::type() const
     return ItemType::Document;
 }
 
-QSharedPointer<Item> Document::clone(Document *doc) const
+Item::SharedPointer Document::clone(Document *doc) const
 {
     Q_UNUSED(doc)
 
@@ -1252,7 +1962,9 @@ QSharedPointer<Item> Document::clone(Document *doc) const
     d->applyBlock(*this, d.get());
 
     for (auto it = m_footnotes.cbegin(), last = m_footnotes.cend(); it != last; ++it) {
-        d->insertFootnote(it.key(), it.value()->clone(d.get()).staticCast<Footnote>());
+        d->insertFootnote(it.key(),
+                          it.value().m_originalLabel,
+                          it.value().m_footnote->clone(d.get()).staticCast<Footnote>());
     }
 
     for (auto it = m_labeledLinks.cbegin(), last = m_labeledLinks.cend(); it != last; ++it) {
@@ -1275,9 +1987,10 @@ void Document::setFootnotesMap(const Footnotes &f)
 }
 
 void Document::insertFootnote(const QString &id,
+                              const QString &originalLabel,
                               FootnoteSharedPointer fn)
 {
-    m_footnotes.insert(id, fn);
+    m_footnotes.insert(id, FootnoteWithLabel{fn, originalLabel});
 }
 
 const Document::LabeledLinks &Document::labeledLinks() const
@@ -1352,6 +2065,50 @@ void Document::incrementAuxLabelCounter(const QString &label,
                                         const QString &path)
 {
     ++m_auxLabelsMap[label][path];
+}
+
+void Document::write(QTextStream &stream,
+                     SerialiseHelper *helper) const
+{
+    Block::write(stream, helper);
+
+    bool first = true;
+
+    if (!footnotesMap().isEmpty()
+        && (items().count() > 1 || (items().count() == 1 && items().at(0)->type() != MD::ItemType::Anchor))) {
+        stream << s_newLineChar << s_newLineChar;
+    }
+
+    for (auto it = footnotesMap().cbegin(), last = footnotesMap().cend(); it != last; ++it) {
+        if (!first) {
+            stream << s_newLineChar << s_newLineChar;
+        }
+
+        stream
+            << s_leftSquareBracketChar
+            << it.value().m_originalLabel
+            << s_rightSquareBracketChar
+            << s_colonChar
+            << s_spaceChar;
+
+        it.value().m_footnote->write(stream, helper);
+
+        first = false;
+    }
+
+    if (!labeledLinks().isEmpty()) {
+        stream << s_newLineChar << s_newLineChar;
+    }
+
+    for (auto it = labeledLinks().cbegin(), last = labeledLinks().cend(); it != last; ++it) {
+        it.value()->write(stream, helper);
+
+        stream << s_newLineChar;
+    }
+
+    if (labeledLinks().isEmpty()) {
+        stream << s_newLineChar;
+    }
 }
 
 } /* namespace MD */

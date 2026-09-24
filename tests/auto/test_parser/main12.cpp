@@ -1235,7 +1235,7 @@ TEST_CASE("369")
     REQUIRE(doc->footnotesMap().size() == 2);
 
     for (auto it = doc->footnotesMap().cbegin(), last = doc->footnotesMap().cend(); it != last; ++it) {
-        REQUIRE((*it)->items().size() == 1);
+        REQUIRE(it.value().m_footnote->items().size() == 1);
     }
 }
 
@@ -1267,7 +1267,7 @@ TEST_CASE("370")
     REQUIRE(doc->footnotesMap().size() == 2);
 
     for (auto it = doc->footnotesMap().cbegin(), last = doc->footnotesMap().cend(); it != last; ++it) {
-        REQUIRE((*it)->items().size() == 1);
+        REQUIRE(it.value().m_footnote->items().size() == 1);
     }
 }
 
@@ -1307,7 +1307,7 @@ TEST_CASE("370-1")
     REQUIRE(doc->footnotesMap().size() == 2);
 
     for (auto it = doc->footnotesMap().cbegin(), last = doc->footnotesMap().cend(); it != last; ++it) {
-        REQUIRE((*it)->items().size() == 1);
+        REQUIRE(it.value().m_footnote->items().size() == 1);
     }
 }
 
@@ -1324,6 +1324,11 @@ TEST_CASE("text_stream")
             Q_UNUSED(doc)
 
             return {};
+        }
+
+        void write(QTextStream &,
+                   MD::SerialiseHelper *) const override
+        {
         }
     };
 
@@ -1350,7 +1355,7 @@ TEST_CASE("text_stream")
     auto f = QSharedPointer<MD::Footnote>::create();
     f->appendItem(my);
 
-    doc->insertFootnote(QStringLiteral("f1"), f);
+    doc->insertFootnote(QStringLiteral("f1"), QStringLiteral("^f1"), f);
 
     doc->appendItem(b);
     doc->appendItem(l);

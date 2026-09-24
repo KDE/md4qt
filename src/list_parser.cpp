@@ -231,6 +231,23 @@ void ListParser::finishFirstChild(Line &currentLine,
     }
 }
 
+inline ListItemSymbol listItemSymbol(const QChar &ch)
+{
+    if (ch == s_minusChar) {
+        return ListItemSymbol::Minus;
+    } else if (ch == s_plusSignChar) {
+        return ListItemSymbol::Plus;
+    } else if (ch == s_asteriskChar) {
+        return ListItemSymbol::Asterisk;
+    } else if (ch == s_dotChar) {
+        return ListItemSymbol::Dot;
+    } else if (ch == s_rightParenthesisChar) {
+        return ListItemSymbol::Bracket;
+    } else {
+        return ListItemSymbol::Unknown;
+    }
+}
+
 ListParser::ListProcessState ListParser::processList(Line &currentLine,
                                                      TextStream &stream,
                                                      QSharedPointer<Document> doc,
@@ -327,6 +344,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
 
                     if (makeListItem) {
                         item = QSharedPointer<ListItem>::create();
+                        item->setSymbol(listItemSymbol(delim));
                         item->setStartColumn(startPos);
                         item->setStartLine(currentLine.lineNumber());
                         item->setEndColumn(currentLine.position() - 1);

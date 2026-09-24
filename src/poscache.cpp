@@ -112,7 +112,7 @@ void PosCache::initialize(QSharedPointer<MD::Document> doc)
         Visitor::process(doc);
 
         for (auto it = doc->footnotesMap().cbegin(), last = doc->footnotesMap().cend(); it != last; ++it) {
-            onFootnote(it->get());
+            onFootnote(it->m_footnote.get());
         }
 
         for (auto it = doc->labeledLinks().cbegin(), last = doc->labeledLinks().cend(); it != last; ++it) {

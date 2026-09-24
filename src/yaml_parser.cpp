@@ -10,6 +10,9 @@
 namespace MD
 {
 
+static const QString s_startString = QStringLiteral("---");
+static const QString s_endString = QStringLiteral("...");
+
 //
 // YAMLHeader
 //
@@ -36,12 +39,19 @@ QSharedPointer<Item> YAMLHeader::clone(Document *doc) const
     return h;
 }
 
+void YAMLHeader::write(QTextStream &stream,
+                       SerialiseHelper *helper) const
+{
+    stream << s_startString << s_newLineChar;
+
+    writeMultiline(yaml(), stream, helper);
+
+    stream << s_newLineChar << s_startString;
+}
+
 //
 // YAMLParser
 //
-
-static const QString s_startString = QStringLiteral("---");
-static const QString s_endString = QStringLiteral("...");
 
 YAMLParser::YAMLParser(Parser *parser)
     : BlockParser(parser)

@@ -354,7 +354,7 @@ TEST_CASE("237")
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::Code);
         auto c = static_cast<MD::Code *>(doc->items().at(3).get());
         REQUIRE(!c->isInline());
-        REQUIRE(c->text() == QStringLiteral("\n"));
+        REQUIRE(c->text().isEmpty());
     }
 }
 

@@ -648,6 +648,11 @@ TEST_CASE("user_defined")
 
             return QSharedPointer<MyItem>::create();
         }
+
+        void write(QTextStream &,
+                   MD::SerialiseHelper *) const override
+        {
+        }
     };
 
     auto doc = QSharedPointer<MD::Document>::create();

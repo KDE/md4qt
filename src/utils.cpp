@@ -13,6 +13,37 @@
 namespace MD
 {
 
+QString getMarkdownContent(ParagraphStream &stream,
+                           qsizetype startPos,
+                           qsizetype startLine,
+                           qsizetype endPos,
+                           qsizetype endLine)
+{
+    QString md;
+    bool first = true;
+
+    ParagraphStream::State st;
+    st.m_lineNumber = startLine;
+    stream.restoreState(&st);
+
+    while (startLine <= endLine) {
+        if (!first) {
+            md.append(s_newLineChar);
+        }
+
+        const auto line = stream.readLine();
+
+        const auto start = (first ? startPos : 0);
+        const auto end = (startLine == endLine ? endPos : line.length() - 1);
+        md.append(line.slicedCopy(start, end - start + 1));
+
+        first = false;
+        ++startLine;
+    }
+
+    return md;
+}
+
 QString readLinkDestination(Line &line)
 {
     if (line.position() < line.length()) {

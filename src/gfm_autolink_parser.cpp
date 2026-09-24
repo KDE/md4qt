@@ -102,6 +102,7 @@ inline void makeLink(const Line::State &start,
     link->setStartLine(lineNumber);
     link->setEndColumn(start.m_pos + length - 1);
     link->setEndLine(lineNumber);
+    link->setMarkdownContent(url.sliced(url.length() - length));
 
     ctx.inlines().append(link);
 

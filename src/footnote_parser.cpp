@@ -193,13 +193,15 @@ void FootnoteParser::processLabel(Line &currentLine,
         note->setIdPos({startPos, currentLine.lineNumber(), endPos, currentLine.lineNumber()});
     }
 
+    const auto original = label;
+
     label = s_numberSignChar
         + label.toCaseFolded().toUpper()
         + s_solidusChar
         + (!path.isEmpty() ? path + s_solidusChar : QString())
         + fileName;
 
-    doc->insertFootnote(label, note);
+    doc->insertFootnote(label, original, note);
 }
 
 BlockState FootnoteParser::process(Line &currentLine,

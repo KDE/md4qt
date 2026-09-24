@@ -36,7 +36,8 @@ ItemWithOpts::Styles StrikethroughEmphasisParser::openStyles(qsizetype startPos,
 {
     ItemWithOpts::Styles styles;
 
-    styles.append(StyleDelim(StrikethroughText, startPos, lineNumber, startPos + length - 1, lineNumber));
+    styles.append(
+        StyleDelim(StrikethroughText, startPos, lineNumber, startPos + length - 1, lineNumber, EmphasisSymbol::Tilde));
 
     return styles;
 }
@@ -47,7 +48,8 @@ ItemWithOpts::Styles StrikethroughEmphasisParser::closeStyles(qsizetype startPos
 {
     ItemWithOpts::Styles styles;
 
-    styles.append(StyleDelim(StrikethroughText, startPos, lineNumber, startPos + length - 1, lineNumber));
+    styles.append(
+        StyleDelim(StrikethroughText, startPos, lineNumber, startPos + length - 1, lineNumber, EmphasisSymbol::Tilde));
 
     return styles;
 }

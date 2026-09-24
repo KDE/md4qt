@@ -72,6 +72,17 @@ BlockState ThematicBreakParser::process(Line &currentLine,
     hl->setStartLine(currentLine.lineNumber());
     hl->setEndColumn(currentLine.length() - 1);
     hl->setEndLine(currentLine.lineNumber());
+
+    skipSpaces(currentLine);
+
+    if (currentLine.currentChar() == s_asteriskChar) {
+        hl->setSymbol(HorizontalLineSymbol::Asterisk);
+    } else if (currentLine.currentChar() == s_minusChar) {
+        hl->setSymbol(HorizontalLineSymbol::Dash);
+    } else if (currentLine.currentChar() == s_lowLineChar) {
+        hl->setSymbol(HorizontalLineSymbol::Underline);
+    }
+
     parent->appendItem(hl);
     currentLine.skip();
 

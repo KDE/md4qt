@@ -230,6 +230,8 @@ BlockState FencedCodeParser::process(Line &currentLine,
         ctx.appendChildIndent(pStartPos);
 
         m_code = QSharedPointer<Code>::create(QString(), true, false);
+        m_code->setFensedCodeSymbol(currentLine.currentChar() == s_tildeChar ? FensedCodeSymbol::Tilde
+                                                                             : FensedCodeSymbol::Backtick);
         ctx.setItem(m_code.get());
 
         if (stream.atEnd()) {
@@ -425,7 +427,7 @@ void FencedCodeParser::resetOnAllContexts()
     if (m_code && m_emptyLinesCount) {
         QString data;
 
-        for (qsizetype i = 0; i < m_emptyLinesCount; ++i) {
+        for (qsizetype i = (m_code->text().isEmpty() ? 1 : 0); i < m_emptyLinesCount; ++i) {
             data.append(s_newLineChar);
         }
 

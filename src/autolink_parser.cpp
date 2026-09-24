@@ -45,7 +45,7 @@ AutolinkParser::AutolinkParser() = default;
 AutolinkParser::~AutolinkParser() = default;
 
 bool AutolinkParser::check(Line &line,
-                           ParagraphStream &,
+                           ParagraphStream &stream,
                            InlineContext &ctx,
                            QSharedPointer<Document>,
                            const QString &,
@@ -77,6 +77,8 @@ bool AutolinkParser::check(Line &line,
         lnk->setStartLine(startLine);
         lnk->setEndColumn(line.position() - 1);
         lnk->setEndLine(line.lineNumber());
+        lnk->setMarkdownContent(
+            getMarkdownContent(stream, lnk->startColumn(), lnk->startLine(), lnk->endColumn(), lnk->endLine()));
         lnk->setUrl(uri);
         lnk->setTextPos({startPos + 1, startLine, line.position() - 2, line.lineNumber()});
         lnk->setUrlPos(lnk->textPos());

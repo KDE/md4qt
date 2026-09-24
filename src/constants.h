@@ -36,6 +36,7 @@ static const auto s_asteriskChar = QLatin1Char('*');
 static const auto s_minusChar = QLatin1Char('-');
 static const auto s_lowLineChar = QLatin1Char('_');
 static const auto s_rightCurlyBracketChar = QLatin1Char('}');
+static const auto s_leftCurlyBracketChar = QLatin1Char('{');
 static const auto s_tildeChar = QLatin1Char('~');
 static const auto s_graveAccentChar = QLatin1Char('`');
 static const auto s_equalSignChar = QLatin1Char('=');

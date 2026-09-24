@@ -724,7 +724,7 @@ TEST_CASE("202")
     REQUIRE(doc->items().size() == 2);
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::Code);
     auto c = static_cast<MD::Code *>(doc->items().at(1).get());
-    REQUIRE(c->text() == QStringLiteral("\n"));
+    REQUIRE(c->text().isEmpty());
     REQUIRE(c->openStyles().empty());
     REQUIRE(c->closeStyles().empty());
 }
@@ -1167,7 +1167,7 @@ TEST_CASE("216")
     REQUIRE(p->items().size() == 2);
 
     REQUIRE(doc->footnotesMap().size() == 1);
-    auto f = static_cast<MD::Footnote *>(doc->footnotesMap().cbegin().value().get());
+    auto f = static_cast<MD::Footnote *>(doc->footnotesMap().cbegin().value().m_footnote.get());
     REQUIRE(f->items().size() == 1);
     REQUIRE(f->idPos() == MD::WithPosition{0, 1, 4, 1});
     auto pp = static_cast<MD::Paragraph *>(f->items().at(0).get());

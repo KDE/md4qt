@@ -96,6 +96,16 @@ public:
         m_endDelim = p;
     }
 
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     /*!
      * YAML content.

@@ -37,6 +37,7 @@ bool HardLineBreakParser::check(Line &line,
 
             if (isEmptyLine(line)) {
                 auto br = QSharedPointer<LineBreak>::create();
+                br->setSymbol(LineBreakType::Spaces);
                 br->setStartColumn(startPos);
                 br->setStartLine(line.lineNumber());
                 br->setEndColumn(line.length() - 1);
@@ -50,6 +51,7 @@ bool HardLineBreakParser::check(Line &line,
             }
         } else if (line.currentChar() == s_reverseSolidusChar && line.position() == line.length() - 1) {
             auto br = QSharedPointer<LineBreak>::create();
+            br->setSymbol(LineBreakType::Backslash);
             br->setStartColumn(line.position());
             br->setStartLine(line.lineNumber());
             br->setEndColumn(line.position());

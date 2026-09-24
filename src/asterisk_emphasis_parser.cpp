@@ -5,11 +5,12 @@
 
 // md4qt include.
 #include "asterisk_emphasis_parser.h"
+#include "constants.h"
 
 namespace MD
 {
 
-const QChar AsteriskEmphasisParser::m_symbol = QLatin1Char('*');
+const QChar AsteriskEmphasisParser::m_symbol = s_asteriskChar;
 
 AsteriskEmphasisParser::AsteriskEmphasisParser() = default;
 
@@ -37,12 +38,22 @@ ItemWithOpts::Styles AsteriskEmphasisParser::openStyles(qsizetype startPos,
     ItemWithOpts::Styles styles;
 
     if (length % 2 == 1) {
-        styles.append(StyleDelim(ItalicText, startPos, lineNumber, startPos, lineNumber));
+        styles.append(StyleDelim(ItalicText,
+                                 startPos,
+                                 lineNumber,
+                                 startPos,
+                                 lineNumber,
+                                 symbol() == s_asteriskChar ? EmphasisSymbol::Asterisk : EmphasisSymbol::Underline));
         ++startPos;
     }
 
     for (auto i = 0; i < length / 2; ++i) {
-        styles.append(StyleDelim(BoldText, startPos, lineNumber, startPos + 1, lineNumber));
+        styles.append(StyleDelim(BoldText,
+                                 startPos,
+                                 lineNumber,
+                                 startPos + 1,
+                                 lineNumber,
+                                 symbol() == s_asteriskChar ? EmphasisSymbol::Asterisk : EmphasisSymbol::Underline));
         startPos += 2;
     }
 
@@ -56,12 +67,22 @@ ItemWithOpts::Styles AsteriskEmphasisParser::closeStyles(qsizetype startPos,
     ItemWithOpts::Styles styles;
 
     for (auto i = 0; i < length / 2; ++i) {
-        styles.append(StyleDelim(BoldText, startPos, lineNumber, startPos + 1, lineNumber));
+        styles.append(StyleDelim(BoldText,
+                                 startPos,
+                                 lineNumber,
+                                 startPos + 1,
+                                 lineNumber,
+                                 symbol() == s_asteriskChar ? EmphasisSymbol::Asterisk : EmphasisSymbol::Underline));
         startPos += 2;
     }
 
     if (length % 2 == 1) {
-        styles.append(StyleDelim(ItalicText, startPos, lineNumber, startPos, lineNumber));
+        styles.append(StyleDelim(ItalicText,
+                                 startPos,
+                                 lineNumber,
+                                 startPos,
+                                 lineNumber,
+                                 symbol() == s_asteriskChar ? EmphasisSymbol::Asterisk : EmphasisSymbol::Underline));
         ++startPos;
     }
 

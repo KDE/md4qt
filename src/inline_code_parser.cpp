@@ -86,6 +86,9 @@ bool InlineCodeParser::check(Line &line,
 
                         code.append(tmp.slicedCopy(end, tmpStartPos - end));
 
+                        auto item = QSharedPointer<Code>::create(code, false, true);
+                        item->setMarkdownContent(code);
+
                         if (code.startsWith(s_spaceChar)
                             && code.endsWith(s_spaceChar)
                             && !code.simplified().isEmpty()) {
@@ -93,7 +96,7 @@ bool InlineCodeParser::check(Line &line,
                             code.removeLast();
                         }
 
-                        auto item = QSharedPointer<Code>::create(code, false, true);
+                        item->setText(code);
                         item->setStartColumn(startCodePos);
                         item->setStartLine(startCodeLine);
                         item->setEndColumn(endCodePos);

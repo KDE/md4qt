@@ -181,6 +181,7 @@ BlockState ATXHeadingParser::process(Line &currentLine,
     skipSpaces(currentLine);
 
     auto heading = QSharedPointer<Heading>::create();
+    heading->setHeadingType(HeadingType::ATX);
     heading->setStartColumn(currentLine.position());
     heading->setStartLine(currentLine.lineNumber());
     heading->setEndColumn(currentLine.length() - 1);
@@ -235,7 +236,8 @@ BlockState ATXHeadingParser::process(Line &currentLine,
     auto label = findHeaderLabel(s);
 
     if (!label.first.isEmpty()) {
-        heading->setLabel(label.first.sliced(1, label.first.length() - 2)
+        heading->setOriginalLabel(label.first.sliced(1, label.first.length() - 2));
+        heading->setLabel(heading->originalLabel()
                           + s_solidusChar
                           + (!path.isEmpty() ? QString(path + s_solidusChar) : QString())
                           + fileName);

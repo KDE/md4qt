@@ -285,7 +285,7 @@ void AlgoVisitor::onFootnote(Footnote *f)
 void AlgoVisitor::onFootnotes(QSharedPointer<Document> doc)
 {
     for (const auto &f : doc->footnotesMap()) {
-        this->onFootnote(f.get());
+        this->onFootnote(f.m_footnote.get());
     }
 }
 

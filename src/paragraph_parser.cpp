@@ -32,6 +32,7 @@ void ParagraphParser::clearRefLink()
     m_reference.reset();
     m_refLinkLabel.clear();
     m_refLinkTitle.clear();
+    m_refMdContent.clear();
     m_wasSpace = false;
     m_refLinkStage = RefLinkParserStage::S0;
     m_refLinkTextPos = {};
@@ -92,6 +93,11 @@ ParagraphParser::RefLinkState ParagraphParser::checkForReferenceLink(Line &curre
     st = currentLine.currentState();
 
     ReverseSolidusHandler rs;
+    qsizetype start = currentLine.position();
+
+    if (!m_refMdContent.isEmpty()) {
+        m_refMdContent.append(s_newLineChar);
+    }
 
     while (currentLine.position() < currentLine.length()) {
         if (!rs.process(currentLine.currentChar())) {
@@ -104,6 +110,7 @@ ParagraphParser::RefLinkState ParagraphParser::checkForReferenceLink(Line &curre
 
                 if (isRefLinkStage0(currentLine, ctx)) {
                     m_reference->setStartColumn(currentLine.position());
+                    start = currentLine.position();
                     m_reference->setStartLine(currentLine.lineNumber());
                     currentLine.nextChar();
                     rs.next();
@@ -192,6 +199,7 @@ ParagraphParser::RefLinkState ParagraphParser::checkForReferenceLink(Line &curre
                 const auto startUrlPos = currentLine.position();
 
                 if (currentLine.position() == currentLine.length()) {
+                    m_refMdContent.append(currentLine.slicedCopy(start, currentLine.length() - start));
                     return RefLinkState::Continue;
                 }
 
@@ -245,6 +253,7 @@ ParagraphParser::RefLinkState ParagraphParser::checkForReferenceLink(Line &curre
 
                 if (currentLine.position() == currentLine.length()
                     && m_refLinkUrlPos.startLine() == currentLine.lineNumber()) {
+                    m_refMdContent.append(currentLine.slicedCopy(start, currentLine.length() - start));
                     return RefLinkState::Continue;
                 }
 
@@ -328,15 +337,20 @@ ParagraphParser::RefLinkState ParagraphParser::checkForReferenceLink(Line &curre
         }
     }
 
+    if (!(m_refLinkStage == RefLinkParserStage::SF && m_refLinkTitlePos.startColumn() == -1)) {
+        m_refMdContent.append(currentLine.slicedCopy(start, currentLine.length() - start));
+    }
+
     switch (m_refLinkStage) {
     case RefLinkParserStage::SF: {
         insertRefLink(doc, currentLine.lineNumber() + 1);
 
         return (makeReturnWrongOnFail ? RefLinkState::Wrong : RefLinkState::Finished);
-    }
+    } break;
 
-    default:
+    default: {
         return RefLinkState::Continue;
+    } break;
     }
 }
 
@@ -352,6 +366,7 @@ qsizetype ParagraphParser::insertRefLink(QSharedPointer<Document> doc,
     m_reference->setText(m_refLinkLabel);
     m_reference->setTitle(m_refLinkTitle);
     m_reference->setTextPos(m_refLinkTextPos);
+    m_reference->setMarkdownContent(m_refMdContent);
 
     if (m_refLinkTitlePos.endLine() != -1) {
         m_reference->setEndColumn(m_refLinkTitlePos.endColumn());
@@ -837,6 +852,8 @@ void ParagraphParser::makeTextObjects(InlineContext &ctx,
 
                     auto tmp = line.slicedCopy(line.position(), toPlace.startColumn() - line.position());
 
+                    text->setMarkdownContent(tmp);
+
                     if (line.position() == startPos) {
                         const auto c = skipIf(0, tmp, [](const QChar &c) {
                             return c.isSpace();
@@ -902,6 +919,8 @@ void ParagraphParser::makeTextObjects(InlineContext &ctx,
                 text->setEndLine(line.lineNumber());
 
                 auto tmp = line.slicedCopy(line.position());
+
+                text->setMarkdownContent(tmp);
 
                 if (line.position() == startPos) {
                     const auto s = skipIf(0, tmp, [](const QChar &c) {

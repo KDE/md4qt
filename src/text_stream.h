@@ -327,9 +327,9 @@ public:
          */
         qsizetype m_lineNumber = 0;
         /*!
-         * Flags about last new line.
+         * Last read symbol is a line ending.
          */
-        bool m_isLastNewLine = false;
+        bool m_lastLineEnding = false;
     }; // struct state
 
     /*!
@@ -376,6 +376,11 @@ protected:
      */
     virtual bool isEmpty() const = 0;
 
+    /*!
+     * Returns length of the stream.
+     */
+    virtual qsizetype length() const = 0;
+
 protected:
     /*!
      * Current state of the stream.
@@ -410,6 +415,7 @@ protected:
     QChar getChar() override;
     const QChar *data() const override;
     bool isEmpty() const override;
+    qsizetype length() const override;
 
 private:
     QString m_data;

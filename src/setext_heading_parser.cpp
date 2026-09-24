@@ -126,6 +126,7 @@ BlockState SetextHeadingParser::process(Line &currentLine,
                                         QStringList &)
 {
     auto heading = QSharedPointer<Heading>::create();
+    heading->setHeadingType(HeadingType::Setext);
     auto p = parent->items().back().staticCast<Paragraph>();
     parent->removeItemAt(parent->items().size() - 1);
     heading->setStartColumn(p->startColumn());

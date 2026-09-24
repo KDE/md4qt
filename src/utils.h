@@ -22,6 +22,27 @@ class StyleDelim;
 /*!
  * \inheaderfile md4qt/utils.h
  *
+ * Get Markdown string from paragraph stream.
+ *
+ * \a stream Stream.
+ *
+ * \a startPos Start position.
+ *
+ * \a startLine Start line.
+ *
+ * \a endPos End position.
+ *
+ * \a endLine End line.
+ */
+QString getMarkdownContent(ParagraphStream &stream,
+                           qsizetype startPos,
+                           qsizetype startLine,
+                           qsizetype endPos,
+                           qsizetype endLine);
+
+/*!
+ * \inheaderfile md4qt/utils.h
+ *
  * Skip characters by the given predicate.
  *
  * \a line String.

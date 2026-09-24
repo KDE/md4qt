@@ -630,7 +630,7 @@ void HtmlVisitor::onFootnotes(const QString &footnoteBackLinkContent)
         const auto fit = this->m_doc->footnotesMap().find(id.m_id);
 
         if (fit != this->m_doc->footnotesMap().cend()) {
-            this->onFootnote(fit->get());
+            this->onFootnote(fit->m_footnote.get());
         }
     }
 
@@ -646,7 +646,7 @@ void HtmlVisitor::onFootnotes(const QString &footnoteBackLinkContent)
         const auto fit = this->m_doc->footnotesMap().find(id.m_id);
 
         if (fit != this->m_doc->footnotesMap().cend()) {
-            this->onFootnote(fit->get());
+            this->onFootnote(fit->m_footnote.get());
 
             if (!footnoteBackLinkContent.isEmpty()) {
                 QString backRef;

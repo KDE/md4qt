@@ -1284,7 +1284,7 @@ TEST_CASE("045")
 
     REQUIRE(fit != doc->footnotesMap().cend());
 
-    auto f = fit.value();
+    auto f = fit.value().m_footnote;
 
     REQUIRE(f->items().size() == 3);
     CHECK_POSITIONS(f.get(), 0, 0, 21, 4);
@@ -1856,7 +1856,7 @@ TEST_CASE("054")
         auto c = static_cast<MD::Code *>(doc->items().at(1).get());
         REQUIRE(c->syntax() == QStringLiteral("java"));
         REQUIRE(!c->isInline());
-        REQUIRE(c->text() == QStringLiteral("\n"));
+        REQUIRE(c->text().isEmpty());
         CHECK_POSITIONS(c, 0, 1, 0, 1);
         REQUIRE(c->startDelim() == MD::WithPosition{0, 0, 2, 0});
         REQUIRE(c->endDelim() == MD::WithPosition{-1, -1, -1, -1});
@@ -1896,7 +1896,7 @@ TEST_CASE("055")
         const auto fit = doc->footnotesMap().find(label);
         REQUIRE(fit != doc->footnotesMap().cend());
 
-        auto f = fit.value();
+        auto f = fit.value().m_footnote;
 
         REQUIRE(f->type() == MD::ItemType::Footnote);
 
