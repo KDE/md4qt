@@ -4,7 +4,7 @@ SPDX-PackageSupplier = "Igor Mironchik <igor.mironchik@gmail.com>"
 SPDX-PackageDownloadLocation = "https://github.com/igormironchik/md4qt"
 
 [[annotations]]
-path = ["tests/auto/commonmark/0.30/spec.json", "tests/auto/commonmark/0.31.2/spec.json"]
+path = ["tests/auto/commonmark/0.30/spec.json", "tests/auto/commonmark/0.31.2/spec.json", "tests/auto/commonmark/0.31.2/spec.md"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "John MacFarlane"
 SPDX-License-Identifier = "CC-BY-SA-4.0"
