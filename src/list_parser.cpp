@@ -131,11 +131,7 @@ BlockState ListParser::check(Line &currentLine,
 
     if (ctx.isInIndent(currentLine.column())) {
         QChar delim;
-        if (isList(currentLine,
-                   (ctx.children().isEmpty() ? nullptr : &ctx.children().back()),
-                   nullptr,
-                   nullptr,
-                   &delim)) {
+        if (isList(currentLine, (ctx.children().isEmpty() ? nullptr : &ctx.bottomChild()), nullptr, nullptr, &delim)) {
             bool dummy = false;
             bool space;
 
@@ -214,16 +210,12 @@ void ListParser::finishFirstChild(Line &currentLine,
     if (m_lastBlockState == BlockState::Continue && makeListItem) {
         if (ctx.children().front().block()) {
             if (ctx.children().front().firstLineNumber() < currentLine.lineNumber()) {
-                ctx.children().front().block()->finish(currentLine,
-                                                       stream,
-                                                       doc,
-                                                       m_lastListItem,
-                                                       ctx.children().front(),
-                                                       path,
-                                                       fileName,
-                                                       linksToParse);
-                ctx.children().front().block()->reset(ctx.children().front());
-                ctx.children().dequeue();
+                ctx.children()
+                    .front()
+                    .block()
+                    ->finish(currentLine, stream, doc, m_lastListItem, ctx.topChild(), path, fileName, linksToParse);
+                ctx.topChild().block()->reset(ctx.topChild());
+                ctx.popChild();
 
                 m_lastBlockState = BlockState::None;
             }
@@ -274,7 +266,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
     QChar delim;
     const auto list =
         isList(currentLine,
-               (ctx.children().isEmpty() ? nullptr : (makeListItem ? &ctx.children().front() : &ctx.children().back())),
+               (ctx.children().isEmpty() ? nullptr : (makeListItem ? &ctx.topChild() : &ctx.bottomChild())),
                &num,
                &len,
                &delim);
@@ -294,8 +286,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
 
     auto formedListItem = false;
 
-    auto *childCtx =
-        (!ctx.children().isEmpty() ? (makeListItem ? &ctx.children().front() : &ctx.children().back()) : nullptr);
+    auto *childCtx = (!ctx.children().isEmpty() ? (makeListItem ? &ctx.topChild() : &ctx.bottomChild()) : nullptr);
 
     if ((list && currentLine.column() >= ctx.indentColumn())
         || lazy
@@ -363,7 +354,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
                     } else if (ctx.children().back().block() && !ctx.children().back().isDiscardForced()) {
                         Context child(&ctx);
                         child.applyParentContext(ctx);
-                        ctx.children().enqueue(child);
+                        ctx.pushChild(child);
                     }
 
                     const auto was = ctx.listDelim(spacesCount);
@@ -397,7 +388,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
             }
 
             if (!makeListItem) {
-                ctx.children().back().applyParentContext(ctx);
+                ctx.bottomChild().applyParentContext(ctx);
             } else {
                 ctx.updateParentContextForAllChildren();
             }
@@ -478,7 +469,7 @@ BlockState ListParser::process(Line &currentLine,
     auto column = currentLine.column();
     auto pos = currentLine.position();
 
-    while (isList(currentLine, (ctx.children().isEmpty() ? nullptr : &ctx.children().front()))
+    while (isList(currentLine, (ctx.children().isEmpty() ? nullptr : &ctx.topChild()))
            && !ctx.isLazyLine(currentLine.lineNumber())
            && (!ctx.children().isEmpty()
                    ? (ctx.children().front().isNotFinished()
@@ -500,7 +491,7 @@ BlockState ListParser::process(Line &currentLine,
                     auto list = QSharedPointer<List>::create();
                     list->setStartColumn(state.m_item->startColumn());
                     list->setStartLine(state.m_item->startLine());
-                    if (ctx.parent() && ctx.parent()->block() && ctx.parent()->item()) {
+                    if (ctx.wasNotProcessedEver() && ctx.parent() && ctx.parent()->block() && ctx.parent()->item()) {
                         static_cast<Block *>(ctx.parent()->item())->appendItem(list);
                     } else {
                         m_lastListItem->appendItem(list);
@@ -556,7 +547,7 @@ BlockState ListParser::process(Line &currentLine,
 
                             currentLine.nextChar();
 
-                            ctx.children().front().updateStartPos(currentLine.lineNumber(), currentLine.position());
+                            ctx.topChild().updateStartPos(currentLine.lineNumber(), currentLine.position());
                         } else {
                             currentLine.restoreState(&st);
                         }

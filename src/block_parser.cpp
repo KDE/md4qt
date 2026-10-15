@@ -37,15 +37,15 @@ BlockState BlockParser::processOneTime(Line &currentLine,
         state = ctx.children()
                     .head()
                     .block()
-                    ->process(currentLine, stream, doc, parent, ctx.children().head(), path, fileName, linksToParse);
+                    ->process(currentLine, stream, doc, parent, ctx.topChild(), path, fileName, linksToParse);
 
         if (state == BlockState::Stop) {
             ctx.children()
                 .head()
                 .block()
-                ->finish(currentLine, stream, doc, parent, ctx.children().head(), path, fileName, linksToParse);
-            ctx.children().head().block()->reset(ctx.children().head());
-            ctx.children().dequeue();
+                ->finish(currentLine, stream, doc, parent, ctx.topChild(), path, fileName, linksToParse);
+            ctx.topChild().block()->reset(ctx.topChild());
+            ctx.popChild();
         }
     }
 
@@ -73,8 +73,8 @@ BlockState BlockParser::process(Line &currentLine,
 void BlockParser::reset(Context &ctx)
 {
     for (qsizetype i = 0; i < ctx.children().size(); ++i) {
-        if (ctx.children()[i].block()) {
-            ctx.children()[i].block()->reset(ctx.children()[i]);
+        if (ctx.childAt(i).block()) {
+            ctx.childAt(i).block()->reset(ctx.childAt(i));
         }
     }
 }
@@ -97,10 +97,10 @@ void BlockParser::finish(Line &currentLine,
                          QStringList &linksToParse)
 {
     for (qsizetype i = 0; i < ctx.children().size(); ++i) {
-        if (ctx.children()[i].block()) {
-            ctx.children()[i]
+        if (ctx.childAt(i).block()) {
+            ctx.childAt(i)
                 .block()
-                ->finish(currentLine, stream, doc, currentBlock(ctx), ctx.children()[i], path, fileName, linksToParse);
+                ->finish(currentLine, stream, doc, currentBlock(ctx), ctx.childAt(i), path, fileName, linksToParse);
         }
     }
 }

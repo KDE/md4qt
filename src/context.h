@@ -102,11 +102,65 @@ public:
     }
 
     /*!
-     * Returns child contexts.
+     * Push context.
+     *
+     * \a ctx Context.
      */
-    inline Children &children()
+    inline void pushChild(const Context &ctx)
     {
-        return m_children;
+        m_children.enqueue(ctx);
+    }
+
+    /*!
+     * Pop context.
+     */
+    inline void popChild()
+    {
+        m_wasNotProcessedEver = false;
+
+        m_children.dequeue();
+    }
+
+    /*!
+     * Pop bottom context.
+     */
+    inline void popBottomChild()
+    {
+        m_children.pop_back();
+    }
+
+    /*!
+     * Returns top context.
+     */
+    inline Context &topChild()
+    {
+        return m_children.head();
+    }
+
+    /*!
+     * Returns bottom context.
+     */
+    inline Context &bottomChild()
+    {
+        return m_children.back();
+    }
+
+    /*!
+     * Returns context at the given position.
+     *
+     * \a pos Position in queue.
+     */
+    inline Context &childAt(qsizetype pos)
+    {
+        return m_children[pos];
+    }
+
+    /*!
+     * Remove all children.
+     */
+    inline void clearChildren()
+    {
+        m_children.clear();
     }
 
     /*!
@@ -115,6 +169,14 @@ public:
     inline const Children &children() const
     {
         return m_children;
+    }
+
+    /*!
+     * Return whether this context did not process one child ever.
+     */
+    inline bool wasNotProcessedEver() const
+    {
+        return m_wasNotProcessedEver;
     }
 
     /*!
@@ -541,6 +603,7 @@ private:
     bool m_isNotFinished = false;
     bool m_isDiscardForced = false;
     bool m_dontConsiderIndents = false;
+    bool m_wasNotProcessedEver = true;
 }; // class Context
 
 } /* namespace MD */

@@ -84,7 +84,7 @@ BlockState SetextHeadingParser::check(Line &currentLine,
             auto list = dynamic_cast<ListParser *>(ctx.block());
 
             if (list && !ctx.children().isEmpty()) {
-                if (isSetext(currentLine, ctx.children().back())) {
+                if (isSetext(currentLine, ctx.bottomChild())) {
                     if (!checkWithoutProcessing) {
                         currentLine.skip();
                     }
@@ -94,7 +94,7 @@ BlockState SetextHeadingParser::check(Line &currentLine,
             }
         }
     } else if (ctx.parent() && ctx.parent()->children().size() > 1) {
-        if (isSetext(currentLine, ctx.parent()->children()[ctx.parent()->children().size() - 2])) {
+        if (isSetext(currentLine, ctx.parent()->childAt(ctx.parent()->children().size() - 2))) {
             if (!checkWithoutProcessing) {
                 currentLine.skip();
             }
