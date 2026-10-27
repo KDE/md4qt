@@ -42,3 +42,43 @@ TEST_CASE("376")
     auto nl = static_cast<MD::List *>(li->items().at(1).get());
     REQUIRE(nl->items().size() == 2);
 }
+
+/*
+a*b**
+
+*/
+TEST_CASE("377")
+{
+    MD::Parser parser;
+
+    auto doc = parser.parse(QStringLiteral("tests/parser/data/377.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 1);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text *>(p->items().at(0).get());
+    REQUIRE(t->text() == QStringLiteral("a*b**"));
+}
+
+/*
+x *b**y
+
+*/
+TEST_CASE("378")
+{
+    MD::Parser parser;
+
+    auto doc = parser.parse(QStringLiteral("tests/parser/data/378.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph *>(doc->items().at(1).get());
+    REQUIRE(p->items().size() == 1);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    auto t = static_cast<MD::Text *>(p->items().at(0).get());
+    REQUIRE(t->text() == QStringLiteral("x *b**y"));
+}

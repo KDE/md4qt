@@ -201,7 +201,7 @@ void EmphasisParser::processEmphasises(InlineContext &ctx)
                 }
 
                 if (!processed && !ctx.delims()[i].m_leftFlanking) {
-                    ctx.delims().remove(i--);
+                    ctx.delims().remove(i--, lengthRight);
                 }
             }
         }
