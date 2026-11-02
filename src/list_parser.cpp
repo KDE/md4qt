@@ -207,7 +207,7 @@ void ListParser::finishFirstChild(Line &currentLine,
                                   bool makeListItem,
                                   QStringList &linksToParse)
 {
-    if (m_lastBlockState == BlockState::Continue && makeListItem) {
+    if ((m_lastBlockState == BlockState::Continue || m_lastBlockState == BlockState::NotStartedYet) && makeListItem) {
         if (ctx.children().front().block()) {
             if (ctx.children().front().firstLineNumber() < currentLine.lineNumber()) {
                 ctx.children()
@@ -369,11 +369,19 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
                         } else {
                             ctx.appendChildIndent(indentFromColumn(column), delim);
 
+                            if (!makeListItem) {
+                                ctx.bottomChild().setNestingLevel(ctx.childIndents().size() - 1);
+                            }
+
                             return {BlockState::Continue, item, true};
                         }
                     }
 
                     ctx.appendChildIndent(indentFromColumn(column), delim);
+
+                    if (!makeListItem) {
+                        ctx.bottomChild().setNestingLevel(ctx.childIndents().size() - 1);
+                    }
                 }
             }
         }
@@ -388,7 +396,8 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
             }
 
             if (!makeListItem) {
-                ctx.bottomChild().applyParentContext(ctx);
+                ctx.bottomChild().applyParentContext(ctx, false);
+                ctx.bottomChild().setNestingLevel(ctx.childIndents().size() - 1);
             } else {
                 ctx.updateParentContextForAllChildren();
             }
@@ -450,12 +459,13 @@ BlockState ListParser::process(Line &currentLine,
         if (isEmptyLine(currentLine)) {
             currentLine.skip();
 
-            return BlockState::Continue;
+            return BlockState::NotStartedYet;
         }
 
         m_list = QSharedPointer<List>::create();
         m_list->setStartColumn(currentLine.position());
         m_list->setStartLine(currentLine.lineNumber());
+        m_list->setLooseness(ListLooseness::Tight);
         parent->appendItem(m_list);
         ctx.lists().append(m_list);
     }
@@ -489,6 +499,7 @@ BlockState ListParser::process(Line &currentLine,
             if (state.m_item) {
                 if (ctx.childIndents().size() > ctx.lists().size()) {
                     auto list = QSharedPointer<List>::create();
+                    list->setLooseness(ListLooseness::Tight);
                     list->setStartColumn(state.m_item->startColumn());
                     list->setStartLine(state.m_item->startLine());
                     if (ctx.wasNotProcessedEver() && ctx.parent() && ctx.parent()->block() && ctx.parent()->item()) {
@@ -499,6 +510,7 @@ BlockState ListParser::process(Line &currentLine,
                     ctx.lists().append(list);
                 } else if (state.m_makeNewList) {
                     auto list = QSharedPointer<List>::create();
+                    list->setLooseness(ListLooseness::Tight);
                     list->setStartColumn(state.m_item->startColumn());
                     list->setStartLine(state.m_item->startLine());
                     ctx.lists().pop_back();
@@ -579,14 +591,31 @@ BlockState ListParser::process(Line &currentLine,
     if (!looped) {
         state = processList(currentLine, stream, doc, ctx, path, fileName, true, linksToParse);
 
-        if (state.m_state != MD::BlockState::Stop) {
+        if (state.m_state != BlockState::Stop) {
             setLastListItem(ctx);
         }
     }
 
     if (state.m_state != BlockState::Stop) {
+        const auto prevNestingLevel =
+            (!ctx.children().isEmpty() && ctx.children().front().block() ? ctx.children().front().nestingLevel() : -1);
+
         m_lastBlockState =
             BlockParser::process(currentLine, stream, doc, m_lastListItem, ctx, path, fileName, linksToParse);
+
+        const auto currNestingLevel =
+            (!ctx.children().isEmpty() && ctx.children().front().block() ? ctx.children().front().nestingLevel()
+                                                                         : prevNestingLevel);
+
+        const auto nestingLevel = std::min(prevNestingLevel, currNestingLevel);
+
+        if ((m_lastBlockState == BlockState::Stop || m_lastBlockState == BlockState::NotStartedYet)
+            && emptyLine
+            && prevNestingLevel > -1
+            && nestingLevel < ctx.lists().size()
+            && (ctx.children().isEmpty() ? false : ctx.children().front().block() != nullptr)) {
+            ctx.lists()[nestingLevel]->setLooseness(ListLooseness::Loose);
+        }
 
         applyLastPosition(ctx, currentLine.length() - (currentLine.length() ? 1 : 0), currentLine.lineNumber());
     }

@@ -30,13 +30,15 @@ class Parser;
  *        to this block parser but child context should not be added nor updated.
  * \value Discard Used on the next lines after check method to break processing with this block and try to process
  *        with other blocks.
+ * \value NotStartedYet Used to handle empty lines before start of the block.
  */
 enum class BlockState {
     None = 0,
     Stop,
     Continue,
     ContinueWithoutAppendingChildCtx,
-    Discard
+    Discard,
+    NotStartedYet
 }; // enum class BlockState
 
 /*!

@@ -571,7 +571,7 @@ BlockState ParagraphParser::process(Line &currentLine,
         } else {
             currentLine.skip();
 
-            return BlockState::Continue;
+            return BlockState::NotStartedYet;
         }
     }
 

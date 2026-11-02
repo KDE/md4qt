@@ -345,11 +345,24 @@ public:
      */
     void setFirst(bool on = true);
 
+    /*!
+     * Returns whether serialiser should add empty lines between blocks.
+     */
+    bool writeEmptyLines() const;
+
+    /*!
+     * Set whether serialiser should add empty lines between blocks.
+     *
+     * \a on Value.
+     */
+    void setWriteEmptyLines(bool on = true);
+
 private:
     Q_DISABLE_COPY(SerialiseHelper)
 
     QStack<const Item *> m_items;
     bool m_first = false;
+    bool m_writeEmptyLines = true;
 }; // class SerialiseHelper
 
 /*!
@@ -1818,6 +1831,27 @@ private:
 }; // class ListItem
 
 //
+// ListLooseness
+//
+
+/*!
+ * \enum MD::ListLooseness
+ * \inmodule md4qt
+ * \inheaderfile md4qt/doc.h
+ *
+ * \brief List looseness.
+ *
+ * \value Unknown Not set.
+ * \value Loose Loose list.
+ * \value Tight Tight list.
+ */
+enum class ListLooseness : int {
+    Unknown = 0,
+    Loose,
+    Tight
+}; // enum ListLooseness
+
+//
 // List
 //
 
@@ -1852,8 +1886,35 @@ public:
      */
     ItemType type() const override;
 
+    /*!
+     * Returns list's looseness.
+     */
+    ListLooseness looseness() const;
+
+    /*!
+     * Set list's looseness.
+     *
+     * \a s Symbol.
+     */
+    void setLooseness(ListLooseness l);
+
+    /*!
+     * Serialise item into Markdown.
+     *
+     * \a stream Stream.
+     *
+     * \a helper Serialisation helper.
+     */
+    void write(QTextStream &stream,
+               SerialiseHelper *helper) const override;
+
 private:
     Q_DISABLE_COPY(List)
+
+    /*!
+     * Looseness of the list.
+     */
+    ListLooseness m_looseness = ListLooseness::Unknown;
 }; // class List
 
 //

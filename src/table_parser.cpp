@@ -384,7 +384,7 @@ BlockState TableParser::process(Line &currentLine,
         if (isEmptyLine(currentLine)) {
             currentLine.skip();
 
-            return BlockState::Continue;
+            return BlockState::NotStartedYet;
         }
 
         skipSpaces(currentLine);

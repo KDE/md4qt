@@ -38,6 +38,7 @@ TEST_CASE("184")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Loose);
         REQUIRE(l->items().size() == 1);
         CHECK_POSITIONS(l, 0, 0, 0, 11);
 
@@ -54,6 +55,7 @@ TEST_CASE("184")
         {
             REQUIRE(i->items().at(1)->type() == MD::ItemType::List);
             auto l = static_cast<MD::List *>(i->items().at(1).get());
+            REQUIRE(l->looseness() == MD::ListLooseness::Loose);
             CHECK_POSITIONS(l, 2, 2, 0, 11);
             REQUIRE(l->items().size() == 1);
 
@@ -70,6 +72,7 @@ TEST_CASE("184")
             {
                 REQUIRE(i->items().at(1)->type() == MD::ItemType::List);
                 auto l = static_cast<MD::List *>(i->items().at(1).get());
+                REQUIRE(l->looseness() == MD::ListLooseness::Tight);
                 CHECK_POSITIONS(l, 4, 3, 0, 4);
                 REQUIRE(l->items().size() == 1);
 
@@ -95,6 +98,7 @@ TEST_CASE("184")
             {
                 REQUIRE(i->items().at(3)->type() == MD::ItemType::List);
                 auto l = static_cast<MD::List *>(i->items().at(3).get());
+                REQUIRE(l->looseness() == MD::ListLooseness::Tight);
                 CHECK_POSITIONS(l, 4, 9, 0, 11);
                 REQUIRE(l->items().size() == 1);
 
@@ -309,6 +313,7 @@ TEST_CASE("188")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Loose);
         REQUIRE(l->items().size() == 1);
         CHECK_POSITIONS(l, 0, 0, 0, 3);
 
@@ -327,6 +332,7 @@ TEST_CASE("188")
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(3).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 1);
         CHECK_POSITIONS(l, 0, 6, 0, 11);
 
@@ -341,6 +347,7 @@ TEST_CASE("188")
 
         {
             auto l = static_cast<MD::List *>(i->items().at(1).get());
+            REQUIRE(l->looseness() == MD::ListLooseness::Loose);
             REQUIRE(l->items().size() == 1);
             CHECK_POSITIONS(l, 2, 7, 0, 11);
 
@@ -349,6 +356,8 @@ TEST_CASE("188")
             REQUIRE(i->items().size() == 3);
             REQUIRE(i->items().at(0)->type() == MD::ItemType::Paragraph);
             REQUIRE(i->items().at(1)->type() == MD::ItemType::List);
+            auto l1 = static_cast<MD::List *>(i->items().at(1).get());
+            REQUIRE(l1->looseness() == MD::ListLooseness::Tight);
             REQUIRE(i->items().at(2)->type() == MD::ItemType::Paragraph);
             auto p = static_cast<MD::Paragraph *>(i->items().at(2).get());
             CHECK_POSITIONS(p, 4, 10, 11, 10);

@@ -197,7 +197,8 @@ void Visitor::onBlockquote(Blockquote *b)
 
 void Visitor::onListItem(ListItem *i,
                          bool first,
-                         bool skipOpeningWrap)
+                         bool skipOpeningWrap,
+                         ListLooseness looseness)
 {
     Q_UNUSED(first)
 
@@ -211,7 +212,9 @@ void Visitor::onListItem(ListItem *i,
                 break;
 
             case ItemType::Paragraph:
-                onParagraph(static_cast<Paragraph *>(it->get()), wrapFirstParagraphInListItem(i), skipOpeningWrap);
+                onParagraph(static_cast<Paragraph *>(it->get()),
+                            wrapFirstParagraphInListItem(i, looseness),
+                            skipOpeningWrap);
                 break;
 
             case ItemType::Code:
@@ -341,9 +344,14 @@ void Visitor::onFootnote(Footnote *f)
     }
 }
 
-bool Visitor::wrapFirstParagraphInListItem(ListItem *i) const
+bool Visitor::wrapFirstParagraphInListItem(ListItem *i,
+                                           ListLooseness looseness) const
 {
-    return (i->items().size() > 1 && i->items().at(1)->type() != ItemType::List);
+    if (looseness != ListLooseness::Unknown) {
+        return (looseness == ListLooseness::Loose);
+    } else {
+        return (i->items().size() > 1 && i->items().at(1)->type() != ItemType::List);
+    }
 }
 
 } /* namespace MD */

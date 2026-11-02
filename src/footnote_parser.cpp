@@ -219,7 +219,7 @@ BlockState FootnoteParser::process(Line &currentLine,
         if (isEmptyLine(currentLine)) {
             currentLine.skip();
 
-            return BlockState::Continue;
+            return BlockState::NotStartedYet;
         }
 
         m_note = QSharedPointer<Footnote>::create();

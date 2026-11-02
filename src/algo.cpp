@@ -249,9 +249,11 @@ void AlgoVisitor::onFootnoteRef(FootnoteRef *ref)
 
 void AlgoVisitor::onListItem(ListItem *i,
                              bool,
-                             bool skipOpeningWrap)
+                             bool skipOpeningWrap,
+                             ListLooseness looseness)
 {
     Q_UNUSED(skipOpeningWrap)
+    Q_UNUSED(looseness)
 
     IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
 

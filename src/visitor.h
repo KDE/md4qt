@@ -184,10 +184,13 @@ protected:
      * \a first Is this item first in the list?
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
+     *
+     * \a looseness List looseness.
      */
     virtual void onListItem(ListItem *i,
                             bool first,
-                            bool skipOpeningWrap = false);
+                            bool skipOpeningWrap = false,
+                            ListLooseness looseness = ListLooseness::Unknown);
 
     /*!
      * Handle table cell.
@@ -207,8 +210,11 @@ protected:
      * Returns whether first paragraph in list item should be wrapped.
      *
      * \a i List item.
+     *
+     * \a looseness List looseness.
      */
-    virtual bool wrapFirstParagraphInListItem(ListItem *i) const;
+    virtual bool wrapFirstParagraphInListItem(ListItem *i,
+                                              ListLooseness looseness = ListLooseness::Unknown) const;
 
 protected:
     /*!

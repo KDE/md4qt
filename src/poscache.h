@@ -395,10 +395,13 @@ protected:
      * \a first Is this item first in the list?
      *
      * \a skipOpeningWrap Indicates that opening wrap should be added or no.
+     *
+     * \a looseness List looseness.
      */
     void onListItem(ListItem *l,
                     bool first,
-                    bool skipOpeningWrap = false) override;
+                    bool skipOpeningWrap = false,
+                    ListLooseness looseness = ListLooseness::Unknown) override;
 
 protected:
     /*!

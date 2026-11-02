@@ -340,8 +340,11 @@ public:
      * Apply settings for child context.
      *
      * \a ctx Context.
+     *
+     * \a updateNestingLevel Should nesting level be updated?
      */
-    void applyParentContext(Context &ctx);
+    void applyParentContext(Context &ctx,
+                            bool updateNestingLevel = true);
 
     /*!
      * Update parent context for all children.
@@ -587,6 +590,24 @@ public:
         m_item = i;
     }
 
+    /*!
+     * Returns nesting level of the context (used in lists parsing).
+     */
+    inline int nestingLevel() const
+    {
+        return m_nestingLelel;
+    }
+
+    /*!
+     * Set nesting level of the context (used in lists parsing).
+     *
+     * \a l Level.
+     */
+    inline void setNestingLevel(int l)
+    {
+        m_nestingLelel = l;
+    }
+
 private:
     Context *m_parent = nullptr;
     BlockParser *m_block = nullptr;
@@ -604,6 +625,7 @@ private:
     bool m_isDiscardForced = false;
     bool m_dontConsiderIndents = false;
     bool m_wasNotProcessedEver = true;
+    int m_nestingLelel = 0;
 }; // class Context
 
 } /* namespace MD */

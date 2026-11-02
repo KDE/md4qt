@@ -265,32 +265,24 @@ void HtmlVisitor::onList(List *l)
             if (first) {
                 type = item->listType();
 
-                if (type == ListItem::Ordered) {
-                    if (!m_justCollectFootnoteRefs) {
+                if (!m_justCollectFootnoteRefs) {
+                    if (type == ListItem::Ordered) {
                         m_html.push_back(QStringLiteral("<ol"));
-                        printId(l);
-
-                        if (item->isTaskList()) {
-                            m_html.push_back(QStringLiteral(" class=\"contains-task-list\""));
-                        }
-
-                        m_html.push_back(QStringLiteral(" dir=\"auto\">\n"));
-                    }
-                } else {
-                    if (!m_justCollectFootnoteRefs) {
+                    } else {
                         m_html.push_back(QStringLiteral("<ul"));
-                        printId(l);
-
-                        if (item->isTaskList()) {
-                            m_html.push_back(QStringLiteral(" class=\"contains-task-list\""));
-                        }
-
-                        m_html.push_back(QStringLiteral(" dir=\"auto\">\n"));
                     }
+
+                    printId(l);
+
+                    if (item->isTaskList()) {
+                        m_html.push_back(QStringLiteral(" class=\"contains-task-list\""));
+                    }
+
+                    m_html.push_back(QStringLiteral(" dir=\"auto\">\n"));
                 }
             }
 
-            onListItem(item, first);
+            onListItem(item, first, false, l->looseness());
 
             first = false;
         }
@@ -553,14 +545,15 @@ void HtmlVisitor::onFootnoteRef(FootnoteRef *ref)
 
 void HtmlVisitor::onListItem(ListItem *i,
                              bool first,
-                             bool skipOpeningWrap)
+                             bool skipOpeningWrap,
+                             ListLooseness looseness)
 {
     if (!m_justCollectFootnoteRefs) {
         m_html.push_back(QStringLiteral("<li"));
         printId(i);
 
         if (i->isTaskList()) {
-            skipOpeningWrap = Visitor::wrapFirstParagraphInListItem(i);
+            skipOpeningWrap = Visitor::wrapFirstParagraphInListItem(i, looseness);
 
             m_html.push_back(QStringLiteral(" class=\"task-list-item\">"));
 
@@ -586,7 +579,7 @@ void HtmlVisitor::onListItem(ListItem *i,
         m_html.push_back(QStringLiteral(">\n"));
     }
 
-    Visitor::onListItem(i, first, skipOpeningWrap);
+    Visitor::onListItem(i, first, skipOpeningWrap, looseness);
 
     if (!m_justCollectFootnoteRefs) {
         m_html.push_back(QStringLiteral("</li>\n"));

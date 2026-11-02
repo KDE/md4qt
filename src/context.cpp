@@ -16,16 +16,22 @@ Context::Context(Context *prnt)
 
 Context::~Context() = default;
 
-void Context::applyParentContext(Context &ctx)
+void Context::applyParentContext(Context &ctx,
+                                 bool updateNestingLevel)
 {
     setIndentColumn(ctx.lastChildIndent());
+
+    if (updateNestingLevel) {
+        setNestingLevel(ctx.children().isEmpty() ? ctx.nestingLevel() : ctx.children().back().nestingLevel());
+    }
+
     m_parent = &ctx;
 }
 
 void Context::updateParentContextForAllChildren()
 {
     for (auto it = m_children.begin(), last = m_children.end(); it != last; ++it) {
-        it->applyParentContext(*this);
+        it->applyParentContext(*this, false);
         it->updateParentContextForAllChildren();
     }
 }

@@ -509,13 +509,14 @@ void PosCache::onFootnote(Footnote *f)
 
 void PosCache::onListItem(ListItem *l,
                           bool first,
-                          bool skipOpeningWrap)
+                          bool skipOpeningWrap,
+                          ListLooseness looseness)
 {
     details::PosRange r{l->startColumn(), l->startLine(), l->endColumn(), l->endLine(), l};
 
     insertInCache(r, false, true);
 
-    Visitor::onListItem(l, first, skipOpeningWrap);
+    Visitor::onListItem(l, first, skipOpeningWrap, looseness);
 
     m_currentItems.pop();
 }

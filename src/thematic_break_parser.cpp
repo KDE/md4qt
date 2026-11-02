@@ -64,7 +64,7 @@ BlockState ThematicBreakParser::process(Line &currentLine,
     if (isEmptyLine(currentLine)) {
         currentLine.skip();
 
-        return BlockState::Continue;
+        return BlockState::NotStartedYet;
     }
 
     auto hl = QSharedPointer<HorizontalLine>::create();

@@ -144,6 +144,16 @@ void SerialiseHelper::setFirst(bool on)
     m_first = on;
 }
 
+bool SerialiseHelper::writeEmptyLines() const
+{
+    return m_writeEmptyLines;
+}
+
+void SerialiseHelper::setWriteEmptyLines(bool on)
+{
+    m_writeEmptyLines = on;
+}
+
 //
 // StyleDelim
 //
@@ -711,8 +721,11 @@ void Block::write(QTextStream &stream,
             if (!firstItem) {
                 stream << s_newLineChar;
                 helper->startLine(stream);
-                stream << s_newLineChar;
-                helper->startLine(stream);
+
+                if (helper->writeEmptyLines()) {
+                    stream << s_newLineChar;
+                    helper->startLine(stream);
+                }
             }
 
             item->write(stream, helper);
@@ -1159,6 +1172,7 @@ Item::SharedPointer List::clone(Document *doc) const
 {
     auto l = QSharedPointer<List>::create();
     l->applyBlock(*this, doc);
+    l->setLooseness(looseness());
 
     return l;
 }
@@ -1166,6 +1180,37 @@ Item::SharedPointer List::clone(Document *doc) const
 ItemType List::type() const
 {
     return ItemType::List;
+}
+
+ListLooseness List::looseness() const
+{
+    return m_looseness;
+}
+
+void List::setLooseness(ListLooseness l)
+{
+    m_looseness = l;
+}
+
+void List::write(QTextStream &stream,
+                 SerialiseHelper *helper) const
+{
+    const auto wasWriteEmptyLines = helper->writeEmptyLines();
+
+    switch (looseness()) {
+    case ListLooseness::Tight: {
+        helper->setWriteEmptyLines(false);
+    } break;
+
+    case ListLooseness::Loose:
+    default: {
+        helper->setWriteEmptyLines(true);
+    } break;
+    }
+
+    Block::write(stream, helper);
+
+    helper->setWriteEmptyLines(wasWriteEmptyLines);
 }
 
 //

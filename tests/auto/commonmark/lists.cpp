@@ -230,6 +230,7 @@ TEST_CASE("305")
     {
         REQUIRE(doc->items().at(2)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(2).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 1);
 
         {
@@ -257,6 +258,7 @@ TEST_CASE("306")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     {
@@ -311,6 +313,7 @@ TEST_CASE("307")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 1);
 
         {
@@ -328,6 +331,7 @@ TEST_CASE("307")
 
             REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
             auto l = static_cast<MD::List *>(li->items().at(1).get());
+            REQUIRE(l->looseness() == MD::ListLooseness::Tight);
             REQUIRE(l->items().size() == 1);
 
             {
@@ -345,6 +349,7 @@ TEST_CASE("307")
 
                 REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
                 auto l = static_cast<MD::List *>(li->items().at(1).get());
+                REQUIRE(l->looseness() == MD::ListLooseness::Loose);
                 REQUIRE(l->items().size() == 1);
 
                 {
@@ -387,6 +392,7 @@ TEST_CASE("308")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 2);
 
         {
@@ -425,6 +431,7 @@ TEST_CASE("308")
     {
         REQUIRE(doc->items().at(3)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(3).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 2);
 
         {
@@ -466,6 +473,7 @@ TEST_CASE("309")
     {
         REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(doc->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Loose);
         REQUIRE(l->items().size() == 2);
 
         {
@@ -528,6 +536,7 @@ TEST_CASE("310")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 7);
 
     for (int i = 0; i < 7; ++i) {
@@ -555,6 +564,7 @@ TEST_CASE("311")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     for (int i = 0; i < 3; ++i) {
@@ -583,6 +593,7 @@ TEST_CASE("312")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 4);
 
     for (int i = 0; i < 3; ++i) {
@@ -632,6 +643,7 @@ TEST_CASE("313")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 2);
 
     for (int i = 0; i < 2; ++i) {
@@ -665,6 +677,7 @@ TEST_CASE("314")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     for (int i = 0; i < 3; ++i) {
@@ -692,6 +705,7 @@ TEST_CASE("315")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     {
@@ -737,6 +751,7 @@ TEST_CASE("316")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     for (int i = 0; i < 3; i += 2) {
@@ -791,6 +806,7 @@ TEST_CASE("317")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 3);
 
     {
@@ -846,6 +862,7 @@ TEST_CASE("318")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 3);
 
     {
@@ -895,6 +912,7 @@ TEST_CASE("319")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 2);
 
     {
@@ -912,6 +930,7 @@ TEST_CASE("319")
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(li->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Loose);
         REQUIRE(l->items().size() == 1);
 
         {
@@ -965,6 +984,7 @@ TEST_CASE("320")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 2);
 
     {
@@ -1021,6 +1041,7 @@ TEST_CASE("321")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 2);
 
     {
@@ -1081,6 +1102,7 @@ TEST_CASE("322")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 1);
 
     {
@@ -1109,6 +1131,7 @@ TEST_CASE("323")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Tight);
     REQUIRE(l->items().size() == 1);
 
     {
@@ -1129,6 +1152,7 @@ TEST_CASE("323")
 
         REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
         auto l = static_cast<MD::List *>(li->items().at(1).get());
+        REQUIRE(l->looseness() == MD::ListLooseness::Tight);
         REQUIRE(l->items().size() == 1);
 
         {
@@ -1158,6 +1182,7 @@ TEST_CASE("324")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 1);
 
     {
@@ -1191,6 +1216,7 @@ TEST_CASE("325")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 1);
 
     {
@@ -1212,6 +1238,7 @@ TEST_CASE("325")
         {
             REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
             auto l = static_cast<MD::List *>(li->items().at(1).get());
+            REQUIRE(l->looseness() == MD::ListLooseness::Tight);
             REQUIRE(l->items().size() == 1);
 
             {
@@ -1252,6 +1279,7 @@ TEST_CASE("326")
 
     REQUIRE(doc->items().at(1)->type() == MD::ItemType::List);
     auto l = static_cast<MD::List *>(doc->items().at(1).get());
+    REQUIRE(l->looseness() == MD::ListLooseness::Loose);
     REQUIRE(l->items().size() == 2);
 
     for (int i = 0; i < 2; ++i) {
@@ -1275,6 +1303,7 @@ TEST_CASE("326")
         {
             REQUIRE(li->items().at(1)->type() == MD::ItemType::List);
             auto l = static_cast<MD::List *>(li->items().at(1).get());
+            REQUIRE(l->looseness() == MD::ListLooseness::Tight);
             REQUIRE(l->items().size() == 2);
 
             for (int j = 0; j < 2; ++j) {

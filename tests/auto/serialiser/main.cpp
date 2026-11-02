@@ -150,6 +150,13 @@ bool compare(QSharedPointer<MD::Block> original,
     REQUIRE(original->type() == serialised->type());
     REQUIRE(original->items().count() == serialised->items().count());
 
+    if (original->type() == MD::ItemType::List) {
+        const auto ol = original.staticCast<MD::List>();
+        const auto sl = serialised.staticCast<MD::List>();
+
+        REQUIRE(ol->looseness() == sl->looseness());
+    }
+
     for (int i = 0; i < original->items().count(); ++i) {
         switch (original->items().at(i)->type()) {
         case MD::ItemType::Paragraph:

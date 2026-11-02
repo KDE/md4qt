@@ -101,7 +101,7 @@ BlockState BlockquoteParser::process(Line &currentLine,
     if (isEmptyLine(currentLine) && !m_quotes.contains(&ctx)) {
         currentLine.skip();
 
-        return BlockState::Continue;
+        return BlockState::NotStartedYet;
     }
 
     currentLine.saveState();
