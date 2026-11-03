@@ -1894,7 +1894,7 @@ public:
     /*!
      * Set list's looseness.
      *
-     * \a s Symbol.
+     * \a l Looseness.
      */
     void setLooseness(ListLooseness l);
 
