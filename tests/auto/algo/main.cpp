@@ -52,6 +52,10 @@ TEST_CASE("002")
     MD::forEach({MD::ItemType::Text}, doc, onItem);
     REQUIRE(g_count == 1);
     g_count = 0;
+
+    MD::forEach({MD::ItemType::YamlHeader}, doc, onItem);
+    REQUIRE(g_count == 0);
+    g_count = 0;
 }
 
 /*
@@ -472,6 +476,24 @@ TEST_CASE("user_defined")
     g_count = 0;
 
     MD::forEach({MD::ItemType{static_cast<int>(MD::ItemType::UserDefined) + 1}}, doc, onItem, 1);
+    REQUIRE(g_count == 1);
+    g_count = 0;
+}
+
+/*
+---
+id: 1
+...
+text
+
+*/
+TEST_CASE("yaml/002")
+{
+    MD::Parser parser;
+
+    auto doc = parser.parse(QStringLiteral("tests/plugins/yaml/data/002.md"));
+
+    MD::forEach({MD::ItemType::YamlHeader}, doc, onItem);
     REQUIRE(g_count == 1);
     g_count = 0;
 }

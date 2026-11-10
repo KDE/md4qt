@@ -507,6 +507,13 @@ void PosCache::onFootnote(Footnote *f)
     m_currentItems.pop();
 }
 
+void PosCache::onYamlHeader(YAMLHeader *h)
+{
+    details::PosRange r{h->startColumn(), h->startLine(), h->endColumn(), h->endLine(), h};
+
+    insertInCache(r);
+}
+
 void PosCache::onListItem(ListItem *l,
                           bool first,
                           bool skipOpeningWrap,

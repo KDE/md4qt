@@ -233,6 +233,13 @@ protected:
     void onFootnote(Footnote *f) override;
 
     /*!
+     * Handle YAML header.
+     *
+     * \a h YAML header.
+     */
+    void onYamlHeader(YAMLHeader *h) override;
+
+    /*!
      * Process all footnotes.
      *
      * \a doc Document.

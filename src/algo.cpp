@@ -284,6 +284,15 @@ void AlgoVisitor::onFootnote(Footnote *f)
     }
 }
 
+void AlgoVisitor::onYamlHeader(YAMLHeader *h)
+{
+    IncrementNestingLevel inc(m_currentNestingLevel, m_maxNestingLevel, m_types);
+
+    if (inc.allowed(ItemType::YamlHeader)) {
+        m_func(h);
+    }
+}
+
 void AlgoVisitor::onFootnotes(QSharedPointer<Document> doc)
 {
     for (const auto &f : doc->footnotesMap()) {

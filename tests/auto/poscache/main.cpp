@@ -18,14 +18,36 @@ inline QString to_string(int i)
     return QString::number(i);
 }
 
-QSharedPointer<MD::Document> prepareTest(const QString &fileName)
+QSharedPointer<MD::Document> prepareTest(const QString &fileName,
+                                         const QString &path = QStringLiteral("tests/parser/data/"))
 {
     MD::Parser p;
-    auto doc = p.parse(QStringLiteral("tests/parser/data/") + fileName);
+    auto doc = p.parse(path + fileName);
 
     g_cache.initialize(doc);
 
     return doc;
+}
+
+TEST_CASE("yaml/002")
+{
+    prepareTest(QStringLiteral("002.md"), QStringLiteral("tests/plugins/yaml/data/"));
+    REQUIRE(g_cache.findFirstInCache({0, 0, 0, 0}).empty());
+    REQUIRE(g_cache.findFirstInCache({0, 1, 0, 1}).empty());
+    auto items = g_cache.findFirstInCache({0, 2, 0, 2});
+    REQUIRE(items.size() == 1);
+    REQUIRE(items.at(0)->type() == MD::ItemType::YamlHeader);
+    items = g_cache.findFirstInCache({0, 3, 0, 3});
+    REQUIRE(items.size() == 1);
+    REQUIRE(items.at(0)->type() == MD::ItemType::YamlHeader);
+    items = g_cache.findFirstInCache({0, 4, 0, 4});
+    REQUIRE(items.size() == 1);
+    REQUIRE(items.at(0)->type() == MD::ItemType::YamlHeader);
+    items = g_cache.findFirstInCache({0, 5, 0, 5});
+    REQUIRE(items.size() == 2);
+    REQUIRE(items.at(0)->type() == MD::ItemType::Paragraph);
+    REQUIRE(items.at(1)->type() == MD::ItemType::Text);
+    REQUIRE(g_cache.findFirstInCache({0, 6, 0, 6}).empty());
 }
 
 TEST_CASE("001")
