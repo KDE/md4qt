@@ -431,15 +431,14 @@ protected:
 
     void onListItem(MD::ListItem *i,
                     bool first,
-                    bool skipOpeningWrap = false) override
+                    bool skipOpeningWrap = false,
+                    MD::ListLooseness looseness = MD::ListLooseness::Unknown) override
     {
-        Q_UNUSED(skipOpeningWrap)
-
         m_qdoc.append(QStringLiteral("%1\\li ").arg(currentOffset()));
         incrementOffset();
 
         m_firstInListItem = true;
-        Visitor::onListItem(i, first);
+        Visitor::onListItem(i, first, skipOpeningWrap, looseness);
 
         decrementOffset();
         m_qdoc.append(QStringLiteral("\n"));
