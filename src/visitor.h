@@ -8,6 +8,7 @@
 
 // md4qt include.
 #include "doc.h"
+#include "yaml_parser.h"
 
 namespace MD
 {
@@ -205,6 +206,13 @@ protected:
      * \a f Footnote.
      */
     virtual void onFootnote(Footnote *f);
+
+    /*!
+     * Handle YAML header.
+     *
+     * \a h YAML header.
+     */
+    virtual void onYamlHeader(YAMLHeader *h);
 
     /*!
      * Returns whether first paragraph in list item should be wrapped.

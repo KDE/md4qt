@@ -38,6 +38,10 @@ void Visitor::process(QSharedPointer<Document> d)
             onUserDefined(it->get());
         } else {
             switch ((*it)->type()) {
+            case ItemType::YamlHeader:
+                onYamlHeader(static_cast<YAMLHeader *>(it->get()));
+                break;
+
             case ItemType::Heading:
                 onHeading(static_cast<Heading *>(it->get()));
                 break;
@@ -342,6 +346,11 @@ void Visitor::onFootnote(Footnote *f)
             }
         }
     }
+}
+
+void Visitor::onYamlHeader(YAMLHeader *h)
+{
+    Q_UNUSED(h)
 }
 
 bool Visitor::wrapFirstParagraphInListItem(ListItem *i,
