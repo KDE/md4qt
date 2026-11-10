@@ -42,8 +42,7 @@ TEST_CASE("002")
         REQUIRE(doc->isEmpty() == false);
         REQUIRE(doc->items().size() == 3);
 
-        REQUIRE(doc->items().at(1)->type()
-                == static_cast<MD::ItemType>(static_cast<int>(MD::ItemType::UserDefined) + 1));
+        REQUIRE(doc->items().at(1)->type() == MD::ItemType::YamlHeader);
         auto h = static_cast<MD::YAMLHeader *>(doc->items().at(1).get());
         REQUIRE(h->startColumn() == 0);
         REQUIRE(h->startLine() == 2);
@@ -85,7 +84,7 @@ TEST_CASE("003")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 3);
 
-    REQUIRE(doc->items().at(1)->type() == static_cast<MD::ItemType>(static_cast<int>(MD::ItemType::UserDefined) + 1));
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::YamlHeader);
     auto h = static_cast<MD::YAMLHeader *>(doc->items().at(1).get());
     REQUIRE(h->startColumn() == 0);
     REQUIRE(h->startLine() == 0);
@@ -164,7 +163,7 @@ TEST_CASE("006")
     REQUIRE(doc->isEmpty() == false);
     REQUIRE(doc->items().size() == 3);
 
-    REQUIRE(doc->items().at(1)->type() == static_cast<MD::ItemType>(static_cast<int>(MD::ItemType::UserDefined) + 1));
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::YamlHeader);
     auto h = static_cast<MD::YAMLHeader *>(doc->items().at(1).get());
     REQUIRE(h->startColumn() == 0);
     REQUIRE(h->startLine() == 0);

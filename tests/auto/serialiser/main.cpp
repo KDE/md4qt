@@ -130,7 +130,7 @@ bool compare(QSharedPointer<MD::Item> original,
         REQUIRE(oa->label() == sa->label());
     } break;
 
-    case static_cast<MD::ItemType>(static_cast<int>(MD::ItemType::UserDefined) + 1): {
+    case MD::ItemType::YamlHeader: {
         const auto oy = original.staticCast<MD::YAMLHeader>();
         const auto sy = serialised.staticCast<MD::YAMLHeader>();
 

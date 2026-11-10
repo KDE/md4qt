@@ -23,7 +23,7 @@ YAMLHeader::~YAMLHeader() = default;
 
 ItemType YAMLHeader::type() const
 {
-    return static_cast<ItemType>(static_cast<int>(ItemType::UserDefined) + 1);
+    return ItemType::YamlHeader;
 }
 
 QSharedPointer<Item> YAMLHeader::clone(Document *doc) const

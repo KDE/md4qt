@@ -51,6 +51,7 @@ namespace MD
  * \value HorizontalLine Horizontal line.
  * \value RawHtml Raw HTML.
  * \value Math Math expression.
+ * \value YamlHeader YAML Header.
  * \value UserDefined Start item for user-defined types.
  */
 enum class ItemType : int {
@@ -75,6 +76,7 @@ enum class ItemType : int {
     HorizontalLine,
     RawHtml,
     Math,
+    YamlHeader,
     UserDefined = 255
 }; // enum class ItemType
 
