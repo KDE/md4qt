@@ -121,6 +121,22 @@ public:
     void resetOnAllContexts() override;
 
     /*!
+     * Returns whether this kind of block can be a lazy line.
+     *
+     * \a line Line.
+     *
+     * \a stream Stream.
+     *
+     * \a doc Document.
+     *
+     * \a ctx Context.
+     */
+    bool canBeLazyLine(Line &line,
+                       TextStream &stream,
+                       QSharedPointer<Document> doc,
+                       Context &ctx) const override;
+
+    /*!
      * Return whether this kind of block may break a paragraph.
      *
      * \a line Line.

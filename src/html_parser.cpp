@@ -173,12 +173,20 @@ void HTMLParser::resetOnAllContexts()
     m_html.reset();
 }
 
+bool HTMLParser::canBeLazyLine(Line &,
+                               TextStream &,
+                               QSharedPointer<Document>,
+                               Context &) const
+{
+    return (m_rule == 7);
+}
+
 bool HTMLParser::mayBreakParagraph(Line &,
                                    TextStream &,
                                    QSharedPointer<Document>,
                                    Context &) const
 {
-    return true;
+    return (m_rule < 7);
 }
 
 } /* namespace MD */

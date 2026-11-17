@@ -82,3 +82,26 @@ TEST_CASE("378")
     auto t = static_cast<MD::Text *>(p->items().at(0).get());
     REQUIRE(t->text() == QStringLiteral("x *b**y"));
 }
+
+/*
+> foo
+</span>
+
+*/
+TEST_CASE("379")
+{
+    MD::Parser parser;
+
+    auto doc = parser.parse(QStringLiteral("tests/parser/data/379.md"));
+
+    REQUIRE(doc->isEmpty() == false);
+    REQUIRE(doc->items().size() == 2);
+    REQUIRE(doc->items().at(1)->type() == MD::ItemType::Blockquote);
+    auto b = static_cast<MD::Blockquote *>(doc->items().at(1).get());
+    REQUIRE(b->items().size() == 1);
+    REQUIRE(b->items().at(0)->type() == MD::ItemType::Paragraph);
+    auto p = static_cast<MD::Paragraph *>(b->items().at(0).get());
+    REQUIRE(p->items().size() == 2);
+    REQUIRE(p->items().at(0)->type() == MD::ItemType::Text);
+    REQUIRE(p->items().at(1)->type() == MD::ItemType::RawHtml);
+}
