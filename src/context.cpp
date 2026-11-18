@@ -23,6 +23,7 @@ void Context::applyParentContext(Context &ctx,
 
     if (updateNestingLevel) {
         setNestingLevel(ctx.children().isEmpty() ? ctx.nestingLevel() : ctx.children().back().nestingLevel());
+        setSerialNumber(ctx.serialNumber());
     }
 
     m_parent = &ctx;

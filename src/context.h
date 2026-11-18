@@ -602,30 +602,72 @@ public:
      * Set nesting level of the context (used in lists parsing).
      *
      * \a l Level.
+     *
+     * \a updateSerialNumber Should the serial number be updated?
      */
-    inline void setNestingLevel(int l)
+    inline void setNestingLevel(int l,
+                                bool updateSerialNumber = false)
     {
+        if (updateSerialNumber) {
+            if (parent()) {
+                for (auto it = parent()->children().crbegin(), last = parent()->children().crend(); it != last; ++it) {
+                    if (it->nestingLevel() == l) {
+                        setSerialNumber(it->serialNumber());
+
+                        break;
+                    }
+                }
+            }
+        }
+
         m_nestingLelel = l;
     }
 
+    /*!
+     * Returns serial number of dummy parent context (used in lists).
+     *
+     * In lists children are all have one parent - context of the list,
+     * and to determine different list items this number is used.
+     *
+     * Every list item has its own unique serial number, and any context
+     * that belongs to the list item has serial number of that list item.
+     */
+    inline int serialNumber() const
+    {
+        return m_serialNumber;
+    }
+
+    /*!
+     * Set serial number of dummy parent context (used in lists).
+     *
+     * \a n Serial number.
+     *
+     * \sa serialNumber()
+     */
+    inline void setSerialNumber(int n)
+    {
+        m_serialNumber = n;
+    }
+
 private:
+    qsizetype m_indent = 0;
+    qsizetype m_firstLineNumber = -1;
+    qsizetype m_lastLineNumber = -1;
+    int m_nestingLelel = 0;
+    int m_serialNumber = 0;
+    Children m_children;
+    ChildLists m_lists;
+    ChildIndents m_childIndents;
+    LineInfo m_lines;
+    QSet<qsizetype> m_lazy;
     Context *m_parent = nullptr;
     BlockParser *m_block = nullptr;
     Item *m_item = nullptr;
-    Children m_children;
-    ChildLists m_lists;
-    qsizetype m_indent = 0;
-    ChildIndents m_childIndents;
-    qsizetype m_firstLineNumber = -1;
-    qsizetype m_lastLineNumber = -1;
-    LineInfo m_lines;
-    QSet<qsizetype> m_lazy;
     QChar m_listDelimiter;
     bool m_isNotFinished = false;
     bool m_isDiscardForced = false;
     bool m_dontConsiderIndents = false;
     bool m_wasNotProcessedEver = true;
-    int m_nestingLelel = 0;
 }; // class Context
 
 } /* namespace MD */

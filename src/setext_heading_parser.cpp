@@ -93,7 +93,9 @@ BlockState SetextHeadingParser::check(Line &currentLine,
                 }
             }
         }
-    } else if (ctx.parent() && ctx.parent()->children().size() > 1) {
+    } else if (ctx.parent()
+               && ctx.parent()->children().size() > 1
+               && ctx.parent()->childAt(ctx.parent()->children().size() - 2).serialNumber() == ctx.serialNumber()) {
         if (isSetext(currentLine, ctx.parent()->childAt(ctx.parent()->children().size() - 2))) {
             if (!checkWithoutProcessing) {
                 currentLine.skip();

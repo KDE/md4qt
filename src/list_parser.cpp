@@ -333,6 +333,8 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
                         currentLine.nextChar();
                     }
 
+                    ctx.setSerialNumber(ctx.serialNumber() + 1);
+
                     if (makeListItem) {
                         item = QSharedPointer<ListItem>::create();
                         item->setSymbol(listItemSymbol(delim));
@@ -356,6 +358,8 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
                         child.applyParentContext(ctx);
                         ctx.pushChild(child);
                     }
+
+                    ctx.bottomChild().setSerialNumber(ctx.serialNumber());
 
                     const auto was = ctx.listDelim(spacesCount);
 
@@ -397,7 +401,7 @@ ListParser::ListProcessState ListParser::processList(Line &currentLine,
 
             if (!makeListItem) {
                 ctx.bottomChild().applyParentContext(ctx, false);
-                ctx.bottomChild().setNestingLevel(ctx.childIndents().size() - 1);
+                ctx.bottomChild().setNestingLevel(ctx.childIndents().size() - 1, true);
             } else {
                 ctx.updateParentContextForAllChildren();
             }
