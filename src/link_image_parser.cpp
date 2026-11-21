@@ -150,8 +150,8 @@ QString LinkImageParser::prepareUrl(const QString &url,
     return u;
 }
 
-QPair<QSharedPointer<Paragraph>,
-      QString>
+std::pair<QSharedPointer<Paragraph>,
+          QString>
 LinkImageParser::parseDescription(const State::Delim &startParagraphDelim,
                                   const State::Delim &endParagraphDelim,
                                   ParagraphStream &stream,
@@ -169,7 +169,7 @@ LinkImageParser::parseDescription(const State::Delim &startParagraphDelim,
     if (stream.currentState() == endParagraphDelim.m_streamState) {
         line = line.sliced(0, endParagraphDelim.m_lineState.m_pos + 1);
     } else if (!endParagraphDelim.m_streamState.m_lineNumber) {
-        return qMakePair(QSharedPointer<Paragraph>::create(), QString());
+        return std::make_pair(QSharedPointer<Paragraph>::create(), QString());
     }
 
     line.restoreState(&startParagraphDelim.m_lineState);
@@ -255,11 +255,11 @@ LinkImageParser::parseDescription(const State::Delim &startParagraphDelim,
 
     stream.restoreState(&sState);
 
-    return qMakePair(paragraph, text);
+    return std::make_pair(paragraph, text);
 }
 
-void LinkImageParser::setImgAndP(const QPair<QSharedPointer<Paragraph>,
-                                             QString> &p,
+void LinkImageParser::setImgAndP(const std::pair<QSharedPointer<Paragraph>,
+                                                 QString> &p,
                                  QSharedPointer<Link> link)
 {
     if (!p.first->isEmpty()) {
@@ -474,8 +474,8 @@ QString LinkImageParser::readLabel(const State::Delim &startDelim,
     return label;
 }
 
-QPair<bool,
-      bool>
+std::pair<bool,
+          bool>
 LinkImageParser::checkShortcutLinkImage(const State::Delim &startDelim,
                                         const ParagraphStream::State &endStreamState,
                                         const Line::State &endLineState,
@@ -561,7 +561,7 @@ LinkImageParser::checkShortcutLinkImage(const State::Delim &startDelim,
                           endLinkLine);
             }
 
-            return qMakePair(true, false);
+            return std::make_pair(true, false);
         } else if (startDelim.m_type == State::Delim::Link) {
             const auto it = doc->footnotesMap().find(url);
 
@@ -581,30 +581,30 @@ LinkImageParser::checkShortcutLinkImage(const State::Delim &startDelim,
 
                 ctx.inlines().append(ref);
 
-                return qMakePair(true, true);
+                return std::make_pair(true, true);
             }
         }
     }
 
     stream.restoreState(&startState);
 
-    return qMakePair(false, false);
+    return std::make_pair(false, false);
 }
 
-QPair<QString,
-      bool>
+std::pair<QString,
+          bool>
 readLinkTitle(Line &line,
               ParagraphStream &stream,
               bool space)
 {
     if (!space) {
-        return qMakePair(QString(), line.currentChar() == s_rightParenthesisChar);
+        return std::make_pair(QString(), line.currentChar() == s_rightParenthesisChar);
     }
 
     if (line.currentChar() != s_quotationMarkChar
         && line.currentChar() != s_apostropheChar
         && line.currentChar() != s_leftParenthesisChar) {
-        return qMakePair(QString(), line.currentChar() == s_rightParenthesisChar);
+        return std::make_pair(QString(), line.currentChar() == s_rightParenthesisChar);
     }
 
     const auto sc = line.currentChar();
@@ -633,17 +633,17 @@ readLinkTitle(Line &line,
 
                 if (!lp) {
                     line.nextChar();
-                    return qMakePair(title, true);
+                    return std::make_pair(title, true);
                 }
             } else if (sc == s_leftParenthesisChar
                        && line.currentChar() == s_leftParenthesisChar
                        && !reverseSolidus.isPrevReverseSolidus()) {
-                return qMakePair(QString(), false);
+                return std::make_pair(QString(), false);
             } else if (sc != s_leftParenthesisChar
                        && line.currentChar() == sc
                        && !reverseSolidus.isPrevReverseSolidus()) {
                 line.nextChar();
-                return qMakePair(title, true);
+                return std::make_pair(title, true);
             } else {
                 title.append(line.currentChar());
             }
@@ -660,7 +660,7 @@ readLinkTitle(Line &line,
         }
     }
 
-    return qMakePair(QString(), false);
+    return std::make_pair(QString(), false);
 }
 
 bool LinkImageParser::checkInlineLinkImage(const State::Delim &startDelim,

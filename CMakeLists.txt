@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-project(md4qt VERSION "5.4.4")
+project(md4qt VERSION "5.4.5")
 
 set(MD4QT_VERSION ${PROJECT_VERSION})
 
@@ -33,6 +33,7 @@ if(ECM_FOUND)
     include(KDECMakeSettings)
     include(KDECompilerSettings NO_POLICY_SCOPE)
     include(ECMSetupVersion)
+    include(ECMInstalledLibraryCheck)
 
     if(ECM_VERSION VERSION_GREATER_EQUAL "6.11.0")
         include(ECMGenerateQDoc)
@@ -184,6 +185,18 @@ if(ECM_FOUND)
     endif()
 
     kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
+
+    ecm_add_installed_library_check(md4qt
+        PACKAGE_NAME "md4qt"
+        PACKAGE_TARGET_NAMESPACE "md4qt::"
+        # simpler variant as by ECM MR 632: QT_STRICT_MODE_LEVEL 6.12
+        COMPILE_DEFINITIONS "-DQT_ENABLE_STRICT_MODE_UP_TO=0x060C00"
+    )
+
+    ecm_installed_library_check_include_strings(md4qt
+        PREFIX "md4qt"
+        HEADERS ${HDR}
+    )
 endif()
 
 if(NOT ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})

@@ -11,6 +11,9 @@
 #include "reverse_solidus.h"
 #include "utils.h"
 
+// C++ include.
+#include <utility>
+
 namespace MD
 {
 
@@ -21,8 +24,8 @@ inline bool isPrevSymbolAllowed(const QChar &c)
     return c.isNull() || s_allowed.contains(c);
 }
 
-inline QPair<QString,
-             Line::State>
+inline std::pair<QString,
+                 Line::State>
 readLink(Line &line,
          QSharedPointer<LinkImageParser> linkParser,
          ParagraphStream &stream,
@@ -44,7 +47,7 @@ readLink(Line &line,
                 break;
             } else if (line.currentChar() == s_rightSquareBracketChar) {
                 if (linkParser->check(line, stream, ctx, doc, path, fileName, linksToParse, parser, rs)) {
-                    return qMakePair(QString(), st);
+                    return std::make_pair(QString(), st);
                 }
             }
         }
@@ -54,7 +57,7 @@ readLink(Line &line,
         line.nextChar();
     }
 
-    return qMakePair(line.slicedCopy(startPos, line.position() - startPos), st);
+    return std::make_pair(line.slicedCopy(startPos, line.position() - startPos), st);
 }
 
 inline qsizetype skipAtEnd(const QString &url)

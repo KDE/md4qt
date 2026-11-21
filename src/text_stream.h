@@ -15,6 +15,9 @@
 #include <QStringView>
 #include <QTextStream>
 
+// C++ include.
+#include <utility>
+
 namespace MD
 {
 
@@ -392,7 +395,7 @@ protected:
     State m_saved;
 
 private:
-    QHash<qsizetype, QPair<QStringView, State>> m_hashedLines;
+    QHash<qsizetype, std::pair<QStringView, State>> m_hashedLines;
 }; // class TextStreamBase
 
 /*!

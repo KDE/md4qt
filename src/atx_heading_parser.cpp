@@ -13,6 +13,9 @@
 #include "reverse_solidus.h"
 #include "utils.h"
 
+// C++ include.
+#include <utility>
+
 namespace MD
 {
 
@@ -69,8 +72,8 @@ BlockState ATXHeadingParser::continueCheck(Line &,
     return BlockState::Stop;
 }
 
-inline QPair<QString,
-             WithPosition>
+inline std::pair<QString,
+                 WithPosition>
 findHeaderLabel(const QString &s)
 {
     const auto start = s.indexOf(s_startIdString);

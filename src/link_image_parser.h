@@ -14,6 +14,9 @@
 #include <QStack>
 #include <QVector>
 
+// C++ include.
+#include <utility>
+
 namespace MD
 {
 
@@ -113,8 +116,8 @@ private:
                                 const ParagraphStream::State &endStreamState,
                                 const Line::State &endLineState,
                                 InlineContext &ctx);
-    QPair<bool,
-          bool>
+    std::pair<bool,
+              bool>
     checkShortcutLinkImage(const State::Delim &startDelim,
                            const ParagraphStream::State &endStreamState,
                            const Line::State &endLineState,
@@ -187,8 +190,8 @@ private:
                        QStringList &linksToParse,
                        const QString &path,
                        const QString &fileName);
-    QPair<QSharedPointer<Paragraph>,
-          QString>
+    std::pair<QSharedPointer<Paragraph>,
+              QString>
     parseDescription(const State::Delim &startParagraphDelim,
                      const State::Delim &endParagraphDelim,
                      ParagraphStream &stream,
@@ -211,8 +214,8 @@ private:
                       qsizetype &startTextLine,
                       qsizetype &endTextPos,
                       qsizetype &endTextLine);
-    void setImgAndP(const QPair<QSharedPointer<Paragraph>,
-                                QString> &p,
+    void setImgAndP(const std::pair<QSharedPointer<Paragraph>,
+                                    QString> &p,
                     QSharedPointer<Link> link);
 }; // class LinkImageParser
 

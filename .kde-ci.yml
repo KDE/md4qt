@@ -7,8 +7,9 @@ Options:
   test-before-installing: True
   require-passing-tests-on: [ 'Linux', 'FreeBSD', 'Windows' ]
   run-cppcheck: False
-  cppcheck-arguments: '--enable=warning,style,performance'
+  cppcheck-arguments: '--enable=all'
   cppcheck-ignore-files:
     - 3rdparty/
   run-gcovr: True
   gcovr-arguments: '--exclude 3rdparty/.* --exclude tests/.* --merge-lines --exclude-function-lines --exclude-unreachable-branches --exclude-noncode-lines --exclude-throw-branches'
+  run-installed-library-check-on: ['@all']

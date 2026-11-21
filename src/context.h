@@ -18,6 +18,7 @@
 
 // C++ include.
 #include <algorithm>
+#include <utility>
 
 namespace MD
 {
@@ -63,7 +64,7 @@ public:
      *
      * \brief Type of list of child indents.
      */
-    using ChildIndents = QVector<QPair<qsizetype, QChar>>;
+    using ChildIndents = QVector<std::pair<qsizetype, QChar>>;
 
     /*!
      * \typealias MD::Context::ChildLists
@@ -265,7 +266,7 @@ public:
     {
         const auto ci = i - (i ? 1 : 0) - indentFromColumn(indentColumn());
 
-        m_childIndents.append(qMakePair(ci, d));
+        m_childIndents.append(std::make_pair(ci, d));
 
         updateParentContextForAllChildren();
     }

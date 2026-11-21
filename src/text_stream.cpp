@@ -82,7 +82,7 @@ Line TextStreamBase::readLine()
     }
 
     auto makeLine = [this](QStringView view, const State &state) -> auto {
-        this->m_hashedLines.insert(state.m_lineNumber - 1, qMakePair(view, state));
+        this->m_hashedLines.insert(state.m_lineNumber - 1, std::make_pair(view, state));
 
         return Line(view, state.m_lineNumber - 1);
     };
